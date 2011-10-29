@@ -1,0 +1,20 @@
+
+Install
+1. Visual Studio Express 2008 
+2. 
+
+Validating XML against DTD
+ihttp://code.activestate.com/recipes/220472/
+
+Generating XSD: 
+
+Download this jar file
+http://www.thaiopensource.com/relaxng/trang-manual.html#running
+
+$java -jar trang.jar <xml> <xsd> 
+
+If there are non-UTF characters, 
+(a) look for "" They dont get copied well especially from the html
+and from PDFs 
+(b) $ sed -i 's/[\d128-\d255]//g' <xml> 
+This will clean up the text

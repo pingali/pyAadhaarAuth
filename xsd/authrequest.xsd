@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" xmlns:u="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" xmlns:xmldsig="http://www.w3.org/2000/09/xmldsig#">
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig.xsd"/>
+  <xs:element name="Auth">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="u:Skey"/>
+        <xs:element ref="u:Uses"/>
+        <xs:element ref="u:Data"/>
+        <xs:element ref="u:Hmac"/>
+        <xs:element ref="xmldsig:Signature"/>
+      </xs:sequence>
+      <xs:attribute name="ac" use="required" type="xs:NCName"/>
+      <xs:attribute name="lk" use="required"/>
+      <xs:attribute name="sa" use="required" type="xs:NCName"/>
+      <xs:attribute name="tid" use="required" type="xs:NCName"/>
+      <xs:attribute name="txn" use="required" type="xs:NCName"/>
+      <xs:attribute name="uid" use="required" type="xs:integer"/>
+      <xs:attribute name="ver" use="required" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Skey">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:base64Binary">
+          <xs:attribute name="ci" use="required" type="xs:integer"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Uses">
+    <xs:complexType>
+      <xs:attribute name="bio" use="required" type="xs:NCName"/>
+      <xs:attribute name="otp" use="required" type="xs:NCName"/>
+      <xs:attribute name="pa" use="required" type="xs:NCName"/>
+      <xs:attribute name="pfa" use="required" type="xs:NCName"/>
+      <xs:attribute name="pi" use="required" type="xs:NCName"/>
+      <xs:attribute name="pin" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Data" type="xs:base64Binary"/>
+  <xs:element name="Hmac" type="xs:string"/>
+</xs:schema>

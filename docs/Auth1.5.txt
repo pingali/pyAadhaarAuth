@@ -1,0 +1,2276 @@
+ 
+
+ 
+
+UIDAI 
+
+ 
+
+Unique Identification Authority of India 
+
+Planning Commission, Govt. of India (GoI), 
+
+3rd Floor, Tower II, 
+
+Jeevan Bharati Building, 
+
+Connaught Circus, 
+
+New Delhi 110001 
+
+ 
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+AADHAAR AUTHENTICATION 
+
+API SPECIFICATION - VERSION 1.5 (REV 1) 
+SEPTEMBER 2011 
+
+
+
+aadhaar english JPG.jpg 
+
+
+ 
+
+
+ 
+
+Table of Contents 
+
+ 
+1. INTRODUCTION ............................................................................................................................ 3 
+1.1 TARGET AUDIENCE AND PRE-REQUISITES ................................................................................. 3 
+1.2 TERMINOLOGY ......................................................................................................................... 4 
+1.3 LEGAL FRAMEWORK ................................................................................................................. 5 
+1.4 OBJECTIVE OF THIS DOCUMENT ................................................................................................. 5 
+2. UNDERSTANDING AADHAAR AUTHENTICATION ................................................................... 6 
+2.1 AADHAAR NUMBER ................................................................................................................... 6 
+2.2 AADHAAR AUTHENTICATION AT A GLANCE ................................................................................. 6 
+2.3 AUTHENTICATION IN PRACTICE ................................................................................................. 7 
+2.4 AADHAAR AUTHENTICATION USAGE .......................................................................................... 7 
+2.5 CONCLUSION ........................................................................................................................... 8 
+3. AADHAAR AUTHENTICATION API ............................................................................................. 9 
+3.1 AUTHENTICATION FLOW ........................................................................................................... 9 
+3.2 API PROTOCOL ...................................................................................................................... 10 
+3.2.1 Element Details ............................................................................................................... 11 
+3.3 AUTHENTICATION API: INPUT DATA FORMAT ........................................................................... 12 
+3.3.1 Element Details ............................................................................................................... 13 
+3.4 AUTHENTICATION API: RESPONSE DATA FORMAT.................................................................... 25 
+3.4.1 Element Details ............................................................................................................... 25 
+4. AUTHENTICATION TRANSACTION SECURITY ....................................................................... 30 
+4.1 AUTHENTICATION THROUGH PUBLIC DEVICES .......................................................................... 30 
+4.2 AUTHENTICATION THROUGH REGISTERED DEVICES ................................................................. 31 
+4.3 AUTHENTICATION AUDITS ....................................................................................................... 31 
+5. APPENDIX ................................................................................................................................... 32 
+5.1 RELATED PUBLICATIONS ............................................................................................................ 32 
+5.2 CHANGES IN VERSION 1.5 FROM VERSION 1.2 ................................................................................. 33 
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+1. Introduction 
+
+The Unique Identification Authority of India (UIDAI) has been created, with the 
+mandate of providing a Unique Identity (Aadhaar) to all Indian residents. The UIDAI 
+proposes to provide online authentication using demographic and biometric data. 
+
+ 
+
+Aadhaar “authentication” means the process wherein Aadhaar Number, along with 
+other attributes, including biometrics, are submitted to the Central Identities Data 
+Repository (CIDR) for its verification on the basis of information or data or documents 
+available with it. UIDAI will provide an online service to support this process. Aadhaar 
+authentication service only responds with a “yes/no” and no personal identity 
+information is returned as part of the response. 
+
+ 
+
+1.1 Target Audience and Pre-Requisites 
+
+This is a technical document and is targeted at software professionals working in 
+technology domain and interested in incorporating Aadhaar authentication into their 
+applications. 
+
+ 
+
+Before reading this document, readers are highly encouraged to read the following 
+documents to understand the overall system: 
+
+1. UIDAI Strategy Overview - 
+http://uidai.gov.in/UID_PDF/Front_Page_Articles/Documents/Strategy_Overveiw-001.pdf 
+2. The Demographic Data Standards and verification procedure Committee Report - 
+http://uidai.gov.in/UID_PDF/Committees/UID_DDSVP_Committee_Report_v1.0.
+pdf 
+3. The Biometrics Standards Committee Report - 
+http://uidai.gov.in/UID_PDF/Committees/Biometrics_Standards_Committee_report.pdf 
+4. From Exclusion to Inclusion with Micropayments - 
+http://uidai.gov.in/images/FrontPageUpdates/microatmstandardsv1.3.pdf 
+5. Aadhaar-Communicating to a billion : An Awareness and Communication Report 
+- http://uidai.gov.in/UID_PDF/Front_Page_Articles/Events/AADHAAR_PDF.pdf 
+
+
+ 
+
+ 
+
+
+ 
+
+1.2 Terminology 
+
+ 
+
+Authentication User Agency (AUA): An organization or an entity using Aadhaar 
+authentication as part of its applications to provide services to residents. Examples 
+include Government Departments, Banks, and other public or private organizations. All 
+AUAs (Authentication User Agencies) must be registered within Aadhaar authentication 
+server to perform secure authentication. 
+
+ 
+
+ 
+
+Sub-AUA (SA): An organization or a department or an entity having a business 
+relationship with AUA offering specific services in a particular domain. All 
+authentication requests emerging from an AUA contains the information on the specific 
+SA. For example, a specific bank providing Aadhaar enabled payment transaction 
+through NPCI as the AUA becomes the SA. Similarly, a state government being an AUA 
+can have the health department under them as the SA using Aadhaar authentication 
+while providing healthcare benefits. 
+
+ 
+
+ 
+
+Authentication Service Agency (ASA): An organization or an entity providing secure 
+leased line connectivity to UIDAI’s data centres for transmitting authentication requests 
+from various AUAs. All connections to production authentication servers must come 
+through private and secure connection through ASAs. Those AUAs who wish to provide 
+their connectivity can become their own ASA where as smaller AUAs who do not wish to 
+create direct leased line connection to UIDAI’s data centres can use an ASA. 
+
+ 
+
+ 
+
+Terminal Devices: Terminal devices are devices employed by SAs/AUAs (both 
+government and non-government) to provide services to the residents. Examples 
+include MicroATM devices, POS devices, PDS terminals, and MGNREGA terminals, and 
+Access Security devices. These devices will host the applications of the SA/AUA and 
+support biometric capture mechanism to capture biometrics of residents for 
+authentication purposes. Any additional features of these terminal devices would 
+depend on specific needs of services offered by SAs/AUAs. These devices must comply 
+with specifications issues by UIDAI to protect all the biometric and demographic 
+information provided by the residents. 
+
+ 
+
+ 
+
+Authentication Factors: Aadhaar authentication will support authentication using 
+multiple factors. These factors include demographic data, biometric data, PIN, OTP, 
+possession of mobile, or combinations thereof. Adding multiple factors may increase the 
+strength of authentication depending on the factors. Applications using Aadhaar 
+authentication need to choose appropriate authentication factors based on the 
+application needs. Currently, not all factors are implemented. 
+
+ 
+
+ 
+
+
+Matching Strategy: Various demographic and biometric matchers use fuzzy matching 
+and work on match thresholds and not on absolute digital (MATCH/NON-MATCH) 
+outputs, the interpretation of match scores to a MATCH or NON-MATCH needs to be 
+tuneable using matching strategy. Currently “Exact” and “Partial” matching strategies 
+are supported in English. Aadhaar authentication will provide matching of Indian 
+language data in future releases. 
+
+ 
+
+ 
+
+Registered and Public Devices: Term “Registered Devices” refers to devices which are 
+registered with Aadhaar system for encryption key management. Aadhaar 
+authentication server can individually identify and validate these terminals and manage 
+encryption keys on each registered device. Term “Public Devices” refers to devices 
+which are not registered with Aadhaar system and uses its own encryption key 
+generation scheme. Aadhaar authentication server does not individually identify public 
+devices and uses an alternate encryption strategy for them. 
+
+ 
+
+1.3 Legal Framework 
+
+UIDAI will develop necessary legal framework and processes around Aadhaar 
+authentication. These documents will specify AUA registration process and will detail 
+out their obligations, responsibilities and liabilities. These documents will be published 
+at a later date. 
+
+ 
+
+1.4 Objective of this document 
+
+This document provides Aadhaar Authentication API (Application Programming 
+Interface) specification. It contains details including API data format, protocol, and 
+security specifications. Current specification only covers authentication using public 
+devices. Registered device specification will follow. 
+
+ 
+
+
+2. Understanding Aadhaar Authentication 
+
+This chapter describes Aadhaar authentication, some of the envisioned usage scenarios, 
+and working details. Technical details follow in subsequent chapters. 
+
+ 
+
+2.1 Aadhaar Number 
+
+The Unique Identification (Aadhaar) Number, which identifies a resident, will give 
+individuals the means to clearly establish their identity to public and private agencies 
+across the country. Three key characteristics of Aadhaar Number are: 
+
+1. Permanency (Aadhaar number remains same during lifetime of a resident) 
+2. Uniqueness (one resident has one ID and no two residents have same ID) 
+3. Global (same identifier can be used across applications and domains) 
+
+
+ 
+
+Aadhaar Number is provided during the initiation process called enrolment where a 
+resident’s demographic and biometric information are collected and uniqueness of the 
+provided data is established through a process called de-duplication. Post de-
+duplication, an Aadhaar Number is issued and a letter is sent to resident informing the 
+details. 
+
+ 
+
+2.2 Aadhaar Authentication at a Glance 
+
+Aadhaar authentication is the process wherein Aadhaar Number, along with other 
+attributes, including biometrics, are submitted online to the CIDR for its verification on 
+the basis of information or data or documents available with it. 
+
+ 
+
+ 
+
+. In all forms of authentication the Aadhaar Number needs to be submitted so that 
+authentication is reduced to a 1:1 match. In addition, Aadhaar authentication service 
+only responds with a “yes/no” and no Personal Identity Information (PII) is returned 
+as part of the response. 
+
+..
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Aadhaar authentication provides several ways in which a resident can authenticate 
+themselves using the system. At a high level, authentication can be ‘Demographic 
+Authentication’ and/or ‘Biometric Authentication’. 
+
+ 
+
+During the authentication transaction, the resident’s record is first selected using the 
+Aadhaar Number and then the demographic/biometric inputs are matched against the 
+stored data which was provided by the resident during enrolment/update process. 
+Fingerprints in the input are matched against all stored 10 fingerprints. 
+
+ 
+
+
+2.3 Authentication in Practice 
+
+In a practice, if a delivery of a certain service requires that resident prove his/her 
+identity, then in such situations, an authentication process precede service delivery. 
+Authentication in a traditional sense could be carried out by verifying credentials 
+owned by the resident. These credentials could be physical documents such as an 
+identity card issued by agency, a passbook issued by a bank, or something similar. In 
+addition, demographic information of the resident, pin number, password, etc. that is 
+unique to residents may be used. Finally authentication can also be done by verifying 
+residents’ biometrics such as fingerprints or iris. 
+
+ 
+
+Authentication needs of these agencies vary based on the type of services and monetary 
+value of the services being delivered. For example, In order to let a beneficiary take 
+advantage of MGNREGA scheme, before beginning day’s work the resident may have to 
+provide the identity card issued by the agency that establishes the credentials of the 
+resident. However, for carrying out a money transaction such as collecting weekly 
+wages, the same agency may demand the beneficiary to provide fingerprint impression 
+which uniquely verifies the beneficiary against already stored impression of the 
+resident. In another example, during a bank transaction such as updating the bank 
+passbook, mere presentation of the passbook to the banking authorities may be 
+sufficient even if a third party produces the passbook. However during money 
+withdrawal, bank may demand physical record such as passbook or cheque uniquely 
+issued to resident along with unique signature of the resident which they can verify 
+with their records. Similarly to gain entry to a facility, a resident may have to produce a 
+photo identity card provided by establishment which carries the photograph of the 
+resident however, in order to gain entry to a high security facility, concerned agency 
+may verify the identity card, physical verify the photograph on the card and also 
+authenticity of the identity card itself. In all of the above examples, the resident provides 
+a physical identity such as an identity card or a passbook and for high value transactions 
+provides an identity unique to him/her such as a finger print, signature which can then 
+be verified against already collected records. 
+
+ 
+
+2.4 Aadhaar Authentication Usage 
+
+Aadhaar authentication enables agencies to verify identity of residents using an online 
+and electronic means where the agency collects required information from the resident 
+along with resident’s Aadhaar Number and passes the same to UIDAI systems for 
+verification. 
+
+ 
+
+Aadhaar authentication service provides services to instantly verify the identity of the 
+resident against the available data in CIDR. Based on the needs of the service, different 
+identifiers could be used along with Aadhaar Number. These identifiers could be 
+combination of biometrics (such as fingerprints, iris impressions) and/or demographic 
+information (such as Name, Date of birth, Address) and/or a secret PIN or OTP number 
+known only to the resident. 
+
+ 
+
+
+Aadhaar Number along with certain demographic information such as name of the 
+resident, date of birth, etc. helps to provides for simple authentication needs. For 
+example, when MGNREGA beneficiary is enrolled and given a job card, resident could be 
+biometrically authenticated against Aadhaar system to verify his/her Aadhaar number 
+along with name, address. 
+
+ 
+
+Combination of Aadhaar Number and biometrics deliver online authentication without 
+needing a card. During biometric authentication, agency will collect the Aadhaar 
+Number along with one or more biometric impressions (e.g., one or more fingerprints, 
+or iris impression alone or iris impression along with fingerprints). The information 
+collected could then be passed to Aadhaar authentication server for authenticating the 
+resident. 
+
+ 
+
+As in the above example, in order to withdraw his/her wages, MGNREGA service 
+beneficiary may be asked to provide Aadhaar Number and one or more fingerprint 
+impressions to authenticate and only then the cash is disbursed. In order to avail the 
+health benefits due to a resident, Aadhaar authentication could be used to verify the 
+identity of the resident across India and deliver the benefit irrespective of the location. 
+This could come very handy for migrant labourers who currently hold identity issued by 
+local agencies and may not be useful in other parts of the country. 
+
+ 
+
+By combining biometric and demographic information stored with Aadhaar system, 
+authentication of the resident could be strengthened. In addition, AUA specific factors 
+such as cards may also be used in conjunction with Aadhaar authentication. 
+
+ 
+
+2.5 Conclusion 
+
+Aadhaar authentication provides a convenient mechanism for all residents to establish 
+their identity. It provides a national platform for identity authentication and can be used 
+to deliver services effectively to residents across the country. 
+
+ 
+
+Rest of the document is technical in nature and is intended for software professionals 
+working with applications wanting to enable their applications to support Aadhaar 
+authentication. 
+
+ 
+
+ 
+
+
+3. Aadhaar Authentication API 
+
+This chapter describes the API in detail including the authentication flow, 
+communication protocol, and data formats. 
+
+ 
+
+3.1 Authentication Flow 
+
+Following diagram explains various authentication scenarios and data flow. 
+
+ 
+
+Scenario in the diagram is a typical authentication flow and is a case of an operator 
+assisted transaction at a PoS terminal: 
+1
+
+1. Resident provides Aadhaar Number, necessary demographic and biometric 
+details to terminal devices belonging to the AUA/SA (or merchant/operator 
+appointed by AUA/SA) to obtain a service offered by the AUA/SA. 
+2. Aadhaar authentication enabled application software that is installed on the 
+device packages these input parameters, encrypts, and sends it to AUA server 
+over either a mobile/broadband network using AUA specific protocol. 
+3. AUA server, after validation adds necessary headers (AUA specific wrapper XML 
+with license key, transaction id, etc.), and passes the request through ASA server 
+to UIDAI CIDR. 
+4. Aadhaar authentication server returns a “yes/no” based on the match of the 
+input parameters. 
+5. Based on the response from the Aadhaar authentication server, AUA/SA 
+conducts the transaction. 
+
+
+ 
+
+Scenario below depicts the resident conducting self-service transactions with 
+Aadhaar authentication on his/her mobile or on the Internet. 
+2
+
+1. In this case, transaction data is captured on the mobile/Internet application 
+provided by AUA/SA to residents 
+2. Resident provides necessary demographic data long with OTP (fingerprint is also 
+possible although not yet common on mobile or PCs) in addition to AUA specific 
+attributes (may be a domain specific account number, password, PIN, etc.) 
+3. Step 3, 4, and 5 are same as in scenario 1 above. 
+
+
+ 
+
+Scenario is a slight variant of 2nd scenario where AUA also plays the role of ASA and 
+has direct connectivity to UIDAI data centers. Scenario is how AUAs and application 
+developers can test Aadhaar authentication using the public URL. 
+3
+4
+
+
+C:\pramod\uid\architecture_appdev\auth_flow_1.5_rev1.jpg 
+
+
+Figure 1: Aadhaar authentication flow under various scenarios 
+
+ 
+
+3.2 API Protocol 
+
+Aadhaar authentication service is exposed as stateless service over HTTPS. Usage of 
+open data format in XML and widely used protocol such as HTTP allows easy adoption 
+and deployment of Aadhaar authentication. To support strong end to end security and 
+avoid request tampering and man-in-the-middle attacks, it is essential that encryption 
+of data happens at the time of capture on the capture device. 
+
+ 
+
+
+Following is the URL format for Aadhaar authentication service: 
+
+ 
+
+https://<host>/<ver>/<ac>/<uid[0]>/<uid[1]>/ 
+
+ 
+
+API input data should be sent to this URL as XML document using Content-Type 
+“application/xml” or “text/xml”. 
+
+ 
+
+.For security reason data collected for Aadhaar authentication must not be stored 
+in the devices or log files. It’s essential for SA and AUA to maintain audit records for 
+all the authentication request metadata along with the response...
+
+ 
+
+For all SSL communication the agencies should automatically validate the Aadhaar 
+certificates. Also on every SSL handshake agencies should validate the revocation list 
+online. 
+
+..
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+3.2.1 Element Details 
+
+host – Aadhaar authentication server address. Actual production server address will be 
+provided to ASAs and AUAs. Note that production servers can only be accessed through 
+secure leased lines. For development and testing purposes, public URL 
+“auth.uidai.gov.in” can be used. Application at AUA/ASA server should ensure that 
+actual URL is configurable. 
+
+ 
+
+ver – Authentication API version (optional). If not provided, URL points to current 
+version. UIDAI may host multiple versions for supporting gradual migration. As of this 
+specification, only valid version for production use is “1.5”. Older versions such as “1.0” 
+and “1.2” will be deprecated in near future. 
+
+ 
+
+ac – A unique code for the AUA which is assigned by UIDAI. This is an alpha-numeric 
+string having maximum length 10. (A default value “public” is available for testing.) 
+
+ 
+
+uid[0] and uid[1] – First 2 digits of Aadhaar Number. Used for load-balancing. 
+
+ 
+
+ 
+
+For all valid responses, HTTP response code 200 is used. All application error codes are 
+encapsulated in response XML element. In the case of connection and other server 
+errors, standard HTTP error response codes are used (4xx codes such as 403, 404, etc.). 
+HTTP automatic redirects also should be handled by ASA/AUA server. 
+
+ 
+
+. ASA server must set REMOTE_ADDR header of HTTP with ASA server’s static IP 
+address. Authentication system allows only white listed IP addresses. 
+
+..
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+. 
+
+
+3.3 Authentication API: Input Data Format 
+
+Aadhaar authentication uses XML as the data format for input and output. To avoid 
+sending unnecessary data, do not pass any optional attribute or element unless its value 
+is different from default value. Any bad data or extra data will be rejected. 
+
+ 
+
+Following is the XML data format for authentication API: 
+
+ 
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?> 
+
+<Auth uid=”” tid=”” ac=”” sa=”” ver=”” txn=”” lk=””> 
+
+ <Tkn type=”” num=””/> 
+
+ <Skey ci=””>encrypted and encoded session key</Skey> 
+
+ <Uses pi=”” pa=”” pfa=”” bio=”” bt=”” pin=”” otp=””/> 
+
+ <Data>encrypted and then encoded block</Data> 
+
+ <Hmac>SHA-256 Hash of Pid XML, encrypted and then encoded</Hmac> 
+
+ <Signature>Digital signature of AUA</Signature> 
+
+</Auth> 
+
+ 
+
+“Data” element contains “Pid” (Personal Identity Data) element which is a base-64 
+encoded encrypted block. Complete “Data” block should be encrypted at the time of 
+capture on the capture device. But, encoding (base-64) of “Data” block and packaging it 
+with enveloping XML under “Auth” element can either be done on the device or on the 
+AUA server based on the AUA needs. Device capability, protocol between devices and 
+AUA server, and data format used between devices and AUA server, etc. should be 
+considered for making that choice. 
+
+ 
+
+Following is the format for “Pid” element: 
+
+ 
+
+<Pid ts=”” ver=””> 
+
+ <Meta fdc=”” idc=”” apc=””> 
+
+ <Locn lat=”” lng=”” vtc=”” subdist=”” dist=”” state=”” pc=””/> 
+
+ </Meta> 
+
+ <Demo lang=””> 
+
+ <Pi ms=”E|P” mv=”” name=”” lname=”” lmv=”” gender=”M|F|T” dob=”” 
+dobt=”V|D|A” age=”” phone=”” email=””/> 
+
+ <Pa ms=”E” co=”” house=”” street=”” lm=”” loc=”” 
+
+ vtc=”” subdist=”” dist=”” state=”” pc=”” po=””/> 
+
+ <Pfa ms=”E|P” mv=”” av=”” lav=”” lmv=””/> 
+
+ </Demo> 
+
+ <Bios> 
+
+ <Bio type=”FMR|FIR|IIR” pos=””>encoded biometric</Bio> 
+
+ </Bios> 
+
+ <Pv otp=”” pin=””/> 
+
+</Pid> 
+
+ 
+
+ 
+
+
+3.3.1 Element Details 
+
+Element: Auth (mandatory) 
+
+. Root element of the input XML for authentication service. 
+
+
+ 
+
+Attributes: 
+
+. uid – (mandatory) Aadhaar Number of the resident 
+. tid – (mandatory) For Registered devices, send its unique Terminal ID. For 
+Public devices, value should be passed as “public”. 
+. ac – (mandatory) A unique code for the AUA which is assigned by UIDAI during 
+AUA registration process. This is an alpha-numeric string having maximum 
+length 10. (A Default value “public” is available only for testing.) 
+. sa – (mandatory) A unique “Sub-AUA” code. AUAs are expected to manage these 
+codes within their system and ensure uniqueness within their system. This 
+allows auditing and business intelligence to be provided at SA level. If AUA and 
+SA are same agency, use value of “ac” for this attribute. This is an alpha-numeric 
+string having maximum length 10. 
+. ver – (mandatory) version of the API. Currently only valid value is “1.5”. Support 
+for older version 1.2 will be removed soon. 
+. txn – (optional) AUA specific transaction identifier. AUA can choose to pass this 
+as part of input. This is returned as part of response as is. This is very useful for 
+linking transactions full round trip across systems. This is an alpha-numeric 
+string of maximum length 50. Only supported characters are A-Z, a-z, 0-9, period, 
+comma, hyphen, backward & forward slash, left & right parenthesis, and colon. 
+No other characters are supported. It is highly recommended that AUAs use this 
+attribute for correlating requests with responses for auditing and verification. 
+. lk – (mandatory) A valid “License Key” assigned to the AUA. Administration 
+portal of UIDAI will provide a mechanism for AUA administrator to generate 
+license keys and use it within the authentication. These license keys have expiry 
+built into them and AUA administrator need to ensure that they generate new 
+license keys before current ones expires through self-service portal. This is an 
+alpha-numeric string of length up to 64 characters. 
+
+
+ 
+
+ 
+
+Element: Tkn (optional) 
+
+. This element can be used to provide a valid token details which is provided to 
+resident such as mobile phone, NFC token, Smart Card, etc.. Currently, only the 
+mobile number is considered a valid token. This is useful for adding second 
+factor (“what resident has”) for a self-service transaction from the resident’s 
+registered mobile phone. 
+
+
+ 
+
+Attributes: 
+
+. type – (mandatory) Type of the token. Currently only valid value is “001” 
+representing mobile phone. UIDAI may add support for additional tokens such as 
+NFC card in future. 
+. num – (mandatory) Token Number. Currently it must be the registered mobile 
+number of the resident and must be derived from Telco network. If this feature 
+
+
+
+needs to be used, AUA must tie up with Telcos and derive the phone number 
+from which the transaction originates and populate that number. 
+
+
+ 
+
+ 
+
+Element: Data (mandatory) 
+
+. Contains the encrypted “Pid” element in base-64 encoding 
+
+
+ 
+
+ 
+
+Element: Hmac (mandatory) 
+
+. Devices which is constructing the “Pid” element must perform the following to 
+provide the Hmac value: 
+o After forming Pid XML, compute SHA-256 hash of Pid XML string 
+o Then encrypt using session key (skey) 
+o Then encode using base-64 encoding (as described earlier, encoding can 
+be done on the AUA server when forming final request XML) 
+
+
+
+
+ 
+
+Authentication server performs the following processing on each authentication 
+request: 
+
+1. Decode and Decrypt the Pid XML from Data element. 
+2. Re-compute the SHA-256 Hash of Pid XML as a string. 
+3. Decode and decrypt the value of Hmac element. 
+4. Compare the re-computed SHA-256 hash with Hmac value received in 
+authentication request. 
+a. If both values match, then, integrity of authentication request is 
+preserved and server will proceed with further processing of the 
+request. 
+b. If values do not match, reject the authentication request with error 
+code representing “HMAC Validation failed”. 
+
+
+
+
+ 
+
+ 
+
+Element: Signature (mandatory) 
+
+. In order to ensure that Auth XML was not tampered during its transit between 
+AUA servers and UIDAI Auth Servers, it is required that Auth XML be digitally 
+signed by AUA. X.509 certificate used by the AUA for the purposes of digital 
+signature should have been issued by a well-know Certification Authority, and 
+should be included in <Signature> of Auth request. 
+
+
+ 
+
+Auth server will validate each request by verifying the digital signature and the 
+Certification Authority of the AUA’s X.509 present in the digital signature. In 
+addition, Auth server will validate that one of the “O” elements in the X.509 
+certificate’s subject contains the AUA’s organization name as stored in UIDAI 
+database. 
+
+ 
+
+ 
+
+Element: Uses (mandatory) 
+
+. This element specifies the authentication factors used by the request. When an 
+authentication factor is specified in this element, that specific attribute must be 
+present in the encrypted data block. This is particularly useful in situations 
+
+
+
+where the AUA does not fully control the terminal device, but wishes to maintain 
+a certain level of control on the authentication transaction. 
+
+
+ 
+
+Attributes: 
+
+. pi – (mandatory) Valid values are “y” or “n”. If the value is “y” then at least one 
+attribute of element “Pi” (part of “Demo” element) should be used in 
+authentication. If value is “n", “Pi” element is not mandated. 
+. pa – (mandatory) Valid values are “y” or “n”. If the value is “y” then at least one 
+attribute of element “Pa” (part of “Demo” element) should be used in 
+authentication. If value is “n", “Pa” element is not mandated. 
+. pfa – (mandatory) Valid values are “y” or “n”. If the value is “y” then element 
+“Pfa” (part of “Demo” element) should be used in authentication. If value is “n", 
+“Pfa” element is not mandated. 
+. bio – (mandatory) Valid values are “y” or “n”. If the value is “y” then at least one 
+biometric element “Bio” (part of “Bios” element) should be used in 
+authentication. If value is “n", “Bio” element is not mandated. 
+. bt – (mandatory only if “bio” attribute has value “y”) provide a comma separated 
+list of biometrics used. Valid values that can be used in this comma separated list 
+are “FMR”, “FIR”, and “IIR”. If “FMR” is part of the list, then at least one “Bio” 
+element with type FMR should be used. Similarly, if “FIR” or “IIR” are part of the 
+list, then at least one “Bio” element with those types must be used. 
+. pin – (mandatory) Valid values are “y” or “n”. If the value is “y” then PIN should 
+be used in authentication. Otherwise, “pin” is not mandated. 
+. otp – (mandatory) Valid values are “y” or “n”. If the value is “y” then OTP should 
+be used in authentication. Otherwise, “otp” is not mandated. 
+
+
+ 
+
+ 
+
+Element: Skey (mandatory for Public devices) 
+
+. Value of this element is base-64 encoded value of encrypted 256-bit AES session 
+key. Session key should be dynamically generated and must not be reused across 
+transactions. See next chapter for encryption details. 
+
+
+ 
+
+Attributes: 
+
+. ci – (mandatory) Public key certificate identifier using which “skey” was 
+encrypted. UIDAI may have multiple public keys in field at the same time. Value 
+of this attribute is the certificate expiration date in the format “YYYYMMDD”. 
+Expiry date of the certificate can be obtained from the certificate itself. 
+
+
+ 
+
+ 
+
+Element: Pid (mandatory) 
+
+ 
+
+Attributes: 
+
+. ts – (mandatory) Timestamp at the time of capture of authentication input. This 
+is in format “YYYY-MM-DDThh:mm:ss” (derived from ISO 8601). Time zone 
+should not be specified and is automatically defaulted to IST (UTC +5.30). Since 
+this timestamp of capture plays a critical role in authentication, it is highly 
+recommended that devices are time synchronized with a time server. 
+
+
+
+ 
+
+.AUAs can buffer authentication requests and send it to Aadhaar authentication 
+server to support occasional lack of network connectivity on the field. Maximum time 
+up to which requests can be queued (buffered) will be defined by UIDAI policy. 
+During initial release, this will be configured to 24 hours. All requests with “ts” value 
+older than this limit will be rejected. 
+
+..
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+. ver – (mandatory) version of the “Pid” element. Currently only valid value is 
+“1.0”. Notice that this is NOT same as Auth API version. Since authentication 
+devices are responsible for generation of “Pid” XML, and there is a possibility 
+that if there is a change in the structure of “Pid” XML, all the devices may not 
+upgrade to latest software version. Since AUAs cannot inspect the “Pid” contents, 
+it is essential that “Pid” XML be allowed to evolve independently of “Auth” XML. 
+Any changes to “Pid” XML structure will result in newer version for “Pid” XML 
+element, and will not necessarily result in update to version of “Auth” XML. 
+
+
+ 
+
+ 
+
+Element: Meta (optional) 
+
+. This element specifies metadata related to the device and transaction. This is 
+made mandatory to ensure that, in future, when certification of the device and 
+application comes in, it can easily be incorporated by AUAs. 
+
+
+ 
+
+Attributes: 
+
+. fdc – (optional) Fingerprint device code. This is a unique code provided for the 
+fingerprint sensor-extractor combination. AUAs will have access to this code 
+through AUA portal. It is highly recommended that this is populated. 
+. idc – (optional) Iris device code. This is a unique code provided for the Iris 
+capture device. AUAs will have access to this code through AUA portal. It is 
+highly recommended that this is populated. 
+. apc – (optional) Application code. This is a unique code provided to the 
+application that is installed on the device and is used to conduct Aadhaar 
+authentication. AUAs will have access to this code through AUA portal. It is 
+highly recommended that this is populated. 
+
+
+ 
+
+ 
+
+Element: Locn (Optional) 
+
+. This element specifies metadata related to the location of the device. This is to 
+support enhanced fraud detection and analytics. 
+
+
+ 
+
+Attributes: 
+
+. lat – (optional) Latitude of the location where the device is currently being used. 
+. lng – (optional) Longitude of the location where the device is currently being 
+used. 
+. vtc – (optional) Village/Town/City code where the device is currently being 
+used. This code corresponds to the codification used for all resident addresses 
+throughout Aadhaar system. 
+
+
+
+. subdist – (optional) Sub District code where the device is currently being used. 
+This code corresponds to the codification used for all resident addresses 
+throughout Aadhaar system. 
+. dist – (optional) District code where the device is currently being used. This code 
+corresponds to the codification used for all resident addresses throughout 
+Aadhaar system. 
+. state – (optional) State code where the device is currently being used. This code 
+corresponds to the codification used for all resident addresses throughout 
+Aadhaar system. 
+. pc – (optional) Postal pin code where the device is currently being used. This 
+code corresponds to the codification used for all resident addresses throughout 
+Aadhaar system. 
+
+
+ 
+
+ 
+
+Element: Demo (optional) 
+
+. Contains child elements “Pi”, “Pa” and “Pfa”, all of which are optional. 
+. All demographic data fields as per KYR specifications. 
+
+
+ 
+
+Attributes: 
+
+. lang – (optional) “Indian Language Code” in the case of using Indian language 
+data for demographic match (see lname, lav attributes below). This must be a 
+valid language code from the following table. If the specified language is not 
+supported, “Unsupported language” error will be returned in Authentication 
+response. UIDAI may support more languages in the future. 
+
+
+ 
+
+Language 
+
+Language code 
+
+Assamese 
+
+01 
+
+Bengali 
+
+02 
+
+Gujarati 
+
+05 
+
+Hindi 
+
+06 
+
+Kannada 
+
+07 
+
+Malayalam 
+
+11 
+
+Manipuri 
+
+12 
+
+Marathi 
+
+13 
+
+Oriya 
+
+15 
+
+Punjabi 
+
+16 
+
+Tamil 
+
+20 
+
+Telugu 
+
+21 
+
+Urdu 
+
+22 
+
+
+
+ 
+
+ 
+
+Element: Pi (Optional) 
+
+. This element captures attributes related to “Personal Identity” 
+
+
+ 
+
+Attributes: 
+
+. ms – (optional) “Matching Strategy” for “name” attribute. Valid values are “E” 
+(Exact match) and “P” (Partial match). This is used only for “name” attribute. 
+Defaulted to “E”. 
+
+
+
+. mv – (optional) “Match value” for “name” attribute. Valid values are the integers 
+in the range 1 – 100 (inclusive). Default value is “100”. ”mv” attribute value 
+MUST be specified when matching strategy (“ms” attribute) is “P”. 
+
+
+ 
+
+It represents the percentage of full words from the name stored in Aadhaar 
+database that must be specified in the “name” attribute for the match to be 
+considered successful. See examples below as part of “name” attribute 
+description. 
+
+ 
+
+. name – (optional) Name of the resident in English. Maximum length is 60. 
+
+
+ 
+
+NOTE: If “ms” and/or “mv” are provided, but, “name” attribute is not provided or 
+empty value is provided, no name matching will be performed. 
+
+ 
+
+When using matching strategy “Exact” (ms=”E”), the name attribute is compared 
+for exact match with the name stored in Aadhaar database. Though comparison 
+is case insensitive, all the words of the name must be specified in the exact same 
+order as provided by the resident during Aadhaar enrolment. 
+
+ 
+
+When using matching strategy “Partial” (ms=”P”), the name attribute is 
+compared for partial match with the name stored in Aadhaar database based the 
+following rules: 
+
+ 
+
+1. Words from the name can appear in any order in the “name” attribute. 
+
+
+For example: If resident’s name is stored as “Anil Kumar Singh” in 
+Aadhaar database, then, any of the inputs - “Kumar Anil Singh”, “Anil 
+Singh Kumar”, “Singh Kumar Anil” or any other combinations – will result 
+in successful match. 
+
+ 
+
+2. Usage of specific titles is allowed in the “name” attribute. These are 
+ignored for matching purposes. Supported titles are “Mr”, “Mrs”, “Dr”, and 
+“Ms”. No other titles are currently supported. 
+
+
+For example: If resident’s name is stored as “Anita Agarwal” in Aadhaar 
+database, then, any of the inputs – “Dr. Anita Agarwal”, “Ms. Anita 
+Agarwal” or “Mrs Anita Agarwal” - will result in successful match, 
+
+ 
+
+3. Following special characters, if present in the “name” attribute, are 
+ignored during matching: 
+a. Period - (.) 
+b. Comma (,) 
+c. Hyphen (-) 
+d. Asterisk (*) 
+e. Opening and closing braces - ‘(‘ and ‘)’ 
+f. Opening and closing square brackets – ‘[‘ and ‘]’ 
+g. Apostrophes – ` 
+h. Single quotes – ‘ 
+i. Double quotes – “ 
+j. Forward slash - / 
+k. Backward slash - \ 
+
+
+
+
+
+l. Hash - # 
+m. Leading, trailing, and more than 1 contiguous spaces are 
+removed before matching 
+
+
+
+
+For example: If resident’s name is stored as “Anita Agarwal” in Aadhaar 
+database, then, “Agarwal, Anita” will result in successful match. 
+
+ 
+
+4. Input should not contain any additional words or initials that are not 
+present in Aadhaar database. This will result in unsuccessful match and 
+authentication failure. 
+
+
+For example: If resident’s name is stored as “Anita Agarwal” in Aadhaar 
+database, then, “Anita Kumari Agarwal” or “Anita Kumari” or “Anita K 
+Agarwal”, “Anita Agar Wal” will result in unsuccessful matches as the 
+words “Kumari”, “K”, “Agar” and “wal” are not present in the Aadhaar 
+database. 
+
+ 
+
+5. When used with “mv” value other than 100, then, inputs can have some 
+words omitted or initials can be used in place a full word. The match is 
+considered successful as long as input contains minimum number of 
+matching full words as determined by the value of “mv”. 
+
+
+For example: Let us say that resident’s name is stored as “Anil Kumar 
+Singh” in Aadhaar database, and “mv” value is specified as 60 percent. It 
+means at least 60% of total words must be matched. In the case of “Anil 
+Kumar Singh”, 60% of 3 (total words in name) is 1.8, rounded up to 2. 
+Thus, any of the following inputs will result in successful match: 
+
+a. “Anil Singh” – matches because of minimum 2 full words 
+b. “Singh, Kumar Anil” – matches because of minimum 2 full words 
+in any order and comma (,) is ignored. 
+c. “Anil K Singh” – matches because of minimum 2 full words in any 
+order and “K” is an initial of “Kumar”. 
+
+
+
+
+ 
+
+Following input will result in unsuccessful match: 
+
+a. “Anil” – does not match because number of words is less than 
+specified minimum. 
+b. “Anil K S” – does not match as initials are not counted as full words 
+and hence, number of matching full words is less than specified 
+minimum. 
+c. “Anil P Singh” – does not match as “P” is not an initial of any of the 
+words stored in database. 
+d. “Anil S Singh” – does not match as after matching full words “Anil” 
+and “Singh”, “S” does not match as initial of “Kumar”. 
+
+
+ 
+
+. lname – (optional) Resident’s name in Indian language. This is a Unicode String 
+in the language specified by the “lang” attribute of “Demo” element. Notice that 
+this is a phonetic matching against the data stored in CIDR. 
+
+
+ 
+
+NOTE: If this attribute is provided, “lang” attribute must be specified for “Demo” 
+element. 
+
+ 
+
+
+. lmv – (optional) Local Language Match Value to adjust phonetic match threshold. 
+This is a value between 1 and 100 (both inclusive). 
+. gender – (optional) Valid values are “M” for male, “F” for female, and “T” for 
+transgender. 
+. dob – (optional) Date of Birth in “YYYY-MM-DD” format. If only year needs to be 
+authenticated, then use format “YYYY”. 
+. dobt – (optional) Date of Birth Type as indicated in Aadhaar system. This 
+attribute can have only 3 values – “V” (for Verified), “D” (for Declared), and “A” 
+(Approximate). When the resident is enrolled, DoB may be recorded along with 
+any of these types. 
+. age – (optional) In certain use cases such as checking whether a resident can be 
+considered a senior citizen or whether a resident is an adult (age above or equal 
+to 18 years), it may be desired that only age of a resident can be verified using 
+Aadhaar Authentication instead of verifying against complete data of birth. When 
+“age” attribute is specified, authentication will pass if resident’s age is “equal to 
+or greater than” the input age. Else, it will fail with appropriate authentication 
+error code. 
+. phone – (optional) Registered mobile phone number of the resident. 
+. email – (optional) Registered email address of the resident. This is case-
+insensitive match removing trailing and leading spaces. 
+
+
+ 
+
+ 
+
+Element: Pa (Optional) 
+
+. This element captures attributes related to “Personal Address”. These are 
+address fields as provided by the resident during enrolment or later updates. 
+Only attributes that are sent as part of input will be compared. 
+. This element should not be used when using “Pfa” element as “Pa” and “Pfa” are 
+mutually exclusive. 
+
+
+ 
+
+Attributes: 
+
+All attributes are compared case insensitive after leading and trailing spaces are 
+trimmed and all the occurrences of consecutive spaces are replaced with single space. 
+
+. ms – (optional) “Matching Strategy” for address attributes. Only the value “E” 
+(Exact match) is supported. This is used only when at least one address attribute 
+is specified. 
+. co – (optional) “Care of” person’s name. 
+. house – (optional) House identifier. 
+. street – (optional) Street name. 
+. lm – (optional) Landmark if any. 
+. loc – (optional) Locality where resident resides. 
+. vtc – (optional) Name of village or town or city. 
+. subdist – (optional) Sub-District name. 
+. dist – (optional) District name. 
+. state – (optional) State name. 
+. pc – (optional) Postal pin code. 
+. po – (optional) Post Office name. 
+
+
+ 
+
+ 
+
+
+Element: Pfa (Optional) 
+
+. This element captures attributes related to “Personal Full Address”. It 
+corresponds to the address of the resident as present in enrolment receipt or 
+Aadhaar letter. 
+. This element should not be used when using “Pa” element as “Pa” and “Pfa” are 
+mutually exclusive. 
+
+
+ 
+
+ 
+
+Attributes: 
+
+. ms – (optional) “Matching Strategy” for address attributes. Valid values are “E” 
+(Exact match) and “P” (Partial match). 
+. mv – (optional) Valid values are integers in the range 1 -100 (inclusive). Default 
+value is “100”. It is used only when matching strategy (ms attribute) is “P” 
+(Partial match). 
+
+
+It represents the percentage of full words from the address stored in Aadhaar 
+database that must be specified in the “av” attribute for the match to be 
+considered successful, 
+
+. av – (mandatory) Resident’s full address specified as a single string value. 
+
+
+ 
+
+Normalization: 
+
+“av” value and the resident’s address stored in Aadhaar database, both are 
+normalized using following rules before comparison. 
+
+ 
+
+1. Following characters/phrases are ignored: 
+a. Period - (.) 
+b. Comma (,) 
+c. Hyphen (-) 
+d. Asterisk (*) 
+e. Opening and closing braces - ‘(‘ and ‘)’ 
+f. Opening and closing square brackets – ‘[‘ and ‘]’ 
+g. Apostrophes – ` 
+h. Single quotes – ‘ 
+i. Double quotes – “ 
+j. Forward slash - / 
+k. Backward slash - \ 
+l. Hash - # 
+m. Care of labels – C/O, S/O, D/O, W/O, H/O 
+n. “No.” 
+
+
+2. Leading and trailing spaces are trimmed and all the occurrences of 
+multiple consecutive spaces are replaced with single space. 
+
+
+ 
+
+When using matching strategy “Exact” (ms=”E”), the normalized “av” attribute is 
+compared for exact match with the normalized resident’s address stored in 
+Aadhaar database. 
+
+ 
+
+When using matching strategy “Partial” (ms=”P”), the normalized “av” attribute 
+is compared for partial match with the normalized resident’s address stored in 
+Aadhaar database. Following are the rules of partial match: 
+
+
+ 
+
+1. Words can appear in any order. 
+2. Following additional normalizations are applied to both the “av” value and 
+address stored in Aadhaar database: 
+a. Commonly used words are replaced with their shortened version: 
+I. “apartment” => “apt” 
+II. “street” => “st” 
+III. “road” => “rd” 
+IV. “main” => “mn” 
+V. “cross” => “crs” 
+VI. “sector” => “sec” 
+VII. “opposite” => “opp” 
+VIII. “market” => “mkt” 
+
+
+b. Suffixes typically used with numbers such as – st, nd, rd, th - are removed. 
+3. Example: 21st is converted to 21, 44th is converted to 44, etc. When used with 
+“mv” value other than 100, some of the words can be omitted in the input. 
+Match is considered successful if minimum number of full words that must 
+match, as determined by the “mv” value, are present in the input. 
+
+
+ 
+
+Examples: 
+
+Scenario: Matching strategy “P”, mv=”60” (60%) 
+
+ 
+
+Given following value as resident’s address stored in database, 
+
+ 
+
+c/o A K Singh, Apartment #12, Lake view meadows, Avenue street, Near 
+Swimming pool, Rajajinagar, Bangalore, Karnataka, 560055 
+
+ 
+
+Following will be the normalized address. 
+
+ 
+
+a k singh apt 12 lake view meadows avenue st near swimming pool 
+rajajinagar bangalore karnataka 560055 
+
+ 
+
+Following are examples of matching and their result: 
+
+1. “s/o A K singh, Lake view meadows, apt #12, avenue st, Karnataka - 
+560055” will be normalized to “a k singh lake view meadows apt 12 
+avenue st karnataka 560055” – which results in successful match as 12 
+words are matched (more than 11 which is rounded 60% of total 
+words 17). 
+2. “s/o A K singh, Lake view meadows Bangalore 560055” will be 
+normalized to “a k singh lake view meadows Bangalore 560055” – 
+which results in unsuccessful match since only 8 words are matched 
+where as a minimum of 11 was requested (60% match value). 
+
+
+ 
+
+. lav – (optional) Resident’s Address in Indian language. This is similar to “av” 
+attribute described above except that this is represented in an Indian language. 
+This will be matched against address data available in the CIDR database. If this 
+attribute is provided, “lang” attribute must be specified for “Demo” element. 
+
+
+ 
+
+
+. lmv – (optional) Local Language Match Value to adjust phonetic match threshold. 
+This is a value between 1 and 100 (both inclusive). 
+
+
+ 
+
+ 
+
+Element: Bios – (optional) 
+
+. This element can have one or many “Bio” elements carrying biometric records to 
+be matched. 
+
+
+ 
+
+ 
+
+Element: Bio (optional) 
+
+. base 64 encoded biometric record 
+
+
+ 
+
+ 
+
+Attributes: 
+
+. type – (optional) This attribute specifies type of the biometric. Valid values are 
+“FMR” (Finger Minutiae), “FIR” (Finger Image), and “IIR” (Iris Image). Defaulted 
+to “FMR”. 
+o FMR - The biometric data is of type “Fingerprint Minutiae Record”. This 
+data is in ISO minutiae format with no proprietary extensions allowed. 
+o FIR - The biometric data is of type “Fingerprint Image Record”. The data is 
+a fingerprint image packaged in ISO 19794-4 format, which could contain 
+a compressed or uncompressed image, of type PNG, WSQ, or Jpeg2000. 
+o IIR - The biometric data is of type “Iris Image Record”. The data is an iris 
+image packaged in ISO 19794-6 format, which could contain a 
+compressed (or uncompressed) image, which could be of type PNG, or 
+Jpeg2000. 
+
+
+. pos – (optional) In order to reduce the unnecessary matching of biometric 
+templates, it is desirable that authentication request contain the biometric 
+position along with biometric templates. Default value is “UNKNOWN”. 
+
+
+ 
+
+“pos” attribute can have following values: 
+
+LEFT_IRIS 
+
+RIGHT_IRIS 
+
+BOTH_IRIS 
+
+LEFT_INDEX 
+
+LEFT_LITTLE 
+
+LEFT_MIDDLE 
+
+LEFT_RING 
+
+LEFT_THUMB 
+
+RIGHT_INDEX 
+
+RIGHT_LITTLE 
+
+RIGHT_MIDDLE 
+
+RIGHT_RING 
+
+RIGHT_THUMB 
+
+BOTH_THUMBS 
+
+LEFT_SLAP 
+
+RIGHT_SLAP 
+
+UNKNOWN 
+
+
+
+ 
+
+
+ 
+
+Element: Pv (optional) 
+
+. This element (“Pin Value”) is used to support additional secret “pin” or “otp” or 
+both for supporting multi-factor authentication. 
+
+
+ 
+
+Attributes: 
+
+. pin – (optional) Actual value of PIN as set by resident. This attribute contains a 6 
+digit numeric value. 
+. otp – (optional) Most recently activated challenge-response OTP value for 
+resident. This attribute contains a 6 digit numeric value. Unlike PIN, OTP is a one-
+time usage token. 
+
+
+ 
+
+ 
+
+.As per UIDAI security policy, if number of failed attempts crosses upper limit, 
+Aadhaar record may be put on hold. The upper limit is dynamically computed based 
+on various heuristics and is not a static number. 
+
+..
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+3.4 Authentication API: Response Data Format 
+
+Authentication API does not provide any identity data as part of the response. All it does 
+is to match given input and respond with a “yes/no”. Response XML is as follows: 
+
+ 
+
+<AuthRes ret=”y|n” code=”” txn=”” err=”” info=”” ts=””> 
+
+ <Signature xmlns="http://www.w3.org/2000/09/xmldsig#"> 
+
+ <SignedInfo> 
+
+ <CanonicalizationMethod 
+
+ Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /> 
+
+ <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-
+sha256" /> 
+
+ <Reference URI=""> 
+
+ <Transforms> 
+
+ <Transform 
+
+ Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-
+signature" /> 
+
+ </Transforms> 
+
+ <DigestMethod 
+Algorithm="http://www.w3.org/2000/09/xmldsig#sha256"/> 
+
+ <DigestValue></DigestValue> 
+
+ </Reference> 
+
+ </SignedInfo> 
+
+ <SignatureValue></SignatureValue> 
+
+ </Signature> 
+
+</AuthRes> 
+
+ 
+
+Agencies that use the authentication response need a mechanism to validate the 
+authenticity of the authentication response for non-repudiation purposes. In order to 
+enable verification and audit, authentication response will be digitally signed by UIDAI 
+and the signature will be part of the response. AUAs are expected to preserve the entire 
+response XML for non-repudiation purposes. 
+
+ 
+
+3.4.1 Element Details 
+
+Element: AuthRes 
+
+ 
+
+Attributes: 
+
+. ret – this is the main authentication response. It is either “y” or “n”. 
+. code – unique alphanumeric “authentication response” code having maximum 
+length 40. AUA is expected to store this for future reference for handling any 
+disputes. Aadhaar authentication server will retain authentication trail only for a 
+short period of time as per UIDAI policy. After that period, older authentication 
+trails will be deleted. If the input is “not” processed due to errors such as 
+decryption, wrong hmac value, etc., a value of “NA” will be returned. Once the 
+integration is tested, this should not happen. But, due to some transmission 
+errors or changes in deployments, if code is returned as “NA”, AUAs may retry 
+the transaction and if it continues to fail, may report to UIDAI technical support. 
+. txn – Authenticator specific transaction identifier. This is exactly the same value 
+that is sent within the request. 
+. ts – Timestamp when the response is generated. This is of type XSD dateTime. 
+
+
+
+. info – This attribute provides meta information on the details included in auth. 
+This can be up to 128 characters and is composed of the following parts: 
+
+
+ 
+
+<Version><SHA-256 of Aadhaar Number><SHA-256 of Demo element><Encoded 
+Usage Data> 
+
+ 
+
+. “Version” – is the version of the info structure. Currently “01” 
+. “SHA-256 of Aadhaar Number” – is the SHA-256 hash value of Aadhaar 
+Number provided as part of input 
+. “SHA-256 of Demo Element” – is the SHA-256 hash value of “Demo” 
+element, as a String. 
+. “Encoded Usage Data” - is 48 bit representation in HEX format of the 
+various attribute usage of this authentication request. 
+
+
+ 
+
+Hexadecimal digits within the “Encoded Usage Data” should be interpreted based 
+on below rules: 
+
+ 
+
+1st hexadecimal digit: 
+
+Bit 3-0: Version number of encoding. It will be hexadecimal “1” (binary: 0001) 
+for encoding specified in this document. 
+
+ 
+
+2nd hexadecimal digit: 
+
+Bit 3: Was “Pi->name” attribute used? 
+
+Bit 2: Was “Pi->lname” attribute used? 
+
+Bit 1: Was “Pi->gender” attribute used? 
+
+Bit 0: Was “Pi->dob” attribute used? 
+
+ 
+
+3rd hexadecimal digit: 
+
+Bit 3: Was “Pi->phone” attribute used? 
+
+Bit 2: Was “Pi->email” attribute used? 
+
+Bit 1: Was “Pi->age” attribute used? 
+
+Bit 0: Was “Pa->co” attribute used? 
+
+ 
+
+4th hexadecimal digit: 
+
+Bit 3: Was “Pa->house” attribute used? 
+
+Bit 2: Was “Pa->street” attribute used? 
+
+Bit 1: Was “Pa->lm” attribute used? 
+
+Bit 0: Was “Pa->loc” attribute used? 
+
+ 
+
+5th hexadecimal digit: 
+
+Bit 3: Was “Pa->vtc” attribute used? 
+
+Bit 2: Was “Pa->dist” attribute used? 
+
+Bit 1: Was “Pa->state” attribute used? 
+
+Bit 0: Was “Pa->pc” attribute used? 
+
+ 
+
+6th hexadecimal digit: 
+
+Bit 3: Was “Pfa->av” attribute used? 
+
+Bit 2: Was “Pfa->lav” attribute used? 
+
+
+Bit 1: Was “FMR” used for biometric auth? 
+
+Bit 0: Was “FIR” used for biometric auth? 
+
+ 
+
+7th hexadecimal digit: 
+
+Bit 3: Was “IIR” used for biometric auth? 
+
+Bit 2: Was “Pv->pin” attribute used? 
+
+Bit 1: Was “Pv->otp” attribute used? 
+
+Bit 0: Was “Tkn” used? 
+
+ 
+
+8th hexadecimal digit: 
+
+Bit 3: Was “Pa->po” attribute used? 
+
+Bit 2: Was “Pa->subdist” attribute used? 
+
+Bit 1: Was “Pi->dobt” attribute used? 
+
+Bit 0: Unused 
+
+ 
+
+9th to 12th Hexadecimal digits: 
+
+Currently unused. Will have value 0. 
+
+ 
+
+For example, if an authentication is done for Aadhaar Number “123412341234” 
+and using demographic attributes “Name”, “Gender”, “DoB”, “Phone”, along with 
+biometric FMR and OTP; 
+
+ 
+
+<Pid ts=”public” ver=”1.0”><Demo><Pi ms=”E” name=”Anand John” 
+gender=”M” dob=”19690126” phone=”9999912345”/></Demo><Bios> 
+<Bio type=”FMR”> 
+YjRmYmJkMTZkZGQ4OGQxYTY5YjI0M2ZiYjU4YTFlNmQwMmQ1YTgyYjNmODU4YTMzYzQyZmNhOWUxN2QwNGVhNGMyMzExZjUyYmY4NjA5ZDVkZDY4YWU2NWE4OTNjNTMNTJiM2U1YzQ5YTZkMGM2NzkyYTJlOGNhMTMxNDg0YWQ2MWM1ZGYzZGU0MTAzNzExZWVlN2E0MjU4ZjQ3ODg3NTU3ZWNmYzcwY2NkM2QwZmIzZjg5OTg3NjEzNzA3ZDlZjkyMWU3NTc3OGU2NGJkMmM3MDhiNGQ4NDgyZGJmMGM3YjY3ZGZkZGZkNjIyNzgwMTllNjhhMmI4MjQxZWY0MA== 
+
+</Bio></Bios><Pv otp=”111111”/></Pid> 
+
+ 
+
+then the value of the “info” attribute will be: 
+
+“0166c782e8f95ba958f28adaae576c42a263c2449af416fb844499bef7fd41b2d00212be474bf2a6bfd4f361389ae66809babc144829129ae2315d6bab02045aa1B8002200000” 
+
+Where: 
+
+. “01” – is the version of info structure 
+. “66c782e8f95ba958f28adaae576c42a263c2449af416fb844499bef7fd41b2d0” – is the SHA-256 hash of Aadhaar Number 
+. “0212be474bf2a6bfd4f361389ae66809babc144829129ae2315d6bab020455aa” – is the SHA-256 hash of “Demo” element (as a String) 
+. “1B8002200000” (binary bits 
+“000110111000000000000010001000000000000000000000”) – is the 
+encoded usage data representing usage of Name, Gender, DoB, Phone, 
+FMR, and OTP portions within authentication request 
+
+
+ 
+
+
+. err – Failure error code. If authentication fails (“ret” attribute value is “n”), this 
+attribute provides any of the following codes: 
+o “100” – “Pi” (basic) attributes of demographic data did not match. 
+o “200” – “Pa” (address) attributes of demographic data did not match 
+o “300” – Biometric data did not match 
+o “500” – Invalid encryption 
+o “510” – Invalid Auth XML format 
+o “511” – Invalid PID XML format 
+o “520” – Invalid device 
+o “530” – Invalid authenticator code 
+o “540” – Invalid version 
+o “550” – Invalid “Uses” element attributes 
+o “561” – Request expired (“Pid->ts” value is older than N hours where N is 
+a configured threshold in authentication server) 
+o “562” – Timestamp value is future time (value specified “Pid->ts” is ahead 
+of authentication server time beyond acceptable threshold) 
+o “563” – Duplicate request (this error occurs when exactly same 
+authentication request was re-sent by AUA) 
+o “564” – HMAC Validation failed 
+o “565” – License key has expired 
+o “566” – Invalid license key 
+o “567” – Invalid input (this error occurs when some unsupported 
+characters were found in Indian language values, “lname” or “lav”) 
+o “568” – Unsupported Language 
+o “569” – Digital signature verification failed (this means that 
+authentication request XML was modified after it was signed) 
+o “570” – Invalid key info in digital signature (this means that certificate 
+used for signing the authentication request is not valid – it is either 
+expired, or does not belong to the AUA or is not created by a well-known 
+Certification Authority) 
+o “571” – PIN Requires reset (this error will be returned if resident is using 
+the default PIN which needs to be reset before usage) 
+o “572” – Invalid biometric position (This error is returned if biometric 
+position value - “pos” attribute in “Bio” element - is not applicable for a 
+given biometric type - “type” attribute in “Bio” element.) 
+o “573” – Pi usage not allowed as per license 
+o “574“ - Pa usage not allowed as per license 
+o “575“ - Pfa usage not allowed as per license 
+o “576” - FMR usage not allowed as per license 
+o “577” – FIR usage not allowed as per license 
+o “578” – IIR usage not allowed as per license 
+o “579” – OTP usage not allowed as per license 
+o “580” – PIN usage not allowed as per license 
+o “581” – Fuzzy matching usage not allowed as per license 
+o “582” – Local language usage not allowed as per license 
+o “700” – Invalid demographic data 
+o “710” – Missing “Pi” data as specified in “Uses” 
+o “720” – Missing “Pa” data as specified in “Uses” 
+o “721” – Missing “Pfa” data as specified in “Uses” 
+
+
+
+
+
+o “730” – Missing PIN data as specified in “Uses” 
+o “740” – Missing OTP data as specified in “Uses” 
+o “800” – Invalid biometric data 
+o “810” – Missing biometric data as specified in “Uses” 
+o “811” – Missing biometric data in CIDR for the given Aadhaar number 
+o “820” – Missing or empty value for “bt” attribute in “Uses” element 
+o “821” – Invalid value in the “bt” attribute of “Uses” element 
+o “901” – No authentication data found in the request (this corresponds to 
+a scenario wherein none of the auth data – Demo, Pv, or Bios – is present) 
+o “902” – Invalid “dob” value in the “Pi” element (this corresponds to a 
+scenarios wherein “dob” attribute is not of the format “YYYY” or “YYYY-
+MM-DD”, or the age of resident is not in valid range) 
+o “910” – Invalid “mv” value in the “Pi” element 
+o “911” – Invalid “mv” value in the “Pfa” element 
+o “912” – Invalid “ms” value 
+o “913” – Both “Pa” and “Pfa” are present in the authentication request (Pa 
+and Pfa are mutually exclusive) 
+o “930 to 939” – Technical error that are internal to authentication server 
+o “940” – Unauthorized ASA channel 
+o “941” – Unspecified ASA channel 
+o “980” – Unsupported option 
+o “999” – Unknown error 
+
+
+
+
+ 
+
+Element: Signature 
+
+This is the root element of digital signature. 
+
+SignedInfo: Contains information canonicalization and signature algorithms 
+used for signature. 
+
+CanonicalizationMethod: specifies the canonicalization algorithm 
+applied to the SignedInfo element prior to performing signature 
+calculations. 
+
+SignatureMethod: Specifies the algorithm used for signature generation 
+and validation. 
+
+Reference: Reference is an element that may occur one or more times. It 
+specifies a digest algorithm and digest value, and optionally an identifier 
+of the object being signed, the type of the object, and/or a list of 
+transforms to be applied prior to digesting. The identification (URI) and 
+transforms describe how the digested content (i.e., the input to the digest 
+method) was created. 
+
+Transforms: Describes how the signer obtained the data object that was 
+digested. 
+
+DigestMethod: DigestMethod is a required element that identifies the 
+digest algorithm to be applied to the signed object. 
+
+DigestValue: It contains the base64 encoded value of the digest. Digest is 
+generated by applying “DigestMethod” on the XML content being signed. 
+
+SignatureValue: This element contains the actual value of digital signature, and 
+is base64 encoded. 
+
+ 
+
+For more details, refer: http://www.w3.org/TR/xmldsig-core/ 
+
+
+4. Authentication Transaction Security 
+
+Broadly, Aadhaar authentication requests can be originated from either a “Registered” 
+or a “Public” device. This specification only describes security related to Public devices. 
+Registered Devices specification will be published at a later date. 
+
+ 
+
+4.1 Authentication through Public Devices 
+
+This approach is applicable to devices without a secured container to store the keys. In 
+this approach it is assumed that the connectivity from the device to the authenticator is 
+using a secure protocol such as HTTPS. 
+
+ 
+
+UIDAI provides a reference implementation of authentication client library for 
+packaging and encrypting authentication data block in Java programming language. 
+UIDAI may also provide other language implementations as necessary. Developers will 
+be able to download these libraries along with UIDAI public key, all digitally signed by 
+UIDAI for use within their application. Development community is encouraged to 
+develop other programming language bindings and submit to UIDAI. 
+
+ 
+
+For Public devices, data should be encrypted with a dynamic session key using AES-256 
+symmetric algorithm (AES/ECB/PKCS7Padding). Session key, in turn, is encrypted with 
+2048-bit UIDAI public key using asymmetric algorithm (RSA/ECB/PKCS1Padding). 
+Reference implementation demonstrates this in detail. Session key must not be reused 
+across transactions. When using Public devices, it is highly recommended that a one-
+time pin (OTP) is used. OTP is retrieved from the UID server as an SMS or Email request 
+before initiating the transaction. 
+
+ 
+
+The encryption flow is as defined below: 
+
+ 
+
+1. If OTP is used, the request for OTP is sent to Aadhaar server along with Aadhaar 
+Number. Aadhaar Authentication server sends the OTP back to the resident’s 
+registered mobile phone as an SMS or to the registered Email address. 
+2. Aadhaar Number, demographic, and biometric details as required by the 
+application are entered into the device along with other factors such as OTP / 
+PIN if they are used. 
+3. AUA/SA provided application on the device generates a one-time session key. 
+4. The authentication “Data” XML block is encrypted using the one-time session key 
+and then encoded (base 64). 
+5. The session key is then encrypted with the UIDAI public key. 
+6. AUA application on the device sends the encrypted block along with HMAC data 
+to AUA server. 
+7. AUA server forms the final authentication XML input for API including license 
+key, transaction reference (“txn” attribute), and sends the data to Aadhaar 
+authentication server either directly or through an ASA network. 
+
+
+
+8. Aadhaar authentication server decrypts session key with the UIDAI private key. 
+The data block is then decrypted using the session key. 
+9. The resident’s decrypted biometric, demographic information, and optional OTP 
+is taken into account during match. 
+10. Aadhaar authentication server responds with a “yes/no” as part of the response 
+XML. 
+
+
+ 
+
+4.2 Authentication through Registered Devices 
+
+Specification for registered devices is under development. Please refer to UIDAI website 
+for all specifications. 
+
+ 
+
+4.3 Authentication Audits 
+
+Aadhaar authentication will record all the authentication requests and their responses 
+for audit purposes. By providing the Aadhaar number and authentication response code 
+(“code” attribute in “AuthRes”), AUAs can request UIDAI to confirm the result of an 
+authentication and authentication factors that were presented in that authentication 
+request. UIDAI policy will determine how long these audits are maintained within CIDR. 
+
+ 
+
+All authentication responses are digitally signed by UIDAI and AUA’s are recommended 
+to validate the response integrity the keep track of these for audit purposes. In addition, 
+attributes “info” and “hmac” of authentication response can be used to verify the usage. 
+3rd party applications can self-verify the authenticity of the response. 
+
+ 
+
+ 
+
+ 
+
+
+5. Appendix 
+
+5.1 Related Publications 
+
+The following standards are applicable and related to the information in this document. 
+
+ 
+
+Demographic Data Standards 
+
+http://uidai.gov.in/UID_PDF/Committees/UID_DDSVP_Committee_Report_v1.0.pdf 
+
+Biometric Standards 
+
+http://uidai.gov.in/UID_PDF/Committees/Biometrics_Standards_Committee_report.pdf 
+
+Aadhaar biometric APIs 
+
+http://uidai.gov.in/UID_PDF/Working_Papers/
+Aadhaar_ABIS_API.pdf 
+
+Data Encryption Algorithm 
+
+ANXI X3.92 
+
+Banking—Retail Financial Services 
+Symmetric Key Management 
+
+ANSI X9.24 
+
+Public Key Cryptography for the Financial 
+Service Industry: Agreement of Symmetric 
+Keys Using Discrete Cryptography 
+
+ANSI X9.42 
+
+Triple Data Encryption Algorithm: Modes 
+of Operation 
+
+ANSI X9.52 
+
+Security Requirements for Cryptographic 
+Modules 
+
+FIPS PUB 140-2 
+
+Personal Identification Number (PIN) 
+Management and Security 
+
+ISO 9564 
+
+Information Technology – Security 
+Techniques – Hash Functions 
+
+ISO 10118 
+
+Information Technology – Security 
+Techniques – Key Management 
+
+ISO 11770 
+
+Information Technology – Security 
+Techniques – Encryption Algorithms 
+
+ISO 18033 
+
+Biometric standards 
+
+ISO 19794-4, ISO 19794-6 
+
+Date and Time format standard 
+
+ISO_8601 
+
+XML Signature 
+
+http://www.w3.org/TR/xmldsig-core/ 
+
+Indian e-governance standard for 
+Metadata and Data standards for Person 
+and Land Region codification 
+
+http://egovstandards.gov.in/standardsandFramework/metadata-and-data-
+standards/MDDS_Standard_release_version_1.0__Dec_24_2k9.pdf 
+
+
+
+ 
+
+ 
+
+
+5.2 Changes in Version 1.5 from Version 1.2 
+
+Old (1.2) 
+
+New (1.5) 
+
+No concept of Sub-AUA and ASA 
+existed 
+
+Introduced the concept of “Sub-AUA” and ASA (see section 
+1.2 and section 3.3.1) 
+
+Auth URL did not contain version 
+number 
+
+Auth URL now includes version number allowing UIDAI to 
+host multiple versions at the same time (see section 3.2 
+and subsection 3.2.1) 
+
+“ver” attribute was optional 
+
+“ver” attribute is made mandatory to enforce strict version 
+compatibility (see section 3.3.1) 
+
+No concept of AUA license keys 
+existed 
+
+Introduced the concept of AUA specific license keys with 
+expiry built in (see section 3.3.1) 
+
+Did not handle mobile number or 
+other tokens to be used as a 
+second factor 
+
+Introduced “Tkn” element that allow AUAs to insert 
+mobile number derived from Telco network to assert 
+passion of mobile (see section 3.3.1) 
+
+Authentication request had no 
+built-in scheme for integrity 
+verification 
+
+Introduced mandatory Hmac and Signature elements to 
+verify integrity and source of data (see section 3.3.1 for 
+definitions of elements “Hmac” and “Signature”) 
+
+“Pid” element generated on the 
+device had no versioning 
+
+Introduced separate versioning for “Pid” element allowing 
+devices with multiple versions to co-exist on the field (see 
+section 3.3.1 for “ver” attribute of “Pid” element) 
+
+Public key used for session key 
+encryption had no key identifier 
+
+Added “ci” attribute to “Skey” element to specify the 
+certificate identifier to allow multiple valid public keys to 
+co-exist 
+
+No support for local language 
+matching of name and address 
+
+Supports local Indian language strings to be phonetically 
+matched with stored data using “lang” attribute of “Demo” 
+element as well as “lname” and “lav” attributes (see 
+section 3.3.1 for details) 
+
+Did not support age matching 
+
+Introduced matching of age in addition to exact DoB (see 
+section 3.3.1 for “age” attribute under “Pi” element) 
+
+DoB Type could not be 
+authenticated 
+
+DoB Type can be authenticated (see section 3.3.1 for 
+“dobt” attribute under “Pi” element) 
+
+No meta data regarding FP 
+sensor/extractor, Iris capture 
+device, application, and location 
+
+Optional “Meta” element added under element for better 
+fraud detection and analytics 
+
+Did not support finger/iris 
+position to be specified for 
+biometric element 
+
+Allows optional attribute “pos” which provide the hint to 
+the system. Although position is specified, it will be 
+matched against all finger/iris template stored in the 
+database (see section 3.3.1 under “Bio” element definition) 
+
+PO Name and Sub District were 
+not provided for matching 
+
+PO Name and Sub District attributes are now supported 
+(see “Pa->po” and “Pa->subdist” attribute) 
+
+Response did not provide any 
+information on what kind of 
+authentication was used 
+
+Authentication response now includes meta information 
+attribute “info” that can be used for audits and claim 
+verifications (see section 3.4 and 3.4.1). 
+
+Response did not include 
+timestamp 
+
+“ts” attribute is included in authentication response for 
+audit purposes (see section 3.4 and subsection 3.4.1) 
+
+Response was not digitally signed 
+
+Authentication response is digitally signed (see section 3.4 
+and subsection 3.4.1) 
+
+Used 128-bit AES session key and 
+1024-bit public key 
+
+Now uses 256-bit AES session key and 2048-bit UIDAI 
+public key for PID block encryption 
+
+-- 
+
+More error codes introduced (see section 3.4.1) 
+
+
+
+ 
+
+
