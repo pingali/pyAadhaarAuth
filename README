@@ -1,4 +1,48 @@
 
+The basic requirement is to generate XML messages to be sent 
+to the auth server and processing the received messages. This 
+can be achieved in multiple ways: 
+
+1. Write custom code to build the XML around the xml.domutils 
+module provided by core python 
+
+2. Build a XSD and use a class generator from that. This makes life
+easier but it is lot more sensitive to the structure and evolution
+of the XSD, and is intolerant of XSD-incompatible  messages from the 
+server. There are three 'objectify' modules 
+  (a) Gnosis Utils 
+  (b) lxml 
+  (c) generateDS 
+
+3. Build a JSON eventually turn the JSON into XML. This has the
+advantage that json handling is much easier. 
+
+The problem is that there is no XSD defined for UID as yet. 
+
+It might make sense to go with a 
+
+$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
+$ sudo pip install lxml 
+$ sudo pip install pyxmlsec 
+$ sudo pip install pyxb 
+
+$ wget http://gnosis.cx/download/Gnosis_Utils-1.2.2.tar.gz
+$ tar zxvf Gnosis_Utils-1.2.2.tar.gz 
+$ cd Gnosis_Utils 
+$ Apply the following patch 
+--- setup.py.orig	2011-10-29 21:42:24.850114295 +0530
++++ setup.py	2011-10-29 21:42:34.850114291 +0530
+@@ -205,7 +205,7 @@
+ copy_all_files = 1
+ 
+ def copy_extra_files():
+-    destroot = glob(os.path.join('build','lib'))[0]
++    destroot = os.path.join('build','lib')
+ 
+     # go through MANIFEST to see what is supposed to be under build directory
+     print "Copying extra files to %s ..." % destroot
+$ sudo python setup.py build 
+$ sudo python setup.py install
 
 Validating XML against DTD
 ihttp://code.activestate.com/recipes/220472/
