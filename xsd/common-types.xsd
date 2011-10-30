@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DISCLAIMER: The sample code or utility or tool described herein
+     is provided on an "as is" basis, without warranty of any kind.
+     UIDAI does not warrant or guarantee the individual success
+     developers may have in implementing the sample code on their
+     environment. 
+     
+     UIDAI does not warrant, guarantee or make any representations
+     of any kind with respect to the sample code and does not make
+     any representations or warranties regarding the use, results
+     of use, accuracy, timeliness or completeness of any data or
+     information relating to the sample code. UIDAI disclaims all
+     warranties, express or implied, and in particular, disclaims
+     all warranties of merchantability, fitness for a particular
+     purpose, and warranties related to the code, or any service
+     or software related thereto. 
+     
+     UIDAI is not responsible for and shall not be liable directly
+     or indirectly for any direct, indirect damages or costs of any
+     type arising out of use or any action taken by you or others
+     related to the sample code.
+     
+     THIS IS NOT A SUPPORTED SOFTWARE.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.uidai.gov.in/authentication/common/types/1.0"
+	xmlns:tns="http://www.uidai.gov.in/authentication/common/types/1.0"
+	elementFormDefault="qualified">
+
+	<xs:simpleType name="uid">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{12}"></xs:pattern>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="pin">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{6}"></xs:pattern>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="otp">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{6}"></xs:pattern>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="AuthErrorCode">
+		<xs:annotation>
+			<xs:documentation>
+				Enum for allowed auth error codes
+               </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="100"></xs:enumeration>
+			<xs:enumeration value="200"></xs:enumeration>
+			<xs:enumeration value="300"></xs:enumeration>
+
+			<xs:enumeration value="500"></xs:enumeration>
+			<xs:enumeration value="510"></xs:enumeration>
+			<xs:enumeration value="520"></xs:enumeration>
+			<xs:enumeration value="530"></xs:enumeration>
+			<xs:enumeration value="540"></xs:enumeration>
+			<xs:enumeration value="550"></xs:enumeration>
+			<xs:enumeration value="561"></xs:enumeration>
+			<xs:enumeration value="562"></xs:enumeration>
+			<xs:enumeration value="563"></xs:enumeration>
+			<xs:enumeration value="564"></xs:enumeration>
+			<xs:enumeration value="565"></xs:enumeration>
+			<xs:enumeration value="566"></xs:enumeration>
+			<xs:enumeration value="567"></xs:enumeration>
+			<xs:enumeration value="568"></xs:enumeration>
+			<xs:enumeration value="569"></xs:enumeration>
+			<xs:enumeration value="570"></xs:enumeration>
+			<xs:enumeration value="571"></xs:enumeration>
+			<xs:enumeration value="572"></xs:enumeration>
+			<xs:enumeration value="573"></xs:enumeration>
+			<xs:enumeration value="574"></xs:enumeration>
+			<xs:enumeration value="575"></xs:enumeration>
+			<xs:enumeration value="576"></xs:enumeration>
+			<xs:enumeration value="577"></xs:enumeration>
+			<xs:enumeration value="578"></xs:enumeration>
+			<xs:enumeration value="579"></xs:enumeration>
+			<xs:enumeration value="580"></xs:enumeration>
+			<xs:enumeration value="581"></xs:enumeration>
+			<xs:enumeration value="582"></xs:enumeration>
+
+			<xs:enumeration value="700"></xs:enumeration>
+			<xs:enumeration value="710"></xs:enumeration>
+			<xs:enumeration value="720"></xs:enumeration>
+			<xs:enumeration value="721"></xs:enumeration>
+			<xs:enumeration value="730"></xs:enumeration>
+			<xs:enumeration value="740"></xs:enumeration>
+
+			<xs:enumeration value="800"></xs:enumeration>
+			<xs:enumeration value="810"></xs:enumeration>
+			<xs:enumeration value="811"></xs:enumeration>
+			<xs:enumeration value="820"></xs:enumeration>
+			<xs:enumeration value="821"></xs:enumeration>
+
+			<xs:enumeration value="901"></xs:enumeration>
+			<xs:enumeration value="902"></xs:enumeration>
+
+			<xs:enumeration value="910"></xs:enumeration>
+			<xs:enumeration value="911"></xs:enumeration>
+			<xs:enumeration value="912"></xs:enumeration>
+			<xs:enumeration value="913"></xs:enumeration>
+
+			<xs:enumeration value="930"></xs:enumeration>
+			<xs:enumeration value="931"></xs:enumeration>
+			<xs:enumeration value="932"></xs:enumeration>
+			<xs:enumeration value="933"></xs:enumeration>
+			<xs:enumeration value="934"></xs:enumeration>
+			<xs:enumeration value="935"></xs:enumeration>
+			<xs:enumeration value="936"></xs:enumeration>
+			<xs:enumeration value="937"></xs:enumeration>
+			<xs:enumeration value="938"></xs:enumeration>
+			<xs:enumeration value="939"></xs:enumeration>
+
+			<xs:enumeration value="980"></xs:enumeration>
+			<xs:enumeration value="999"></xs:enumeration>
+
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="AuthErrorClassification">
+		<xs:annotation>
+			<xs:documentation>
+				Enum providing additional meaning to those error codes which may have
+				multiple meanings.
+               </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="UID_NOT_FOUND"></xs:enumeration>
+			<xs:enumeration value="UID_INACTIVE"></xs:enumeration>
+			<xs:enumeration value="UID_BLOCKED"></xs:enumeration>
+			<xs:enumeration value="INCORRECT_PIN"></xs:enumeration>
+			<xs:enumeration value="INCORRECT_OTP"></xs:enumeration>
+			<xs:enumeration value="TKN_MISMATCH"></xs:enumeration>
+			<xs:enumeration value="FRAUD_CHECK_FAILED"></xs:enumeration>
+			<xs:enumeration value="NO_BIOMETRIC_GALLERY"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="AuthResult">
+		<xs:annotation>
+			<xs:documentation>
+				Valid values for auth result
+               </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="y"></xs:enumeration>
+			<xs:enumeration value="n"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+</xs:schema>

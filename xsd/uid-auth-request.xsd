@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DISCLAIMER: The sample code or utility or tool described herein
+     is provided on an "as is" basis, without warranty of any kind.
+     UIDAI does not warrant or guarantee the individual success
+     developers may have in implementing the sample code on their
+     environment. 
+     
+     UIDAI does not warrant, guarantee or make any representations
+     of any kind with respect to the sample code and does not make
+     any representations or warranties regarding the use, results
+     of use, accuracy, timeliness or completeness of any data or
+     information relating to the sample code. UIDAI disclaims all
+     warranties, express or implied, and in particular, disclaims
+     all warranties of merchantability, fitness for a particular
+     purpose, and warranties related to the code, or any service
+     or software related thereto. 
+     
+     UIDAI is not responsible for and shall not be liable directly
+     or indirectly for any direct, indirect damages or costs of any
+     type arising out of use or any action taken by you or others
+     related to the sample code.
+     
+     THIS IS NOT A SUPPORTED SOFTWARE.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
+	xmlns:tns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
+	elementFormDefault="qualified"
+	xmlns:ar="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+	xmlns:common="http://www.uidai.gov.in/authentication/common/types/1.0">
+
+	<xs:import namespace="http://www.uidai.gov.in/authentication/common/types/1.0"
+		schemaLocation="common-types.xsd" />
+
+	<xs:simpleType name="LicenseKey">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="200"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+
+	<xs:simpleType name="Tid">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9\.,-\\/():]*"></xs:pattern>
+			<xs:maxLength value="50"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="Ver">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9\.,-\\/():]*"></xs:pattern>
+			<xs:maxLength value="10"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="Txn">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9\.,-\\/():]*"></xs:pattern>
+			<xs:maxLength value="50"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="AuaCode">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9]*"></xs:pattern>
+			<xs:maxLength value="10"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="TknType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="001">
+				<xs:annotation>
+					<xs:documentation>Mobile number</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="TknNum">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9]*"></xs:pattern>
+			<xs:maxLength value="100"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="Tkn">
+		<xs:sequence>
+			<xs:element name="type" type="tns:TknType"></xs:element>
+			<xs:element name="num" type="tns:TknNum"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Uses">
+		<xs:attribute name="pi" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Indicates whether server should ensure
+					presence of
+					pi element
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="y"></xs:enumeration>
+					<xs:enumeration value="n"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="pa" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Indicates whether server should ensure
+					presence of
+					pa element
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="y"></xs:enumeration>
+					<xs:enumeration value="n"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="pfa" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Indicates whether server should ensure
+					presence of pfa element
+                    </xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="y"></xs:enumeration>
+					<xs:enumeration value="n"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="bio" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Indicates whether server should ensure for
+					presence of bios and bio elements 
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="y"></xs:enumeration>
+					<xs:enumeration value="n"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="bt" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+					Comma separated list of biometrics used. Valid
+					values that can be used in this comma separated list are “FMR”,
+					“FIR”, and “IIR”.
+					When specified, server will ensure presence of
+					bio
+					element of specified types.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="pin" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Indicates whether server should ensure
+					presence of
+					pin attribute in Pv element
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="y"></xs:enumeration>
+					<xs:enumeration value="n"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="otp" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Indicates whether server should ensure
+					presence of
+					otp attribute in Pv element
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="y"></xs:enumeration>
+					<xs:enumeration value="n"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:simpleType name="TokenType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="MOBILE"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="Skey">
+		<xs:simpleContent>
+			<xs:extension base="xs:base64Binary">
+				<xs:attribute name="ci" type="xs:string" use="required">
+					<xs:annotation>
+						<xs:documentation>
+							Certificate identifier - should be expiry date of certificate in YYYYMMDD format
+						</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<xs:complexType name="Auth">
+		<xs:sequence>
+			<xs:element name="Tkn" type="tns:Tkn" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						This element can be used to provide a valid token
+						details which is provided to resident such as mobile phone, NFC
+						token, Smart Card, etc.. Currently, UID system only recognizes the
+						mobile number as a valid token. This is useful for adding second
+						factor (“what resident has”) for a self-service transaction from
+						the resident’s registered mobile phone.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Skey" type="tns:Skey">
+				<xs:annotation>
+					<xs:documentation>
+						Value of this element is base-64 encoded value
+						of encrypted session key.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Uses" type="tns:Uses">
+				<xs:annotation>
+					<xs:documentation>
+						In the case where Authenticator does not have
+						full control over the terminal devices, it is highly recommended
+						that this element be used to add the minimum usage criteria.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Data" type="xs:base64Binary">
+				<xs:annotation>
+					<xs:documentation>Base-64 encoded data containing encrypted
+						authentication data
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Hmac" type="xs:base64Binary" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Base-64 encoded data containing encrypted
+						authentication data
+						</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="uid" type="common:uid" use="required">
+			<xs:annotation>
+				<xs:documentation>UID number of the resident</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ac" type="tns:AuaCode" use="required">
+			<xs:annotation>
+				<xs:documentation>Authenticator Code, or "public" if
+					authenticator
+					code is not available.
+					</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="tid" type="tns:Tid" use="required">
+			<xs:annotation>
+				<xs:documentation>Unique Terminal ID of the device
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ver" type="tns:Ver">
+			<xs:annotation>
+				<xs:documentation>Version of the API. Defaulted to latest
+					version
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="txn" type="tns:Txn">
+			<xs:annotation>
+				<xs:documentation>
+					Authenticator specific transaction identifier
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="lk" type="tns:LicenseKey">
+			<xs:annotation>
+				<xs:documentation>
+					AUA License key
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sa" type="tns:AuaCode" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Service Agency
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:element name="Auth" type="tns:Auth"></xs:element>
+</xs:schema>

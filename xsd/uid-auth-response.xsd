@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DISCLAIMER: The sample code or utility or tool described herein
+     is provided on an "as is" basis, without warranty of any kind.
+     UIDAI does not warrant or guarantee the individual success
+     developers may have in implementing the sample code on their
+     environment. 
+     
+     UIDAI does not warrant, guarantee or make any representations
+     of any kind with respect to the sample code and does not make
+     any representations or warranties regarding the use, results
+     of use, accuracy, timeliness or completeness of any data or
+     information relating to the sample code. UIDAI disclaims all
+     warranties, express or implied, and in particular, disclaims
+     all warranties of merchantability, fitness for a particular
+     purpose, and warranties related to the code, or any service
+     or software related thereto. 
+     
+     UIDAI is not responsible for and shall not be liable directly
+     or indirectly for any direct, indirect damages or costs of any
+     type arising out of use or any action taken by you or others
+     related to the sample code.
+     
+     THIS IS NOT A SUPPORTED SOFTWARE.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"
+	xmlns:tns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"
+	xmlns:common="http://www.uidai.gov.in/authentication/common/types/1.0"
+	elementFormDefault="qualified">
+
+	<xs:import namespace="http://www.uidai.gov.in/authentication/common/types/1.0"
+		schemaLocation="common-types.xsd" />
+		
+	<xs:complexType name="AuthRes">
+		<xs:attribute name="ret" type="common:AuthResult">
+			<xs:annotation>
+				<xs:documentation>Authentication response - 'y' for
+					authentication success, 'n' for authentication failure
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="code" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Unique alphanumeric authentication response
+					code. In the case of any dispute, this can be used later to verify
+					the authentication. UID application will retain authentication
+					trail only for a short time as per UID policy. After that period,
+					this code will become unusable.
+					</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="txn" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Authenticator specific transaction
+					identifier. This is exactly same value as in the request
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="err" type="common:AuthErrorCode">
+			<xs:annotation>
+				<xs:documentation>Failure error code. If authentication
+					fails (“ret” attribute value is “n”), this attribute provides additional details.
+					Refer AADAHAR API Specification on UIDAI Website for further details
+					</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="info" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>This attribute is a value with up to 128 characters, and is composed of following parts:
+					(Version) + (SHA-256 hash of Aadhaar number) + (Encoded UIDAI Data)
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ts" type="xs:dateTime">
+			<xs:annotation>
+				<xs:documentation>Authentication timestamp.
+					Represents the timestamp at which authentication response was generated.
+					</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		
+	</xs:complexType>
+
+	<xs:element name="AuthRes" type="tns:AuthRes">
+	</xs:element>
+
+</xs:schema>

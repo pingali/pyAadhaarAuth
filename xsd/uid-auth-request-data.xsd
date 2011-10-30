@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DISCLAIMER: The sample code or utility or tool described herein
+     is provided on an "as is" basis, without warranty of any kind.
+     UIDAI does not warrant or guarantee the individual success
+     developers may have in implementing the sample code on their
+     environment. 
+     
+     UIDAI does not warrant, guarantee or make any representations
+     of any kind with respect to the sample code and does not make
+     any representations or warranties regarding the use, results
+     of use, accuracy, timeliness or completeness of any data or
+     information relating to the sample code. UIDAI disclaims all
+     warranties, express or implied, and in particular, disclaims
+     all warranties of merchantability, fitness for a particular
+     purpose, and warranties related to the code, or any service
+     or software related thereto. 
+     
+     UIDAI is not responsible for and shall not be liable directly
+     or indirectly for any direct, indirect damages or costs of any
+     type arising out of use or any action taken by you or others
+     related to the sample code.
+     
+     THIS IS NOT A SUPPORTED SOFTWARE.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+	xmlns:tns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+	elementFormDefault="qualified"
+	xmlns:common="http://www.uidai.gov.in/authentication/common/types/1.0">
+
+	<xs:import namespace="http://www.uidai.gov.in/authentication/common/types/1.0"
+		schemaLocation="common-types.xsd" />
+
+	<xs:simpleType name="matchingStrategy">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="E">
+				<xs:annotation>
+					<xs:documentation>Exact Match
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="P">
+				<xs:annotation>
+					<xs:documentation>Partial Match
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F">
+				<xs:annotation>
+					<xs:documentation>Fuzzy Match
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="gender">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="M">
+				<xs:annotation>
+					<xs:documentation>Male
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F">
+				<xs:annotation>
+					<xs:documentation>Female
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="T">
+				<xs:annotation>
+					<xs:documentation>Transgender
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="Pi">
+		<xs:annotation>
+			<xs:documentation>Personal identity data to be matched
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="ms" type="tns:matchingStrategy"
+			default="E">
+			<xs:annotation>
+				<xs:documentation>Matching strategy to be used for
+					English name matching</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="mv" type="xs:int" default="100">
+			<xs:annotation>
+				<xs:documentation>
+					Match value is a value between 1 and 100,
+					and it indicates percentage of full words that must match
+					for authentication to be successful
+                    </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="name">
+			<xs:annotation>
+				<xs:documentation>Name of the resident</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="99"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="lmv" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>
+					Local match value is a value between 1 and 100,
+					and it indicates fuzziness threshold to be applied only for lname matching.
+                </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="lname">
+			<xs:annotation>
+				<xs:documentation>Name of the resident in local language</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="99"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="gender" type="tns:gender">
+			<xs:annotation>
+				<xs:documentation>Gender of the resident</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="dob">
+			<xs:annotation>
+				<xs:documentation>Date of birth of the resident
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="10"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="dobt">
+			<xs:annotation>
+				<xs:documentation>Date of birth Type.  Can be "A" (), "D" (Declared) or "V" (Verified)
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="1"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="age" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>Date of birth of the resident
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="phone">
+			<xs:annotation>
+				<xs:documentation>Phone number of the resident
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="18"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="email">
+			<xs:annotation>
+				<xs:documentation>Email address of the resident
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="254"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="Pa">
+		<xs:annotation>
+			<xs:documentation>Personal address data to be matched
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="ms" type="tns:matchingStrategy"
+			default="E">
+			<xs:annotation>
+				<xs:documentation>Matching strategy to be used for
+					authentication purposes
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="co">
+			<xs:annotation>
+				<xs:documentation>Care of person's name</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="house">
+			<xs:annotation>
+				<xs:documentation>House identifier</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="street">
+			<xs:annotation>
+				<xs:documentation>Street name</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="lm">
+			<xs:annotation>
+				<xs:documentation>Landmark if any</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="loc">
+			<xs:annotation>
+				<xs:documentation>Locality where resident resides
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="vtc">
+			<xs:annotation>
+				<xs:documentation>Name of the village or town or city
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="po">
+			<xs:annotation>
+				<xs:documentation>PO Name
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="subdist">
+			<xs:annotation>
+				<xs:documentation>Sub district
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="dist">
+			<xs:annotation>
+				<xs:documentation>District name</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="state">
+			<xs:annotation>
+				<xs:documentation>State name</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="100"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="pc">
+			<xs:annotation>
+				<xs:documentation>Postal pin code</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="6"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+
+	<xs:complexType name="Pfa">
+		<xs:annotation>
+			<xs:documentation>Personal full address data to be matched
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="mv" type="xs:int" default="100">
+			<xs:annotation>
+				<xs:documentation>
+					Match value is a value between 1 and 100,
+					and it indicates percentage of full words that must match
+					for authentication to be successful
+                    </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ms" type="tns:matchingStrategy"
+			default="E">
+			<xs:annotation>
+				<xs:documentation>
+					Matching strategy to be used for
+					for matching english address
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="av">
+			<xs:annotation>
+				<xs:documentation>Resident's full address specified as one
+					string value</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="1024"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="lmv" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>
+					Local match value is a value between 1 and 100,
+					and it indicates fuzziness threshold to be used when using local address, lav
+                    </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="lav">
+			<xs:annotation>
+				<xs:documentation>Resident's full address specified as one
+					string value in local langauge</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="1024"></xs:maxLength>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="Demo">
+		<xs:annotation>
+			<xs:documentation>Demographic data to be matched
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element type="tns:Pi" name="Pi" minOccurs="0"></xs:element>
+			<xs:element type="tns:Pa" name="Pa" minOccurs="0"></xs:element>
+			<xs:element type="tns:Pfa" name="Pfa" minOccurs="0"></xs:element>
+		</xs:sequence>
+		<xs:attribute name="lang" type="xs:string" default="23"></xs:attribute>
+	</xs:complexType>
+
+	<xs:simpleType name="bioMetricType">
+		<xs:annotation>
+			<xs:documentation>Biometric record type
+               </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="FMR">
+				<xs:annotation>
+					<xs:documentation>Finger Minutiae
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="FIR">
+				<xs:annotation>
+					<xs:documentation>Finger Image
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="IIR">
+				<xs:annotation>
+					<xs:documentation>Iris Image
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
+<xs:simpleType name="BiometricPosition">
+	   <xs:restriction base="xs:string">
+	        <xs:annotation>
+	             <xs:documentation>Additional attribute added for pos 
+	             </xs:documentation>
+	        </xs:annotation>
+	        <xs:enumeration value="LEFT_IRIS"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_IRIS"></xs:enumeration>
+	        <xs:enumeration value="BOTH_IRIS"></xs:enumeration>
+	        <xs:enumeration value="LEFT_INDEX"></xs:enumeration>
+	        <xs:enumeration value="LEFT_LITTLE"></xs:enumeration>
+	        <xs:enumeration value="LEFT_MIDDLE"></xs:enumeration>
+	        <xs:enumeration value="LEFT_RING"></xs:enumeration>
+	        <xs:enumeration value="LEFT_THUMB"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_INDEX"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_LITTLE"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_MIDDLE"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_RING"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_THUMB"></xs:enumeration>
+	        <xs:enumeration value="BOTH_THUMBS"></xs:enumeration>
+	        <xs:enumeration value="LEFT_SLAP"></xs:enumeration>
+	        <xs:enumeration value="RIGHT_SLAP"></xs:enumeration>
+	        <xs:enumeration value="UNKNOWN"></xs:enumeration>	
+	   </xs:restriction>     
+	</xs:simpleType>
+
+     <xs:complexType name="Bio">
+          <xs:annotation>
+               <xs:documentation>Base 64 encoded biometric record
+               </xs:documentation>
+          </xs:annotation>
+          <xs:simpleContent>
+               <xs:extension base="xs:base64Binary">
+                    <xs:attribute type="tns:bioMetricType" name="type" ></xs:attribute>
+                    <xs:attribute name="pos" 
+                         type="tns:BiometricPosition" default="UNKNOWN">
+                         <xs:annotation>
+                            <xs:documentation>Biometric position representing additional details about biometric image</xs:documentation>                            
+                         </xs:annotation>
+                    </xs:attribute>   
+               </xs:extension>
+          </xs:simpleContent>
+     </xs:complexType>
+
+	<xs:complexType name="Bios">
+		<xs:annotation>
+			<xs:documentation>One or many biometrics to be
+				matched.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="Bio" type="tns:Bio"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Pv">
+		<xs:attribute name="otp" type="common:otp">
+			<xs:annotation>
+				<xs:documentation>Most recently activated
+					challenge-response OTP value for resident.
+                    </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="pin" type="common:pin">
+			<xs:annotation>
+				<xs:documentation>Actual value of numeric pin
+					as set by
+					resident.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	
+	<xs:simpleType name="Code">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="10"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="Geocode">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="100"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="Latitude">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="100"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="Longitude">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="100"></xs:maxLength>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:complexType name="Locn">
+		<xs:attribute name="lat" type="tns:Latitude"></xs:attribute>
+		<xs:attribute name="lng" type="tns:Longitude"></xs:attribute>
+		<xs:attribute name="vtc" type="tns:Geocode"></xs:attribute>
+		<xs:attribute name="subdist" type="tns:Geocode"></xs:attribute>
+		<xs:attribute name="dist" type="tns:Geocode"></xs:attribute>
+		<xs:attribute name="state" type="tns:Geocode"></xs:attribute>
+		<xs:attribute name="pc" type="tns:Geocode"></xs:attribute>
+	</xs:complexType>
+	
+	<xs:complexType name="Meta">
+		<xs:sequence>
+			<xs:element name="Locn" type="tns:Locn" minOccurs="0"></xs:element>
+		</xs:sequence>
+		<xs:attribute name="fdc" type="tns:Code">
+			<xs:annotation>
+				<xs:documentation>Finger device code</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="idc" type="tns:Code">
+			<xs:annotation>
+				<xs:documentation>Iris device code</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="apc" type="tns:Code" use="required">
+			<xs:annotation>
+				<xs:documentation>Application code</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:element name="Pid">
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation>Person Identification Data
+				</xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:element name="Meta" type="tns:Meta" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Meta data related to device and transaction.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Demo" type="tns:Demo" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Demographic
+							Data for Matching
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Bios" type="tns:Bios" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Biometric Data
+							for Matching
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Pv" type="tns:Pv" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Additional
+							secret  pin  or otp  or
+							both for supporting multifactor authentication
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="ts" type="xs:dateTime" use="required">
+				<xs:annotation>
+					<xs:documentation>Timestamp of capture
+                         </xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="ver" type="xs:string" default="1.0">
+				<xs:annotation>
+					<xs:documentation>Version of the API. Defaulted to latest
+						version
+						</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+
+
+</xs:schema>
