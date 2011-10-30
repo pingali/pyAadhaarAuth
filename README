@@ -17,6 +17,9 @@ XSD is providing (e.g., sanity checks)
 Running 
 -------
 
+$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
+$ sudo pip install lxml 
+$ sudo pip install pyxmlsec 
 $ python authrequest.py 
 <Auth txn="" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="123412341234" tid="" sa="public">
   <Skey ci="23233">ZWhoc2tz</Skey>
@@ -90,8 +93,7 @@ to the auth server and processing the received messages. This
 can be achieved in multiple ways: 
 
 1. Write custom code to build the XML around the xml.domutils 
-module provided by core python or low level capabilities of 
-tools like lxml
+or lxml and use the XSD to validate the generated xml only. 
 
 2. Build a XSD and use a class generator from that. This makes life
 easier but it is lot more sensitive to the structure and evolution
@@ -106,14 +108,9 @@ server. There are three 'objectify' modules
 advantage that json handling is much easier. However the xml 
 signatures might pose a problem (not sure).
 
-The problem is that there is no XSD defined for UID as yet. 
+======================================================================
 
-It might make sense to go with a 
-
-$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
-$ sudo pip install lxml 
-$ sudo pip install pyxmlsec 
-$ sudo pip install pyxb 
+Other notes in case it is useful
 
 Instructions for installing Gnosis_Utils
 -----------------------------------------
