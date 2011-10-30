@@ -11,40 +11,19 @@
 #      </Data> 
 #      <Hmac>xy+JPoVN9dsWVm4YPZFwhVBKcUzzCTVvAxikT6BT5EcPgzX2JkLFDls+kLoNMpWe 
 #      </Hmac> 
-#      <Signature xmlns="http://www.w3.org/2000/09/xmldsig#"> 
-#            <SignedInfo> 
-#                  <CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /> 
-#                  <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /> 
-#                  <Reference> 
-#                        <Transforms> 
-#                              <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /> 
-#                        </Transforms> 
-#                        <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /> 
-#                        <DigestValue>Idd9hQtO+YAR4bjfQpNxXQ/EvXc=</DigestValue> 
-#                  </Reference> 
-#            </SignedInfo> 
-#            <SignatureValue>SyFAqzqtJ/VTWcR5cdxoIcsa7GMmgJo7X2Rtr+CVYZLaL2myg3HgaasaT7tPOa95 
-#            ... gzGfV+qTcU+1lhQscYnwJqqFmoViZO7NRVwPcfgadXs=</SignatureValue> 
-#            <KeyInfo> 
-#                  <X509Data> 
-#                        <X509Certificate>MIICfzCCAeigAwIBAgIGAbAh09VkMA0GCSqGSIb3DQEBBQUAMHoxCzAJBgNVBAYT 
-#                        ...
-#                              /upJnBH02TRb1Wq63OtcuyBIFA==</X509Certificate> 
-#                        <X509SubjectName>CN=Public AUA,OU=Public,O=Public 
-#                              AUA,L=Bangalore,ST=KA,C=IN</X509SubjectName> 
-#                  </X509Data> 
-#            </KeyInfo> 
-#      </Signature> 
 #</Auth> 
 #
 
 import sys
 sys.path.append("lib") 
 
-from lxml import etree 
+from lxml import etree, objectify 
+
 import dumper 
 import hashlib 
 from config import Config 
+import traceback 
+import base64 
 
 class AuthRequest():
 
@@ -76,23 +55,33 @@ class AuthRequest():
             '_pin': "n",
             '_bio': "n", 
             '_pfa': "n",
-            '_pi': "y"
+            '_pi': "y",
+            '_pa': "n",
             }
         self._hmac = ""
         self._data = ""
-        self._signature_template = {
-            'xmlns': 'http://www.w3.org/2000/09/xmldsig#',
-            'canonicalizationmethod': "http://www.w3.org/2001/10/xml-exc-c14n#",
-            'signaturemethod': "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
-            'transforms': [ "http://www.w3.org/2000/09/xmldsig#enveloped-signature" ],
-            'digestmethod': "http://www.w3.org/2000/09/xmldsig#sha1"
-            }
 
     def validate(self): 
         
         if ((self._skey['_ci'] == None) or (self._skey['_text'] == None)):
             raise Exception("Invalid Skey ci or text")
+    
+    def xsd_check(self, xml_text=None):
         
+        if xml_text == None: 
+            xml_text = self.tostring() 
+        
+        f = file(cfg.xsd.request)
+        schema = etree.XMLSchema(file=f)
+        parser = objectify.makeparser(schema = schema)
+        try: 
+            objectify.fromstring(xml_text, parser)
+            print "The XML generated is XSD compliant" 
+        except: 
+            print "[Error] Unable to parse incoming message" 
+            traceback.print_exc(file=sys.stdout) 
+            return False 
+        return True 
 
     def set_skey(self, ci="", text=""):
         self._skey['_ci'] = ci
@@ -103,7 +92,13 @@ class AuthRequest():
             'ci': self._skey['_ci'],
             'text': self._skey['_text'],
             }
+
+    def set_data(self, data=""):
+        self._data = data 
         
+    def get_data(self):
+        self._data 
+
     def generate_xmldsig_template(self):
         "" 
         
@@ -121,10 +116,22 @@ class AuthRequest():
                                 tid=self._tid, 
                                 ac=self._ac, 
                                 sa=self._sa,
-                                txn = self._txn
+                                txn = self._txn,
+                                uid = self._uid,
                                 )
         skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
-        skey.text = self._skey['_text']
+        skey.text = base64.b64encode(self._skey['_text'])
+        
+        uses = etree.SubElement(root, "Uses", 
+                                otp=self._uses['_otp'],
+                                pin=self._uses['_pin'],
+                                bio=self._uses['_bio'],
+                                pfa=self._uses['_pfa'],
+                                pi=self._uses['_pi'],
+                                pa=self._uses['_pa'])
+        
+        data = etree.SubElement(root, "Data")
+        data.text = base64.b64encode(self._data)
 
         doc = etree.ElementTree(root) 
         return etree.tostring(doc, pretty_print=True)
@@ -135,7 +142,15 @@ class AuthRequest():
 if __name__ == '__main__':
     
     cfg = Config('auth.cfg') 
-    x = AuthRequest(cfg)
-    x.set_skey("23233", "434344e4834ksfisjfkljfdslksdf") 
-    print x.tostring() 
+    x = AuthRequest(cfg, uid="123412341234")
+    x.set_skey("23233", "ehhsks")
+    x.set_data("dfdsfdfds") 
+    s = x.tostring() 
+    print s 
+    x.xsd_check()
 
+    test_xml = file('fixtures/authrequest.xml').read() 
+    print "Validating this incoming XML" 
+    print test_xml
+    x.xsd_check(test_xml) 
+    
