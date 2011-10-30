@@ -1,3 +1,12 @@
+
+$ python authrequest.py 
+<Auth txn="" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" tid="" sa="public">
+  <Skey ci="23233">434344e4834ksfisjfkljfdslksdf</Skey>
+</Auth>
+
+
+Background
+-----------
 The basic requirement is to generate XML messages to be sent 
 to the auth server and processing the received messages. This 
 can be achieved in multiple ways: 
@@ -67,5 +76,12 @@ and from PDFs
 (b) $ sed -i 's/[\d128-\d255]//g' <xml> 
 This will clean up the text
 
+Links 
+------
+
 Validating XML against DTD
-ihttp://code.activestate.com/recipes/220472/
+http://code.activestate.com/recipes/220472/
+
+xmlsec example code
+http://pyxmlsec.labs.libre-entreprise.org/index.php?section=examples
+

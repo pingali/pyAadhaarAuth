@@ -37,23 +37,105 @@
 #      </Signature> 
 #</Auth> 
 #
-#
-#from xml.dom.minidom import Document
-## Create the minidom document
-#doc = Document()
-## Create the <wml> base element
-#wml = doc.createElement("wml")
-#doc.appendChild(wml)
-## Create the main <card> element
-#maincard = doc.createElement("card")
-#maincard.setAttribute("id", "main")
-#wml.appendChild(maincard)
-## Create a <p> element
-#paragraph1 = doc.createElement("p")
-#maincard.appendChild(paragraph1)
-## Give the <p> elemenet some text
-#ptext = doc.createTextNode("This is a test!")
-#paragraph1.appendChild(ptext)
-## Print our newly created XML
-#print doc.toprettyxml(indent="  ")
-#
+
+import sys
+sys.path.append("lib") 
+
+from lxml import etree 
+import dumper 
+import hashlib 
+from config import Config 
+
+class AuthRequest():
+
+    """
+    Base class to parse, validate, and generate auth requests going to
+    the server. Mostly it will be used in the generate mode. The aim
+    is to simplify writing applications around the auth request. We
+    could potentially use this with AppEngine and Django that are
+    python-based. This interface supports only v1.5 and public AuAs 
+    """
+
+    def __init__(self, cfg=None, biometrics=False, uid="", 
+                 tid="", lk="", txn=""):
+        
+        self._cfg = cfg 
+        self._biometrics = biometrics
+        self._tid = tid
+        self._lk = lk
+        self._ac = "public"
+        self._ver = "1.5" 
+        self._sa = "public" 
+        self._uid = uid
+        self._txn = txn 
+        self._skey = { 
+            '_ci': None, 
+            '_text': None}
+        self._uses  = { 
+            '_otp': "n", 
+            '_pin': "n",
+            '_bio': "n", 
+            '_pfa': "n",
+            '_pi': "y"
+            }
+        self._hmac = ""
+        self._data = ""
+        self._signature_template = {
+            'xmlns': 'http://www.w3.org/2000/09/xmldsig#',
+            'canonicalizationmethod': "http://www.w3.org/2001/10/xml-exc-c14n#",
+            'signaturemethod': "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+            'transforms': [ "http://www.w3.org/2000/09/xmldsig#enveloped-signature" ],
+            'digestmethod': "http://www.w3.org/2000/09/xmldsig#sha1"
+            }
+
+    def validate(self): 
+        
+        if ((self._skey['_ci'] == None) or (self._skey['_text'] == None)):
+            raise Exception("Invalid Skey ci or text")
+        
+
+    def set_skey(self, ci="", text=""):
+        self._skey['_ci'] = ci
+        self._skey['_text'] = text
+
+    def get_skey(self):
+        return { 
+            'ci': self._skey['_ci'],
+            'text': self._skey['_text'],
+            }
+        
+    def generate_xmldsig_template(self):
+        "" 
+        
+    def set_hmac(self): 
+        key = self._cfg.request.hmac_key 
+        ""
+
+    def tostring(self):
+
+        self.validate()
+
+        root = etree.Element('Auth', 
+                                xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0",
+                                ver=self._ver,
+                                tid=self._tid, 
+                                ac=self._ac, 
+                                sa=self._sa,
+                                txn = self._txn
+                                )
+        skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
+        skey.text = self._skey['_text']
+
+        doc = etree.ElementTree(root) 
+        return etree.tostring(doc, pretty_print=True)
+
+    def load(self, xmlfile):
+        doc = etree.parse('authrequest.xml')
+        
+if __name__ == '__main__':
+    
+    cfg = Config('auth.cfg') 
+    x = AuthRequest(cfg)
+    x.set_skey("23233", "434344e4834ksfisjfkljfdslksdf") 
+    print x.tostring() 
+

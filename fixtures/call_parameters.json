@@ -1,0 +1,117 @@
+Testing Data
+Test Codes
+Test URL: http://auth.uidai.gov.in/1.5/ (remember to append AUA code and first two digits of Aadhaar number in the URL)
+
+Test Codes:
+
+AUA Code ("ac" attribute) : "public"
+Sub-AUA Code ("sa" attribute) - "public"
+License Key ("lk" attribute) : You can use any of the following license keys given below. Binary distribution of sample client is shipped with the first one below.
+"MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" - allows usage of PI, PA, PFA, BIO-FMR, BIO-FIR, BIO-IIR, OTP, PIN, Indian Language
+Public key certificate - See chapter on certificates (remember to use Staging/Test certificate for testing and production certificate for production)
+Keystore for digital signature for "public" AUA - Keystore in p12 file format (keystore Password: "public", Alias: "public")
+ 
+
+Test Data
+Note: Following data are purely for tesing and are not of real residents. Neither Aadhaar numbers nor demographic/biometric data are real and are ONLY available in test system.
+
+Sample biometric data given below is "base 64" encoded. Just add the encoded string to "bio" element. You can also use your own Aadhaar number and demographics/biometric data for testing.
+
+uid=999999990019
+name=Shivshankar Choudhury
+dob=13-05-1968
+dobt=V
+gender=M
+phone=2810806979
+email=sschoudhury@dummyemail.com
+careof=
+building=
+landmark=
+street=12 Maulana Azad Marg
+locality=
+poname=
+vtc=New Delhi
+subdist=New Delhi
+district=New Delhi
+state=New delhi
+pincode=110002
+bio=
+Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALSh
+MgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDF
+APqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATco
+MQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA
+
+
+uid=999999990026
+name=Kumar Agarwal
+dob=04-05-1978
+dobt=A
+gender=M
+phone=2314475929
+email=kma@mailserver.com
+careof=
+building=IPP, IAP
+landmark=Opp RSEB Window
+street=5A Madhuban
+locality=Veera Desai Road
+poname=
+vtc=Udaipur
+subdist=
+district=Udaipur
+state=Rajasthan
+pincode=313001
+bio=
+Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALSh
+MgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDF
+APqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATco
+MQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA
+
+
+uid=999999990042
+name=Fatima Bedi
+dob=30-07-1943
+dobt=A
+gender=F
+phone=2837032088
+email=bedi2020@mailserver.com
+careof=
+building=K-3A Rampur Garden
+landmark=
+street=
+locality=
+poname=
+vtc=Bareilly
+subdist=
+district=Bareilly
+state=Uttar Pradesh
+pincode=243001
+bio=
+Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALSh
+MgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDF
+APqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATco
+MQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA
+
+
+uid=999999990057
+name=Rohit Pandey
+dob=08-07-1985
+dobt=A
+gender=M
+phone=2821096353
+email=rpandey@mailserver.com
+careof=
+building=603/4 Vindyachal
+landmark=
+street=7TH Road Raja Wadi
+locality=Neelkanth Valley
+poname=Ghatkopar (EAST)
+vtc=Mumbai
+subdist=
+district=Mumbai
+state=Maharastra
+pincode=243001
+bio=
+Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALSh
+MgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDF
+APqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATco
+MQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA
