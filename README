@@ -1,13 +1,15 @@
+Python Client for UIDAI authentication service
+=============================================
 
-===Python Client for UIDAI authentication service
-
-==Status
+Status
+------
 
 Skeleton code (not primetime) 
 Simplest possible XSD-compliant XML is generated for request and response 
 Incoming XML can be validated and 'objectified for both 
 
-==To do
+To do
+-----
 
 1. Use the objectified xml to populate internal state 
 2. Look through the spec for validation rules beyond what the 
@@ -15,7 +17,8 @@ XSD is providing (e.g., sanity checks)
 3. Add pyxmlsec processing 
 4. Look into integration with biometrics
 
-==Running 
+Running 
+-------
 
 $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
 $ sudo pip install lxml 
