@@ -21,57 +21,57 @@ XSD is providing (e.g., sanity checks)
 Running 
 -------
 
-$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
-$ sudo pip install lxml 
-$ sudo pip install pyxmlsec 
-$ python authrequest.py 
-<Auth txn="" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="123412341234" tid="" sa="public">
-  <Skey ci="23233">ZWhoc2tz</Skey>
-  <Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
-  <Data>ZGZkc2ZkZmRz</Data>
-</Auth>
-
-The XML generated is XSD compliant
-Validating this incoming XML
-<?xml version="1.0"?> 
-<Auth xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" 
-      ver="1.5" tid="public" ac="public" sa="public" 
-      lk="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" uid="999999990019" 
-      txn="GEO.11051880"> 
-      <Skey ci="20131003">Nc6DrZKFk1oQXxfgnFUl0mmtYYIPl0RGaFd2oINkpChU1++xdddMx6Dlbz6mEYs3 
-            IyzChGjRXN5/al9r0runFX8LspTfMchwpxaaDIOyIUguBoYmPUqJDqTQcwey6Ntc 
-            TJWFSgOvBg+omUkdbK/9GOQ5KWWrN+E0A9JN0IPU4IJqJZmsA6ETZlVoZteYtoMI 
-            Ucv53qmxNPOEmJ3s4BC3ppHRRWRFMUp/eW7DFJ33W+uInZB6yekKE0dz8fYeo03w 
-            2JUT1wlafL7aseb04nv5tNEbllHWafmbMpbv2pXKr+WPgytjrygt1LagGqF4a5Mr 
-            /UTNwsy4m/YwlkWN0QcYVw== 
-      </Skey> 
-      <Uses otp="n" pin="n" bio="n" pa="n" pfa="n" pi="y" /> 
-      <Data>YOn05vg5qMwElULpEmdiH0j6rM1XWcbQN0n+CFNQeazouCgjyPBH/a2SwbFgq/fF 
-            CYUm+the8gQyYC36VO49NLcNcD7WdMhweoiDYgJoCX/t87Kbq/ABoAetfX7OLAck 
-            /mHrTmw8tsfJgo4xGSzKZKr+pVn1O8dDHJjwgptySr7vp2Ntj6ogu6B905rsyTWw 
-            73iMgoILDHf5soM3Pvde+/XW5rJD9AIPQGhHnKirwkiAgNIhtWU6ttYg4t6gHHbZ 
-            0gVBwgjRzM3sDWKzK0EnmA== 
-      </Data> 
-      <Hmac>xy+JPoVN9dsWVm4YPZFwhVBKcUzzCTVvAxikT6BT5EcPgzX2JkLFDls+kLoNMpWe 
-      </Hmac> 
-</Auth> 
-
-The XML generated is XSD compliant
-
-$ python authresponse.py
-<?xml version="1.0"?>
-<AuthRes info="" txn="" code="-1" err="100" ts="2011-10-30T13:30:35" ret="n" xmlns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"/>
-
-The XML generated is XSD compliant
-Validating this incoming XML
-<?xml version="1.0"?> 
-<AuthRes  xmlns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"
-	  ret="y" code="52" 
-	  txn="322hfdjhsjkdhfjkds" err="100" info="" 
-	  ts="2011-10-30T13:26:19"></AuthRes>
-
-The XML generated is XSD compliant
-
+>$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
+>$ sudo pip install lxml 
+>$ sudo pip install pyxmlsec 
+>$ python authrequest.py 
+><Auth txn="" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="123412341234" tid="" sa="public">
+>  <Skey ci="23233">ZWhoc2tz</Skey>
+>  <Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
+>  <Data>ZGZkc2ZkZmRz</Data>
+></Auth>
+>
+>The XML generated is XSD compliant
+>Validating this incoming XML
+><?xml version="1.0"?> 
+><Auth xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" 
+>      ver="1.5" tid="public" ac="public" sa="public" 
+>      lk="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" uid="999999990019" 
+>      txn="GEO.11051880"> 
+>      <Skey ci="20131003">Nc6DrZKFk1oQXxfgnFUl0mmtYYIPl0RGaFd2oINkpChU1++xdddMx6Dlbz6mEYs3 
+>            IyzChGjRXN5/al9r0runFX8LspTfMchwpxaaDIOyIUguBoYmPUqJDqTQcwey6Ntc 
+>            TJWFSgOvBg+omUkdbK/9GOQ5KWWrN+E0A9JN0IPU4IJqJZmsA6ETZlVoZteYtoMI 
+>            Ucv53qmxNPOEmJ3s4BC3ppHRRWRFMUp/eW7DFJ33W+uInZB6yekKE0dz8fYeo03w 
+>            2JUT1wlafL7aseb04nv5tNEbllHWafmbMpbv2pXKr+WPgytjrygt1LagGqF4a5Mr 
+>            /UTNwsy4m/YwlkWN0QcYVw== 
+>      </Skey> 
+>      <Uses otp="n" pin="n" bio="n" pa="n" pfa="n" pi="y" /> 
+>      <Data>YOn05vg5qMwElULpEmdiH0j6rM1XWcbQN0n+CFNQeazouCgjyPBH/a2SwbFgq/fF 
+>            CYUm+the8gQyYC36VO49NLcNcD7WdMhweoiDYgJoCX/t87Kbq/ABoAetfX7OLAck 
+>            /mHrTmw8tsfJgo4xGSzKZKr+pVn1O8dDHJjwgptySr7vp2Ntj6ogu6B905rsyTWw 
+>            73iMgoILDHf5soM3Pvde+/XW5rJD9AIPQGhHnKirwkiAgNIhtWU6ttYg4t6gHHbZ 
+>            0gVBwgjRzM3sDWKzK0EnmA== 
+>      </Data> 
+>      <Hmac>xy+JPoVN9dsWVm4YPZFwhVBKcUzzCTVvAxikT6BT5EcPgzX2JkLFDls+kLoNMpWe 
+>      </Hmac> 
+></Auth> 
+>
+>The XML generated is XSD compliant
+>
+>$ python authresponse.py
+><?xml version="1.0"?>
+><AuthRes info="" txn="" code="-1" err="100" ts="2011-10-30T13:30:35" ret="n" xmlns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"/>
+>
+>The XML generated is XSD compliant
+>Validating this incoming XML
+><?xml version="1.0"?> 
+><AuthRes  xmlns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"
+>	  ret="y" code="52" 
+>	  txn="322hfdjhsjkdhfjkds" err="100" info="" 
+>	  ts="2011-10-30T13:26:19"></AuthRes>
+>
+>The XML generated is XSD compliant
+>
 
 Notes
 -----
