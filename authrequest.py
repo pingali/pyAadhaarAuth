@@ -75,13 +75,13 @@ class AuthRequest():
         schema = etree.XMLSchema(file=f)
         parser = objectify.makeparser(schema = schema)
         try: 
-            objectify.fromstring(xml_text, parser)
+            obj = objectify.fromstring(xml_text, parser)
             print "The XML generated is XSD compliant" 
         except: 
             print "[Error] Unable to parse incoming message" 
             traceback.print_exc(file=sys.stdout) 
-            return False 
-        return True 
+            return None 
+        return obj
 
     def set_skey(self, ci="", text=""):
         self._skey['_ci'] = ci
@@ -134,10 +134,11 @@ class AuthRequest():
         data.text = base64.b64encode(self._data)
 
         doc = etree.ElementTree(root) 
-        return etree.tostring(doc, pretty_print=True)
+        return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
 
-    def load(self, xmlfile):
-        doc = etree.parse('authrequest.xml')
+    def load(self, xmlfile):        
+        xml_text = file(xmlfile).read() 
+        o = self.xsd_check(xml_text) 
         
 if __name__ == '__main__':
     
