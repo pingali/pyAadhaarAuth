@@ -1,4 +1,3 @@
-
 Python Client for UIDAI authentication service
 =============================================
 
@@ -21,7 +20,7 @@ XSD is providing (e.g., sanity checks)
 Running 
 -------
 
->$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
+>$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev <br />
 >$ sudo pip install lxml 
 >$ sudo pip install pyxmlsec 
 >$ python authrequest.py 
