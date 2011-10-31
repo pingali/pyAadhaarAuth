@@ -7,6 +7,7 @@ Status
 Skeleton code (not primetime) 
 Simplest possible XSD-compliant XML is generated for request and response 
 Incoming XML can be validated and 'objectified for both 
+Outgoing XML can be signed (and verified using p12 file)
 
 To do
 -----
@@ -14,8 +15,7 @@ To do
 1. Use the objectified xml to populate internal state 
 2. Look through the spec for validation rules beyond what the 
 XSD is providing (e.g., sanity checks) 
-3. Add pyxmlsec processing 
-4. Look into integration with biometrics
+3. Look into integration with biometrics
 
 Running 
 -------
@@ -71,6 +71,28 @@ Validating this incoming XML
 
 The XML generated is XSD compliant
 
+$ python authrequest_signature.py fixtures/authrequest-with-sig.xml 
+<?xml version="1.0"?>
+<Auth xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" tid="public" ac="public" sa="public" lk="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" uid="999999990019" txn="GEO.11051880"> 
+....
+R/l8w0hCInLusQMZeXgHcnxBGDSk1AQxKk5UfQmCwHNcRJMB5Zkj8+9n6T+/wx6D
+tKDelktgIoo7w0EJ6MdVJ9Qzr5PJcYzX+ERgJEd/NNNVoPjFc2Al2odjToZdFN8+
+/upJnBH02TRb1Wq63OtcuyBIFA==</X509Certificate>
+</X509Data> 
+            </KeyInfo> 
+      </Signature> 
+</Auth>
+
+$ python authrequest_signature.py fixtures/authrequest-with-sig.xml  > new-authrequest-with-sig.xml
+$ xmlsec --verify --pkcs12 fixtures/public.p12 --pwd public new-authrequest-with-sig.xml
+func=xmlSecOpenSSLX509StoreVerify:file=x509vfy.c:line=360:obj=x509-store:subj=X509_verify_cert:error=4:crypto library function failed:subj=/C=IN/ST=KA/L=Bangalore/O=Public AUA/OU=Public/CN=Public AUA;err=20;msg=unable to get local issuer certificate
+func=xmlSecOpenSSLX509StoreVerify:file=x509vfy.c:line=360:obj=x509-store:subj=X509_verify_cert:error=4:crypto library function failed:subj=/C=IN/ST=KA/L=Bangalore/O=Public AUA/OU=Public/CN=Public AUA;err=20;msg=unable to get local issuer certificate
+func=xmlSecOpenSSLX509StoreVerify:file=x509vfy.c:line=408:obj=x509-store:subj=unknown:error=71:certificate verification failed:err=20;msg=unable to get local issuer certificate
+OK
+SignedInfo References (ok/all): 1/1
+Manifests References (ok/all): 0/0
+
+[Notes: The above error refers to the lack of CA certificate.] 
 
 Notes
 -----
