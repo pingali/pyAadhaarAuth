@@ -200,8 +200,11 @@ class AuthRequestSignature():
             return self.cleanup(doc, dsig_ctx)
         
         # Print signed document to stdout
-        doc.dump("-")
-        
+        #doc.dump("-")
+        #doc.formatDump("-", 0)
+        import libxml2mod
+        libxml2mod.xmlDocFormatDump("-", doc._o, 0)
+
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
 
