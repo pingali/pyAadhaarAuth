@@ -17,6 +17,7 @@
 import sys
 sys.path.append("lib") 
 
+import libxml2
 from lxml import etree, objectify 
 
 import dumper 
@@ -24,6 +25,8 @@ import hashlib
 from config import Config 
 import traceback 
 import base64 
+import random 
+from datetime import datetime
 
 class AuthRequest():
 
@@ -40,6 +43,9 @@ class AuthRequest():
         
         self._cfg = cfg 
         self._biometrics = biometrics
+        self._pidxml_biometrics = None
+        self._pidxml_demographics = None 
+        
         self._tid = tid
         self._lk = lk
         self._ac = "public"
@@ -55,7 +61,7 @@ class AuthRequest():
             '_pin': "n",
             '_bio': "n", 
             '_pfa': "n",
-            '_pi': "y",
+            '_pi': "n",
             '_pa': "n",
             }
         self._hmac = ""
@@ -65,7 +71,10 @@ class AuthRequest():
         
         if ((self._skey['_ci'] == None) or (self._skey['_text'] == None)):
             raise Exception("Invalid Skey ci or text")
-    
+        
+        if (self._pidxml_demographics == None and self._pidxml_biometrics == None):
+            raise Exception("Payload (demographics/biometics) not set") 
+
     def xsd_check(self, xml_text=None):
         
         if xml_text == None: 
@@ -105,6 +114,48 @@ class AuthRequest():
     def set_hmac(self): 
         key = self._cfg.request.hmac_key 
         ""
+        
+    def set_pidxml_biometrics(self, datatype="FMR", data=None, ts=None):
+        
+        if (datatype != "FMR"): 
+            raise Exception("Non FMR biometrics not supported") 
+        
+        if (data == None): 
+            raise Exception("Data for biometrics inclusion is missing") 
+
+        self._uses['_bio'] = "y"
+        self._uses['_bt'] = "FMR"
+
+        if ts == None:
+            ts = Datetime.utcnow() 
+        root = etree.Element('Pid', 
+                             xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0",
+                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
+                             ver="1.0")
+        bios = etree.SubElement(root, "Bios")
+        bio=etree.SubElement(bios, "Bio", type="FMR")
+        bio.text = data 
+        doc = etree.ElementTree(root) 
+        self._pidxml_biometrics = etree.tostring(doc,pretty_print=True)
+
+    def set_pidxml_demographics(self, datatype="Name", data=None, ts=None):
+        
+        if (datatype != "Name" or data == None):
+            raise Exception("Does not support demographic checks other than Name") 
+        
+        self._uses['_pi'] = "y" 
+        
+        if ts == None:
+            ts = datetime.utcnow() 
+
+        root = etree.Element('Pid', 
+                             xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0",
+                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
+                             ver="1.0")
+        demo = etree.SubElement(root, "Demo")
+        pi=etree.SubElement(demo, "Pi", ms="E", name=data)
+        doc = etree.ElementTree(root) 
+        self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
 
     def tostring(self):
 
@@ -143,8 +194,9 @@ class AuthRequest():
 if __name__ == '__main__':
     
     cfg = Config('auth.cfg') 
-    x = AuthRequest(cfg, uid="123412341234")
+    x = AuthRequest(cfg, uid="123412341234", lk=cfg.common.license_key)
     x.set_skey("23233", "ehhsks")
+    x.set_pidxml_demographics(data="KKKK")
     x.set_data("dfdsfdfds") 
     s = x.tostring() 
     print s 
