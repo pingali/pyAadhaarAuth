@@ -4,27 +4,32 @@ Python Client for UIDAI authentication service
 Status
 ------
 
-Skeleton code (not primetime) 
-Simplest possible XSD-compliant XML is generated for request and response 
-Incoming XML can be validated and 'objectified for both 
-Outgoing XML can be signed (and verified using p12 file)
-Has support for generation of Pid XML 
+1. Skeleton code (not production-ready) 
+2. Simplest possible XSD-compliant XML is generated for request and response 
+3. Incoming XML can be validated and 'objectified for both 
+4. Outgoing XML can be signed (and verified using p12 file)
+5. Has support for generation of Pid XML (biometric and demographic)
+6. Session key automatically generated and 
+7. Encryption of session key using UID certificate
+(and encryption/decryption testing using public.p12) 
+8. Support for license key in the config file
 
 To do
 -----
 
-0. Look through the GeoAmida implementation to see the differences
-in implementation 
-1. Figure out how to invoke xmlDocDumpFormatMemory instead of 
+1. Look through the GeoAmida implementation to see the differences
+in implementation - mostly done 
+2. Figure out how to invoke xmlDocDumpFormatMemory instead of 
 lxml.tostring and doc.formatDump. Not sure for now. Not sure 
 that it matters. 
-2. Use the objectified xml to populate internal state 
-3. Look through the spec for validation rules beyond what the 
+3. Use the objectified xml to populate internal state 
+4. Look through the spec for validation rules beyond what the 
 XSD is providing (e.g., sanity checks) 
-4. Look into integration with biometrics
-5. Fix fixtures/call_parameters.json 
-6. Add support for session key generation and extraction of 
-certificate information 
+5. Look into integration with biometrics
+6. Fix fixtures/call_parameters.json 
+7. Add support for session key generation and extraction of 
+certificate information - done
+8. Make this into a module 
 
 Running 
 -------
@@ -103,6 +108,15 @@ Manifests References (ok/all): 0/0
 
 [Notes: The above error refers to the lack of CA certificate.] 
 
+$ python auth_crypt.py 
+certificate expiry =  Jun 28 04:40:44 2012 GMT
+Encryption payload:  39jsjsfdhdshfd
+Encrypted base64 encoded data:
+hm8IKZIubO49F3y2RiLhBlW1tG3lAWep4j9l8rQ/XO/0OHKj4s+iehkkUw6Ew5KGes/yWeo993SRYw4/4sGT+fSNqCGw0LCL7WGdDKxuuoTuW0qytdfQQCydPICo1/fyy6RNl9n/v4+4eaf3UWgfg3oFq3d4J4cSDqfHC4ToCeQ=
+Decrypted data
+39jsjsfdhdshfd
+Encrytion payload and decrypted data matched
+
 Notes
 -----
 
@@ -141,56 +155,4 @@ server. There are three 'objectify' modules
 3. Build a JSON eventually turn the JSON into XML. This has the
 advantage that json handling is much easier. However the xml 
 signatures might pose a problem (not sure).
-
-======================================================================
-
-Other notes in case it is useful
-
-Instructions for installing Gnosis_Utils
------------------------------------------
-
-$ wget http://gnosis.cx/download/Gnosis_Utils-1.2.2.tar.gz
-$ tar zxvf Gnosis_Utils-1.2.2.tar.gz 
-$ cd Gnosis_Utils 
-$ Apply the following patch 
---- setup.py.orig	2011-10-29 21:42:24.850114295 +0530
-+++ setup.py	2011-10-29 21:42:34.850114291 +0530
-@@ -205,7 +205,7 @@
- copy_all_files = 1
- 
- def copy_extra_files():
--    destroot = glob(os.path.join('build','lib'))[0]
-+    destroot = os.path.join('build','lib')
- 
-     # go through MANIFEST to see what is supposed to be under build directory
-     print "Copying extra files to %s ..." % destroot
-$ sudo python setup.py build 
-$ sudo python setup.py install
-
-Generating XSD 
----------------
-
-There is no XSD that is distributed with the uid auth client. So we have
-to generate it first from the sample XSDs available. There is a java 
-tool for this.
-
-Download this jar file
-http://www.thaiopensource.com/relaxng/trang-manual.html#running
-
-$java -jar trang.jar <xml> <xsd> 
-
-If there are non-UTF characters, 
-(a) look for "" They dont get copied well especially from the html
-and from PDFs 
-(b) $ sed -i 's/[\d128-\d255]//g' <xml> 
-This will clean up the text
-
-Links 
-------
-
-Validating XML against DTD
-http://code.activestate.com/recipes/220472/
-
-xmlsec example code
-http://pyxmlsec.labs.libre-entreprise.org/index.php?section=examples
 

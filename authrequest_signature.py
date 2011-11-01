@@ -45,6 +45,8 @@ import os, sys
 import libxml2
 import xmlsec
 from config import Config 
+from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
+
 
 class AuthRequestSignature(): 
     
@@ -208,7 +210,7 @@ class AuthRequestSignature():
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
 
-
+    
     def cleanup(self, doc=None, dsig_ctx=None, res=-1):
         if dsig_ctx is not None:
             dsig_ctx.destroy()

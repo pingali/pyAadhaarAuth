@@ -1,0 +1,288 @@
+
+Random Notes 
+==============
+
+GeoAmida's implementation: 
+
+import pyopenssl 
+import m2crypto 
+
+
+authxml: 
+
+   sha256_length: 256 
+   license_key =  "MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ="
+   rsa_key_len = 32 
+   aes_key_len = 32 
+   rsa_key_offset = 27 # whats this? 
+
+   ---------------------------------- pid_biometrics
+   # Generate this xml segment separately and insert into auth 
+   return the following as pidxml (text format; not 
+      Pid
+	   ts:  now.strftime(YYYY-MM-DDTHH:mm:SS) 
+	   ver: 1.0
+	   xmlns: "http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+	   Bios 
+		Bio
+		   type: "FMR"
+		Bio.text = <biometric-data> 
+      return xmlDocDumpFormatMemory(Pid) 
+
+
+   ---------------------------------- pid_demographics
+   # Generate this xml segment separately and insert into auth 
+   return the following as pidxml (text format; not 
+      Pid
+	   ts:  now.strftime(YYYY-MM-DDTHH:mm:SS) 
+	   ver: 1.0
+	   xmlns: "http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+	   Demo 
+		Pi
+		   ms: "E"
+		   name: <name> 
+	   
+      return xmlDocDumpFormatMemory(Pid) 
+
+   --------------------- 
+   xml header 
+   Auth
+      xmlns: "http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
+      ver: 1.5 
+      tid:  public 
+      ac: public 
+      sa: public 
+      lk: cfg.licensekey 
+      uid: <12 digit number> 
+      txn = <random-number> 
+
+      Skey
+         ci = x509_get_notAfter(UIDAI public certificate) 
+
+      session_key = rand(rsa_key_length)
+      read public key 
+      enc_sess_key = RSA_public_encrypt(text, key, RSA_PKCS1_PADDING) 
+      encoded_skey = b64encode(enc_sess_key) 
+      Skey.text = encoded_skey 
+      
+      Uses 
+       	   otp: n
+ 	   pin: n
+	   bio: y
+	   pa: n
+	   pfa: n
+	   pi: n
+	   bt: "FMR"
+
+     Data 
+     Data.text = aes_encrypt_data(pidxml, sesskey) 
+     Hmac
+     Hmac.text = aes_encypt_data(hMacSha256(pidxml), sessKey) 
+
+     do_digital_signature 
+
+
+For demographic 
+
+     same as the above except 
+      
+     Uses 
+       	otp: n
+ 	pin: n
+	bio: n
+	pa: n
+	pfa: n
+	pi: y
+
+         
+    
+     
+---------------------------------------------------------------
+
+SSL client 
+
+# -*- coding: latin-1 -*-
+#
+# Copyright (C) AB Strakt
+# Copyright (C) Jean-Paul Calderone
+# See LICENSE for details.
+
+"""
+Simple SSL client, using blocking I/O
+"""
+
+from OpenSSL import SSL
+import sys, os, select, socket
+
+def verify_cb(conn, cert, errnum, depth, ok):
+    # This obviously has to be updated
+    print 'Got certificate: %s' % cert.get_subject()
+    return ok
+
+if len(sys.argv) < 3:
+    print 'Usage: python[2] client.py HOST PORT'
+    sys.exit(1)
+
+dir = os.path.dirname(sys.argv[0])
+if dir == '':
+    dir = os.curdir
+
+# Initialize context
+ctx = SSL.Context(SSL.SSLv23_METHOD)
+ctx.set_verify(SSL.VERIFY_PEER, verify_cb) # Demand a certificate
+ctx.use_privatekey_file (os.path.join(dir, 'client.pkey'))
+ctx.use_certificate_file(os.path.join(dir, 'client.cert'))
+ctx.load_verify_locations(os.path.join(dir, 'CA.cert'))
+
+# Set up client
+sock = SSL.Connection(ctx, socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+sock.connect((sys.argv[1], int(sys.argv[2])))
+
+while 1:
+    line = sys.stdin.readline()
+    if line == '':
+        break
+    try:
+        sock.send(line)
+        sys.stdout.write(sock.recv(1024))
+        sys.stdout.flush()
+    except SSL.Error:
+        print 'Connection died unexpectedly'
+        break
+
+
+sock.shutdown()
+sock.close()
+====================================================
+
+$ echo 'this is text' > text.1
+$ openssl enc -aes-256-cbc -a -k "thisisapassword" -in text.1 -out text.enc
+$ openssl enc -d -aes-256-cbc -a -k "thisisapassword" -in text.enc -out text.2
+$ cat text.2
+this is text
+
+Code for AES encryption/Decryption class is here: 
+
+http://stackoverflow.com/questions/5003626/problem-with-m2cryptos-aes
+
+Other places: 
+https://github.com/abbot/m2crypto/tree/x509_hacks/tests
+
+See this for use of M2Crypto 
+
+http://xmppwebid.github.com/xmppwebid/python-xmppwebid-doc/_modules/xmppwebid/xmppwebid.html
+http://svn.osafoundation.org/m2crypto/trunk/doc/howto.smime.html
+
+
+https://github.com/abbot/m2crypto/blob/x509_hacks/tests/test_rsa.py
+
+import sha, md5, os, sys
+from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
+
+x509 = X509.load_cert("tests/recipient.pem")        
+rsa = x509.get_pubkey().get_rsa()        
+rsa.public_encrypt("data", RSA.pkcs1_padding)
+
+
+--------
+
+https://github.com/iivvoo/Firefox-sync-example/blob/master/client.py
+def cipher_decrypt(self, ciphertext, key, IV):        
+    cipher = Cipher(alg='aes_256_cbc', key=key, iv=IV, op=0)        
+    v = cipher.update(ciphertext)        
+    v = v + cipher.final()
+
+  @staticmethod    
+  def hmac_sha256(key, s):        
+      return hmac.new(key, s, hashlib.sha256).digest()
+
+------------
+# -*- Encoding: utf-8 -*-
+
+from M2Crypto.EVP import Cipher
+
+key = 'a' * 16
+text = 'Hello, there!'
+
+cipher = Cipher(alg='des_ede_ecb', key=key, op=1, iv='\0'*16)
+
+encrypted_text = cipher.update(text)
+encrypted_text += cipher.final()
+
+decipher = Cipher(alg='des_ede_ecb', key=key, op=0, iv='\0'*16)
+
+decrypted_text = decipher.update(encrypted_text)
+decrypted_text += decipher.final()
+
+assert text == decrypted_text
+
+
+---------------
+
+Connections
+
+import requests 
+
+class SyncSample(object):    
+      server = "https://auth.services.mozilla.com"    
+      api = "1.0"
+
+      def get_node(self):        
+      	  url = self.server + '/user/1.0/' + self.username + '/node/weave' 
+	  r = requests.get(url, auth=(self.username, self._password))
+	  return r.read()
+
+
+
+======================================================================
+
+Other notes in case it is useful
+
+Instructions for installing Gnosis_Utils
+-----------------------------------------
+
+$ wget http://gnosis.cx/download/Gnosis_Utils-1.2.2.tar.gz
+$ tar zxvf Gnosis_Utils-1.2.2.tar.gz 
+$ cd Gnosis_Utils 
+$ Apply the following patch 
+--- setup.py.orig	2011-10-29 21:42:24.850114295 +0530
++++ setup.py	2011-10-29 21:42:34.850114291 +0530
+@@ -205,7 +205,7 @@
+ copy_all_files = 1
+ 
+ def copy_extra_files():
+-    destroot = glob(os.path.join('build','lib'))[0]
++    destroot = os.path.join('build','lib')
+ 
+     # go through MANIFEST to see what is supposed to be under build directory
+     print "Copying extra files to %s ..." % destroot
+$ sudo python setup.py build 
+$ sudo python setup.py install
+
+Generating XSD 
+---------------
+
+There is no XSD that is distributed with the uid auth client. So we have
+to generate it first from the sample XSDs available. There is a java 
+tool for this.
+
+Download this jar file
+http://www.thaiopensource.com/relaxng/trang-manual.html#running
+
+$java -jar trang.jar <xml> <xsd> 
+
+If there are non-UTF characters, 
+(a) look for "" They dont get copied well especially from the html
+and from PDFs 
+(b) $ sed -i 's/[\d128-\d255]//g' <xml> 
+This will clean up the text
+
+Links 
+------
+
+Validating XML against DTD
+http://code.activestate.com/recipes/220472/
+
+xmlsec example code
+http://pyxmlsec.labs.libre-entreprise.org/index.php?section=examples
+

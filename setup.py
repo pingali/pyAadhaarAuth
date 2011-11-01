@@ -9,6 +9,6 @@ setup(name='uidauth',
       author_email='pingali@gmail.com',
       #url='http://www.python.org/sigs/distutils-sig/',
       #packages=['', 'distutils.command'],
-      requires=['lxml', 'config']
+      requires=['lxml', 'config', 'M2Crypto']
      )
 

@@ -27,6 +27,8 @@ import traceback
 import base64 
 import random 
 from datetime import datetime
+from auth_crypt import AuthCrypt 
+from M2Crypto import Rand 
 
 class AuthRequest():
 
@@ -37,7 +39,7 @@ class AuthRequest():
     could potentially use this with AppEngine and Django that are
     python-based. This interface supports only v1.5 and public AuAs 
     """
-
+    
     def __init__(self, cfg=None, biometrics=False, uid="", 
                  tid="", lk="", txn=""):
         
@@ -45,7 +47,8 @@ class AuthRequest():
         self._biometrics = biometrics
         self._pidxml_biometrics = None
         self._pidxml_demographics = None 
-        
+        self._session_key = None
+
         self._tid = tid
         self._lk = lk
         self._ac = "public"
@@ -72,7 +75,8 @@ class AuthRequest():
         if ((self._skey['_ci'] == None) or (self._skey['_text'] == None)):
             raise Exception("Invalid Skey ci or text")
         
-        if (self._pidxml_demographics == None and self._pidxml_biometrics == None):
+        if (self._pidxml_demographics == None and 
+            self._pidxml_biometrics == None):
             raise Exception("Payload (demographics/biometics) not set") 
 
     def xsd_check(self, xml_text=None):
@@ -92,9 +96,15 @@ class AuthRequest():
             return None 
         return obj
 
-    def set_skey(self, ci="", text=""):
-        self._skey['_ci'] = ci
-        self._skey['_text'] = text
+    def set_skey(self):
+        
+        a = AuthCrypt(cfg.request.uid_cert_path, None) 
+        when = a.get_cert_expiry() #Jun 28 04:40:44 2012 GMT
+        expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
+        self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
+        print "session_key = ", self._session_key 
+        self._skey['_ci'] = expiry.strftime("%Y%M%d")
+        self._skey['_text'] = a.encrypt(self._session_key)
 
     def get_skey(self):
         return { 
@@ -195,7 +205,7 @@ if __name__ == '__main__':
     
     cfg = Config('auth.cfg') 
     x = AuthRequest(cfg, uid="123412341234", lk=cfg.common.license_key)
-    x.set_skey("23233", "ehhsks")
+    x.set_skey() 
     x.set_pidxml_demographics(data="KKKK")
     x.set_data("dfdsfdfds") 
     s = x.tostring() 
