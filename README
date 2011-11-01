@@ -8,10 +8,13 @@ Skeleton code (not primetime)
 Simplest possible XSD-compliant XML is generated for request and response 
 Incoming XML can be validated and 'objectified for both 
 Outgoing XML can be signed (and verified using p12 file)
+Has support for generation of Pid XML 
 
 To do
 -----
 
+0. Look through the GeoAmida implementation to see the differences
+in implementation 
 1. Figure out how to invoke xmlDocDumpFormatMemory instead of 
 lxml.tostring and doc.formatDump. Not sure for now. Not sure 
 that it matters. 
@@ -19,6 +22,9 @@ that it matters.
 3. Look through the spec for validation rules beyond what the 
 XSD is providing (e.g., sanity checks) 
 4. Look into integration with biometrics
+5. Fix fixtures/call_parameters.json 
+6. Add support for session key generation and extraction of 
+certificate information 
 
 Running 
 -------
