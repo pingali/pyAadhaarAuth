@@ -12,10 +12,13 @@ Outgoing XML can be signed (and verified using p12 file)
 To do
 -----
 
-1. Use the objectified xml to populate internal state 
-2. Look through the spec for validation rules beyond what the 
+1. Figure out how to invoke xmlDocDumpFormatMemory instead of 
+lxml.tostring and doc.formatDump. Not sure for now. Not sure 
+that it matters. 
+2. Use the objectified xml to populate internal state 
+3. Look through the spec for validation rules beyond what the 
 XSD is providing (e.g., sanity checks) 
-3. Look into integration with biometrics
+4. Look into integration with biometrics
 
 Running 
 -------
