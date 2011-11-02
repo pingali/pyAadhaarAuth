@@ -62,7 +62,9 @@ class AuthRequest():
     
     def __init__(self, cfg=None, biometrics=False, uid="", 
                  tid="", lk="", txn=""):
-        
+        """
+        Constructor of AuthRequest. Pass cfg
+        """
         self._cfg = cfg 
         self._biometrics = biometrics
         self._pidxml_biometrics = None
@@ -91,7 +93,10 @@ class AuthRequest():
         self._data = ""
 
     def validate(self): 
-        
+        """
+        Check for whether the data is complete enough to be able to 
+        generate an authentication request. 
+        """
         if ((self._skey['_ci'] == None) or (self._skey['_text'] == None)):
             raise Exception("Invalid Skey ci or text")
         
@@ -101,6 +106,11 @@ class AuthRequest():
 
     def xsd_check(self, xml_text=None):
         
+        """
+        Check for whether the XML generated is compliant with the XSD
+        or not.
+        """
+
         if xml_text == None: 
             xml_text = self.tostring() 
         
@@ -115,9 +125,15 @@ class AuthRequest():
             traceback.print_exc(file=sys.stdout) 
             return None 
         return obj
+    
+    def set_txn(self, txn=""):
+        if (txn == ""):
+            self._txn = random.randint(2**15, 2**16-1)
 
     def set_skey(self):
-        
+        """
+        Generate the session and set the Skey parameters 
+        """
         a = AuthCrypt(cfg.request.uid_cert_path, None) 
         when = a.get_cert_expiry() #Jun 28 04:40:44 2012 GMT
         expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
@@ -145,8 +161,13 @@ class AuthRequest():
         key = self._cfg.request.hmac_key 
         ""
         
-    def set_pidxml_biometrics(self, datatype="FMR", data=None, ts=None):
+    def set_pidxml_biometrics(self, datatype="FMR", 
+                              data=None, ts=None):
         
+        """
+        Generate the biometrics XML payload. Supports only FMR for now
+        """ 
+
         if (datatype != "FMR"): 
             raise Exception("Non FMR biometrics not supported") 
         
@@ -155,9 +176,13 @@ class AuthRequest():
 
         self._uses['_bio'] = "y"
         self._uses['_bt'] = "FMR"
-
+        
+        # the biometrics may be collected somewhere else and the
+        # timestamp may be set there. If it not set, set it to 
+        # local time 
         if ts == None:
             ts = Datetime.utcnow() 
+
         root = etree.Element('Pid', 
                              xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0",
                              ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -166,10 +191,19 @@ class AuthRequest():
         bio=etree.SubElement(bios, "Bio", type="FMR")
         bio.text = data 
         doc = etree.ElementTree(root) 
-        self._pidxml_biometrics = etree.tostring(doc,pretty_print=True)
-
-    def set_pidxml_demographics(self, datatype="Name", data=None, ts=None):
         
+        # Update internal state 
+        self._pidxml_biometrics = etree.tostring(doc,pretty_print=True)
+        
+        return True 
+
+
+    def set_pidxml_demographics(self, datatype="Name", 
+                                data=None, ts=None):
+        """
+        Generate the demographics XML payload.
+        """
+
         if (datatype != "Name" or data == None):
             raise Exception("Does not support demographic checks other than Name") 
         
@@ -178,6 +212,7 @@ class AuthRequest():
         if ts == None:
             ts = datetime.utcnow() 
 
+        # construct the demographics xml 
         root = etree.Element('Pid', 
                              xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0",
                              ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -185,10 +220,15 @@ class AuthRequest():
         demo = etree.SubElement(root, "Demo")
         pi=etree.SubElement(demo, "Pi", ms="E", name=data)
         doc = etree.ElementTree(root) 
+        
+        # update the internal state 
         self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
+        return True 
 
     def tostring(self):
-
+        """
+        Generate the XML that must be sent across.
+        """
         self.validate()
 
         root = etree.Element('Auth', 
