@@ -1,6 +1,6 @@
-================================================
-Python Client for Aadhaar Authentication Service
-================================================
+===========================================================
+Python Client and Library for Aadhaar Authentication Service
+===========================================================
 
 *THIS IS STILL UNDER DEVELOPMENT. DO NOT USE IT YET" 
 
@@ -48,7 +48,7 @@ INSTALLATION
 
 # Ubuntu 
 $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
-$ sudo pip install lxml pyxmlsec libxml2 
+$ sudo pip install lxml pyxmlsec libxml2 M2Crypto 
 $ easy_install pyAadhaarAuth
 $ cat auth.cfg 
 $ python aadhaarclient.py
@@ -66,10 +66,12 @@ STATUS
 (and encryption/decryption testing using public.p12) 
 8. Support for license key in the config file
 9. Support for posting to authentication server and receiving the response 
+10. AES encryption and decryption support added 
 
 TODO
 ====
 
+0. Integration and cleanup. 
 1. Look through the GeoAmida implementation to see the differences
 in implementation - mostly done 
 2. Figure out how to invoke xmlDocDumpFormatMemory instead of 
