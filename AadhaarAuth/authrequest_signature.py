@@ -263,7 +263,7 @@ if __name__ == "__main__":
         print "" 
         sys.exit(1)
     
-    cfg = Config('auth.cfg')  
+    cfg = Config('fixtures/auth.cfg')  
     x = AuthRequestSignature(cfg.request.use_template) 
     x.init_xmlsec() 
     res = x.sign_file(sys.argv[1], 

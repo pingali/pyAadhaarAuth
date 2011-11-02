@@ -65,6 +65,7 @@ STATUS
 7. Encryption of session key using UID certificate
 (and encryption/decryption testing using public.p12) 
 8. Support for license key in the config file
+9. Support for posting to authentication server and receiving the response 
 
 TODO
 ====
@@ -81,8 +82,8 @@ XSD is providing (e.g., sanity checks)
 6. Fix fixtures/call_parameters.json 
 7. Add support for session key generation and extraction of 
 certificate information - done
-8. Make this into a module 
-
+8. Make this into a module - in progress 
+9. Test with https connection 
 
 Running 
 ======
@@ -166,6 +167,14 @@ hm8IKZIubO49F3y2RiLhBlW1tG3lAWep4j9l8rQ/XO/0OHKj4s+iehkkUw6Ew5KGes/yWeo993SRYw4/
 Decrypted data
 39jsjsfdhdshfd
 Encrytion payload and decrypted data matched
+
+$python auth_connection.py
+<?xml version="1.0" encoding="UTF-8"?><AuthRes code="7f27e1ab8ec7480593835102b0582f44" err="931" info="015feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e90000000000000000000000000000000000000000000000000000000000000000100000000000" ret="n" ts="2011-11-02T14:22:16.916+05:30" txn=""><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>9dhWVTdnfu/DsYzZuHHGOClWWdDnY/FavATpmmAKpmI=</DigestValue></Reference></SignedInfo><SignatureValue>nerrU3qgtbVOJ8MroHpTT1vLf0CC4qZortlLk3XEu3FJbAgAA9TIFtBPQ1Bo6CrLjX9izlmkLukp
+rw7KiEhqkEf8hfyi+MAhcGhFrt3Tt0AyO2ZnHi3SzgFpJGj43wT35gYYPN7yZ5ZSDcNan8AR9Y1r
+K8rwnnifyYekDQzjvwMsEdTmdY3UYiTwzxUIYTiZ+1QY+9Air6WqRX3SPr3qAqf/k4mQNgp8oklH
+jQNOsS/7J0kZhLGDXUUi5MW8y5BjLxGTOQsTQBikWoYncXzic6e3V/eKMVh3UBbZzZYAdStYUXui
+JUU0ryKIXy88SAkjGbb4jPILBw7yQRS7h7UYkw==</SignatureValue></Signature></AuthRes>
+
 
 THANKS
 ======

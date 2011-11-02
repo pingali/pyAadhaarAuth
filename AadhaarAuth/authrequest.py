@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 #Copyright (C) 2011 by Venkata Pingali (pingali@gmail.com) & TCS 
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -263,7 +265,7 @@ class AuthRequest():
         
 if __name__ == '__main__':
     
-    cfg = Config('auth.cfg') 
+    cfg = Config('fixtures/auth.cfg') 
     x = AuthRequest(cfg, uid="123412341234", lk=cfg.common.license_key)
     x.set_skey() 
     x.set_pidxml_demographics(data="KKKK")

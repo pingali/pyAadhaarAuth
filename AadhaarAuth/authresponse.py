@@ -127,7 +127,7 @@ class AuthResponse():
         
 if __name__ == '__main__':
     
-    cfg = Config('auth.cfg') 
+    cfg = Config('fixtures/auth.cfg') 
     x = AuthResponse(cfg, err=100, ts=datetime.utcnow())
     x.validate() 
     s = x.tostring() 
