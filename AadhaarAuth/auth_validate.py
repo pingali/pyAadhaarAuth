@@ -61,7 +61,7 @@ class AuthValidate():
         xml_text = file(xmlfile).read() 
         return self.xsd_check_memory(xml_text) 
     
-    def check_dom(self, obj):
+    def check_dom(self, obj, signed=False):
 
         if obj == None: 
             return False
@@ -114,7 +114,18 @@ class AuthValidate():
         if (ver != "1.5"):
             print "Attribute 'ver' should be set to 1.5"
             result = False 
-        
+
+        #lk="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" 
+        lk = obj.get('lk')
+        lk_default="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" 
+        if (lk == None):
+            print "Attribute lk is missing"
+            result = False 
+        if (self._testing):
+            if (lk != lk_default):
+                print "lk should be set to 'MK...xQ=' during testing"
+                return False
+
         # => Skey element checks         
         #<Skey ci="20150922">YlZUdW9kek4yb3UrZ1dNL1ZqeDJmRlBIbHhSVTRwVjd4TkdRVGVGWmJ2eTV0WnQwbUZpYWFzRURyTWdXaXFkdU05Nm4zMXNxenVqR0phZTZvUDVJTXE3ZkVPRzBNemNBdThwWm1XbW9HMjkydCs2cFJkR0FobWVaSFVpZzBSQVFiS1ZVL3pnVDhocXp6d2xLNWljTTB0STNMSE1LT3paU3V1VmNVbGxKbTZ2SlF3aUZTUWwzWFRVQW51SGdaeXRMTHN0RkRCZXo2U0laRmNBckxRQytEL2xWWlhPdGE4RUIwMGdyVmtpZUc1aE8xVzlaemdTa295SC96dC9ic0trSXdZdTZhMGE2N25wQng1V0hWMGdsbnpZQkRlOE1CTkduWm9TWGE0RUdya0xLNnZTdlVFaEU5WnRKMDdJSkxUS3lsUTFFV3U4YVFXQnd6UEdsVk4vM2x3PT0=</Skey>
 
@@ -127,10 +138,12 @@ class AuthValidate():
             
             enc_session_key = obj["Skey"].text
             session_key_len = len(enc_session_key)
-            print session_key_len 
-            if (enc_session_key == None or session_key_len != 460):
+            session_key_len_default = 460 # How/Why?
+            if (enc_session_key == None or 
+                session_key_len != session_key_len_default):
                 print "Encrypted/encoded session key length is wrong.", \
                     "Please check the session key"             
+                print "Default value for session key length = %d" % (session_key_len_default)
                 result = False 
                 
         #<Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
@@ -151,29 +164,230 @@ class AuthValidate():
         # Data element. 
         obj["Data"]  # raise an exception if this is not present
         obj["Hmac"]  # raise an exception if this is not present
-
+        
         if result == False:
-            print "XML is compliant but invalid" 
+            print "Body of Auth XML is compliant but invalid" 
         else:
-            print "XML is compliant and probably valid" 
-        return result
-        
-    def validate(self, xml,is_file=True): 
+            print "Body of XML is compliant and probably valid" 
 
-        if is_file: 
-            obj = self.xsd_check_file(xml)
-        else:
-            obj = self.xsd_check_memory(xml)
+        if not signed:
+            return result
         
-        if obj == None:
-            return False 
+        # Check the signature now..
+        try:
+            signature = obj["{http://www.w3.org/2000/09/xmldsig#}Signature"]
+        except:
+            print "Signature element is either missing or has invalid ",\
+            "namespace string"
+            print "Namespace string should be ",\
+                "'http://www.w3.org/2000/09/xmldsig#'"
+            return False
+
+        signedinfo = signature.SignedInfo
+
+        canonalg = signedinfo.CanonicalizationMethod.get("Algorithm")
+        canonalg_default = "http://www.w3.org/2001/10/xml-exc-c14n#"
+        if (canonalg != canonalg_default):
+            print "CanonicalizationMethod algorithm is non-existent or invalid"
+            print "The Algorithm should be ", canonalg_default
+            result = False
         
-        return self.check_dom(obj)
+        sigmethodalg = signedinfo.SignatureMethod.get("Algorithm")
+        sigmethodalg_default="http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+        if (sigmethodalg != sigmethodalg_default):
+            print "SignatureMethod algorithm is non-existent of invalid"
+            print "The Algorithm should be ", sigmethodalg_default
+            result = False            
+  
+        reference = signedinfo.Reference
+        transformalg = reference.Transforms.Transform.get("Algorithm")
+        transformalg_default="http://www.w3.org/2000/09/xmldsig#enveloped-signature" 
+        if (transformalg != transformalg_default):
+            print "Transform has non-existent of invalid algorithm"
+            print "The Algorithm should be ", transformalg_default
+            result = False
         
+        digestmethodalg = reference.DigestMethod.get("Algorithm")
+        digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
+        if (digestmethodalg != digestmethodalg_default):
+            print "DigestMethod has non-existent of invalid algorithm"
+            print "The Algorithm should be ", digestmethodalg_default
+            result = False
+        
+        digestvalue = reference.DigestValue.text
+        if (digestvalue == None):
+            print "Digest value should be non-null"
+            result = False
+
+        sigvalue = signature.SignatureValue.text
+        if (sigvalue == None):
+            print "Signature value should be non-null"
+            result = False
+
+        try:
+            keyinfo = signature.KeyInfo
+        except:
+            keyinfo=None
+            print "KeyInfo element is missing"
+            result = False
+
+        if keyinfo != None:
+            x509cert = keyinfo.X509Data.X509Certificate
+            if x509cert.text == None:
+                print "X509Certificate element is missing" 
+                result = False
+            
+            x509name = keyinfo.X509Data.X509SubjectName
+            if x509name.text == None:
+                print "X509SubjectName element is missing" 
+                result = False 
+            
+            if (self._testing): 
+                # First turn this 
+                #<X509SubjectName>CN=Public AUA,OU=Public,O=Public 
+                #              AUA,L=Bangalore,ST=KA,C=IN</X509SubjectName>
+                # into 
+                #CN=Public AUA,OU=Public,O=Public AUA,L=Bangalore,ST=KA,C=IN
+
+                l = x509name.text.splitlines()
+                l = [x.lstrip() for x in l]
+                t = ''.join(l)
+                t_default = "CN=Public AUA,OU=Public,O=Public AUA,L=Bangalore,ST=KA,C=IN"
+                if (t != t_default):
+                    print "X509SubjectName element body is inconsistent",\
+                        "with that expected in testing mode. Please check",\
+                        "the local certificate being used"
+                    print "Expected: ", t_default
+        
+        if not signed:
+            if result == False:
+                print "XML is compliant but invalid" 
+            else:
+                print "XML is compliant and probably valid" 
+                return result
+
+
+    
+    def validate(self, xml,is_file=True, signed=False): 
+
+        # XSD check will fail if signature is included
+        if (not signed and self._request_xsd != None):
+            if is_file: 
+                obj = self.xsd_check_file(xml)
+            else:
+                obj = self.xsd_check_memory(xml)
+                
+            if obj == None:
+                return False 
+        
+            return self.check_dom(obj,signed)
+
+        else: 
+            if is_file:
+                xml_text = file(xml).read()
+            else:
+                xml_text = xml 
+            obj = objectify.fromstring(xml_text)
+            return self.check_dom(obj,signed)
         
 if __name__ == '__main__':
     
-    cfg = Config('fixtures/auth.cfg') 
-    v = AuthValidate(cfg.xsd.request) 
+    assert(sys.argv)
+    if len(sys.argv) < 2:
+        print """
+Error: wrong number of arguments.
+
+Usage: auth_validate.py <xml-file> [<xsd-file>]
+
+Examples: 
+
+      $python auth_validate.py fixtures/authrequest.xml xsd/authrequest.xsd
+
+      This assumes unsigned xml and validates the xml against the XSD.
+      In addition it does XML element-by-element content validation" 
+
+      $python auth_validate.py fixtures/authrequest-with-sig.xml
+
+      This assumes signed xml and does not use XSD for validation.
+      The script only does XML element-by-element content validation
+"""
+        exit(1)
+
+    xsdfile = None
+    signed=True  # default 
+    xmlfile = sys.argv[1]
+    if (len(sys.argv) > 2):
+        # XSD file provided.
+        xsdfile = sys.argv[2]
+        signed=False
+
+    #cfg = Config('fixtures/auth.cfg') 
+    #v = AuthValidate(cfg.xsd.request) 
+    v=AuthValidate(xsdfile)
     print "Validating Auth Request XML" 
-    v.validate('fixtures/authrequest-with-sig.xml')
+    #v.validate('fixtures/authrequest-with-sig.xml',signed=True)
+    v.validate(xmlfile, signed)
+
+#
+#========================================================
+#================ Sample Certificate ====================
+#========================================================
+#<?xml version="1.0"?> 
+#<Auth xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" 
+#      ver="1.5" tid="public" ac="public" sa="public" 
+#      lk="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" uid="999999990019" 
+#      txn="GEO.11051880"> 
+#      <Skey ci="20131003">Nc6DrZKFk1oQXxfgnFUl0mmtYYIPl0RGaFd2oINkpChU1++xdddMx6Dlbz6mEYs3 
+#            IyzChGjRXN5/al9r0runFX8LspTfMchwpxaaDIOyIUguBoYmPUqJDqTQcwey6Ntc 
+#            TJWFSgOvBg+omUkdbK/9GOQ5KWWrN+E0A9JN0IPU4IJqJZmsA6ETZlVoZteYtoMI 
+#            Ucv53qmxNPOEmJ3s4BC3ppHRRWRFMUp/eW7DFJ33W+uInZB6yekKE0dz8fYeo03w 
+#            2JUT1wlafL7aseb04nv5tNEbllHWafmbMpbv2pXKr+WPgytjrygt1LagGqF4a5Mr 
+#            /UTNwsy4m/YwlkWN0QcYVw== 
+#      </Skey> 
+#      <Uses otp="n" pin="n" bio="n" pa="n" pfa="n" pi="y" /> 
+#      <Data>YOn05vg5qMwElULpEmdiH0j6rM1XWcbQN0n+CFNQeazouCgjyPBH/a2SwbFgq/fF 
+#            CYUm+the8gQyYC36VO49NLcNcD7WdMhweoiDYgJoCX/t87Kbq/ABoAetfX7OLAck 
+#            /mHrTmw8tsfJgo4xGSzKZKr+pVn1O8dDHJjwgptySr7vp2Ntj6ogu6B905rsyTWw 
+#            73iMgoILDHf5soM3Pvde+/XW5rJD9AIPQGhHnKirwkiAgNIhtWU6ttYg4t6gHHbZ 
+#            0gVBwgjRzM3sDWKzK0EnmA== 
+#      </Data> 
+#      <Hmac>xy+JPoVN9dsWVm4YPZFwhVBKcUzzCTVvAxikT6BT5EcPgzX2JkLFDls+kLoNMpWe 
+#      </Hmac> 
+#      <Signature xmlns="http://www.w3.org/2000/09/xmldsig#"> 
+#            <SignedInfo> 
+#                  <CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /> 
+#                  <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /> 
+#                  <Reference> 
+#                        <Transforms> 
+#                              <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /> 
+#                        </Transforms> 
+#                        <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /> 
+#                        <DigestValue>Idd9hQtO+YAR4bjfQpNxXQ/EvXc=</DigestValue> 
+#                  </Reference> 
+#            </SignedInfo> 
+#            <SignatureValue>SyFAqzqtJ/VTWcR5cdxoIcsa7GMmgJo7X2Rtr+CVYZLaL2myg3HgaasaT7tPOa95 
+#                  xYJwnwA/pl+S7ki+W/4Kq1nraV/wxArgE5hFTUFG8G/MOcuMy9Ajd1VPvuqMGvHA 
+#                  gzGfV+qTcU+1lhQscYnwJqqFmoViZO7NRVwPcfgadXs=</SignatureValue> 
+#            <KeyInfo> 
+#                  <X509Data> 
+#                        <X509Certificate>MIICfzCCAeigAwIBAgIGAbAh09VkMA0GCSqGSIb3DQEBBQUAMHoxCzAJBgNVBAYT 
+#                              AklOMQswCQYDVQQIEwJLQTESMBAGA1UEBxMJQmFuZ2Fsb3JlMQ4wDAYDVQQKEwVV 
+#                              SURBSTEeMBwGA1UECxMVQXV0aGVudGljYXRpb24gU2VydmVyMRowGAYDVQQDExFV 
+#                              SURBSSBBdXRoIFNlcnZlcjAeFw0xMTA2MjgwNDQwNDRaFw0xMjA2MjgwNDQwNDRa 
+#                              MGkxCzAJBgNVBAYTAklOMQswCQYDVQQIEwJLQTESMBAGA1UEBxMJQmFuZ2Fsb3Jl 
+#                              MRMwEQYDVQQKEwpQdWJsaWMgQVVBMQ8wDQYDVQQLEwZQdWJsaWMxEzARBgNVBAMT 
+#                              ClB1YmxpYyBBVUEwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJBEgKhZZNmH 
+#                              ejKTFaSg0Z/KN6kP98/FKpPkGTlkovJxa7KX0x74I++JhObM8SkRgCGR3DBK/YZB 
+#                              o0ZCbvs9czTEoDA8CBMDSFLEP5z+Zi65hdNT9XQiaeN0sSY7N4cafsS/KH/LESbM 
+#                              6I5OLvSGj10aQB8KDgwItvp/7xK6/Vu3AgMBAAGjITAfMB0GA1UdDgQWBBSd3qZJ 
+#                              j5lPp+1zkJJCqyZoTLLWAzANBgkqhkiG9w0BAQUFAAOBgQBiGVbCITrygzpC+09u 
+#                              R/l8w0hCInLusQMZeXgHcnxBGDSk1AQxKk5UfQmCwHNcRJMB5Zkj8+9n6T+/wx6D 
+#                              tKDelktgIoo7w0EJ6MdVJ9Qzr5PJcYzX+ERgJEd/NNNVoPjFc2Al2odjToZdFN8+ 
+#                              /upJnBH02TRb1Wq63OtcuyBIFA==</X509Certificate> 
+#                        <X509SubjectName>CN=Public AUA,OU=Public,O=Public 
+#                              AUA,L=Bangalore,ST=KA,C=IN</X509SubjectName> 
+#                  </X509Data> 
+#            </KeyInfo> 
+#      </Signature> 
+#</Auth> 
+#
