@@ -52,6 +52,9 @@ from datetime import datetime
 from auth_crypt import AuthCrypt 
 from M2Crypto import Rand 
 
+from auth_validate import AuthValidate
+
+
 """
 This module implements the authentication request class. We could
 potentially move the authentication response class to this module as
@@ -129,27 +132,6 @@ class AuthRequest():
             self._pidxml_biometrics == None):
             raise Exception("Payload (demographics/biometics) not set") 
 
-    def xsd_check(self, xml_text=None):
-        """
-        Check for whether the XML generated is compliant with the XSD
-        or not. Eventually this will be moved out into a separate
-        class and corresponding binary.
-        """
-
-        if xml_text == None: 
-            xml_text = self.tostring() 
-        
-        f = file(cfg.xsd.request)
-        schema = etree.XMLSchema(file=f)
-        parser = objectify.makeparser(schema = schema)
-        try: 
-            obj = objectify.fromstring(xml_text, parser)
-            print "The XML generated is XSD compliant" 
-        except: 
-            print "[Error] Unable to parse incoming message" 
-            traceback.print_exc(file=sys.stdout) 
-            return None 
-        return obj
     
     def set_txn(self, txn=""):
         """
@@ -304,13 +286,6 @@ class AuthRequest():
         doc = etree.ElementTree(root) 
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
 
-    def xsd_check_file(self, xmlfile):        
-        """
-        XSD-validate an xml file generated externally.
-        """
-        xml_text = file(xmlfile).read() 
-        o = self.xsd_check(xml_text) 
-        return True 
         
 if __name__ == '__main__':
     
@@ -321,8 +296,8 @@ if __name__ == '__main__':
     x.set_data()
     s = x.tostring() 
     print s 
-    x.xsd_check()
     
-    print "Validating file" 
-    x.xsd_check_file('fixtures/authrequest.xml')
+    v = AuthValidate(cfg.xsd.request) 
+    v.validate(s, is_file=False)
+
     
