@@ -166,8 +166,8 @@ class AuthRequest():
         when = a.x509_get_cert_expiry() #Jun 28 04:40:44 2012 GMT
         expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
         self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
-        print "session_key = ", self._session_key 
-        self._skey['_ci'] = expiry.strftime("%Y%M%d")
+        print "session_key (encoded) = ", base64.b64encode(self._session_key)
+        self._skey['_ci'] = expiry.strftime("%Y%m%d")
         self._skey['_text'] = a.x509_encrypt(self._session_key)
 
     def get_skey(self):
