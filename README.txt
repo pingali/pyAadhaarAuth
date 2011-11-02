@@ -1,8 +1,47 @@
-Python Client for UIDAI authentication service
-=============================================
+================================================
+Python Client for Aadhaar Authentication Service
+================================================
 
-Status
-------
+This package supports biometrics and demographics authentication
+using the Aadhaar Authentication Service (also known as UID).
+
+USAGE 
+=====
+
+Please obtain the relevant certificates from UIDAI 
+(https://developer.uidai.gov.in)
+
+Expected usage pattern is follows (TBD)
+
+$ cat aadhaarclient.py 
+#!/usr/bin/env python
+
+from AadhaarAuth import AuthRequest, AuthResponse
+from config import Config
+ 
+cfg = Config("auth.cfg")
+areq = AuthRequest(cfg) 
+ares = AuthResponse(cfg) 
+
+while more_authentications: 
+    areq.set_uid("12323232") 
+    areq.set_demographics("Name", "Utkal Chaudhury")
+    result = auth.execute() 
+    ares.load(result)
+    auth.clear()
+     
+INSTALLATION 
+============
+
+# Ubuntu 
+$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
+$ sudo pip install lxml pyxmlsec libxml2 
+$ easy_install pyAadhaarAuth
+$ cat auth.cfg 
+$ python aadhaarclient.py
+
+STATUS
+======
 
 1. Skeleton code (not production-ready) 
 2. Simplest possible XSD-compliant XML is generated for request and response 
@@ -14,8 +53,8 @@ Status
 (and encryption/decryption testing using public.p12) 
 8. Support for license key in the config file
 
-To do
------
+TODO
+====
 
 1. Look through the GeoAmida implementation to see the differences
 in implementation - mostly done 
@@ -31,12 +70,10 @@ XSD is providing (e.g., sanity checks)
 certificate information - done
 8. Make this into a module 
 
-Running 
--------
 
-$ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
-$ sudo pip install lxml 
-$ sudo pip install pyxmlsec 
+Running 
+======
+
 $ python authrequest.py 
 <Auth txn="" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="123412341234" tid="" sa="public">
   <Skey ci="23233">ZWhoc2tz</Skey>
@@ -116,4 +153,11 @@ hm8IKZIubO49F3y2RiLhBlW1tG3lAWep4j9l8rQ/XO/0OHKj4s+iehkkUw6Ew5KGes/yWeo993SRYw4/
 Decrypted data
 39jsjsfdhdshfd
 Encrytion payload and decrypted data matched
+
+THANKS
+======
+
+UIDAI - for authentication spec and a bold initiative
+Mindtree - for the sample java client 
+GeoDesic - for c-code 
 
