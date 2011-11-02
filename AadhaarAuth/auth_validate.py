@@ -122,17 +122,17 @@ class AuthValidate():
         expiry = obj["Skey"].get('ci')
         if ((self._testing == True) and (expiry != "20150922")):
             print "Expiry date is wrong! Check the UIDAI ", \
-                  "certificate being used" 
+                "certificate being used" 
             result = False
             
-        enc_session_key = obj["Skey"].text
-        session_key_len = len(enc_session_key)
-        print session_key_len 
-        if (enc_session_key == None or session_key_len != 460):
-            print "Encrypted/encoded session key length is wrong.", \
-                  "Please check the session key"             
-            result = False 
-        
+            enc_session_key = obj["Skey"].text
+            session_key_len = len(enc_session_key)
+            print session_key_len 
+            if (enc_session_key == None or session_key_len != 460):
+                print "Encrypted/encoded session key length is wrong.", \
+                    "Please check the session key"             
+                result = False 
+                
         #<Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
         for attrib in ['pfa', 'bio', 'pin', 'pa', 'otp', 'pi']:
             attrib_val = obj["Uses"].get(attrib)
@@ -148,7 +148,9 @@ class AuthValidate():
             print "pi and bio attributes are mutually exclusive"
             result = False 
         
-        
+        # Data element. 
+        obj["Data"]  # raise an exception if this is not present
+        obj["Hmac"]  # raise an exception if this is not present
 
         if result == False:
             print "XML is compliant but invalid" 
@@ -174,5 +176,4 @@ if __name__ == '__main__':
     cfg = Config('fixtures/auth.cfg') 
     v = AuthValidate(cfg.xsd.request) 
     print "Validating Auth Request XML" 
-    #v.xsd_check_file('fixtures/authrequest.xml')
-    v.validate('fixtures/authrequest.xml')
+    v.validate('fixtures/authrequest-with-sig.xml')
