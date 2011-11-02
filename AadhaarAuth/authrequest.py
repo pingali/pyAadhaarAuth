@@ -52,6 +52,11 @@ from datetime import datetime
 from auth_crypt import AuthCrypt 
 from M2Crypto import Rand 
 
+"""
+This module implements the authentication request class. We could
+potentially move the authentication response class to this module as
+well.
+"""
 class AuthRequest():
 
     """

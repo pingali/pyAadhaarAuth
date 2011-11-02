@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #
 #Copyright (C) 2011 by Venkata Pingali (pingali@gmail.com) & TCS 
-#(for only the modifications; main copyright held by Valos)
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
