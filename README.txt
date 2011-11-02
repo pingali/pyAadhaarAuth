@@ -165,10 +165,15 @@ $ python auth_crypt.py
 certificate expiry =  Jun 28 04:40:44 2012 GMT
 Encryption payload:  39jsjsfdhdshfd
 Encrypted base64 encoded data:
-hm8IKZIubO49F3y2RiLhBlW1tG3lAWep4j9l8rQ/XO/0OHKj4s+iehkkUw6Ew5KGes/yWeo993SRYw4/4sGT+fSNqCGw0LCL7WGdDKxuuoTuW0qytdfQQCydPICo1/fyy6RNl9n/v4+4eaf3UWgfg3oFq3d4J4cSDqfHC4ToCeQ=
+F4o8Ac+qZzow++OeYKdSQe0fIvY+HL+/QPP+kEKOPPtur5DWvqH31TUODozXGKhdkE3CCO+6Ysng0hA/u481E/xarvt0X0H0BO2ruu6sdekSvFePUeJldPCxQbUDSAKtf2m5J6reltI6nWNsxNk2ufsXQMxTeTHErWK+82mMnSY=
 Decrypted data
 39jsjsfdhdshfd
 Encrytion payload and decrypted data matched
+AES Encryption testing
+Original text  qwrtttrtyutyyyyy
+Encrypted encoded text  MrOFl55pSBCWKKl+0LSEwvC7UWpo5uh5KtNt/dN97Fo=
+decrypted text  qwrtttrtyutyyyyy
+AES encryption successful
 
 $python auth_connection.py
 <?xml version="1.0" encoding="UTF-8"?><AuthRes code="7f27e1ab8ec7480593835102b0582f44" err="931" info="015feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e90000000000000000000000000000000000000000000000000000000000000000100000000000" ret="n" ts="2011-11-02T14:22:16.916+05:30" txn=""><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>9dhWVTdnfu/DsYzZuHHGOClWWdDnY/FavATpmmAKpmI=</DigestValue></Reference></SignedInfo><SignatureValue>nerrU3qgtbVOJ8MroHpTT1vLf0CC4qZortlLk3XEu3FJbAgAA9TIFtBPQ1Bo6CrLjX9izlmkLukp

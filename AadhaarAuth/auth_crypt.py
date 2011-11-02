@@ -82,11 +82,11 @@ class AuthCrypt():
         data = "39jsjsfdhdshfd" # some test data
         if show:
             print "Encryption payload: ", data
-        enc_data = self.encrypt(data)
+        enc_data = self.x509_encrypt(data)
         if show:
             print "Encrypted base64 encoded data:" 
             print enc_data 
-        dec_data = self.decrypt(enc_data)
+        dec_data = self.x509_decrypt(enc_data)
         if show:
             print "Decrypted data" 
             print dec_data
@@ -98,65 +98,66 @@ class AuthCrypt():
                 print "Encrytion payload and decrypted data matched" 
         return True 
 
-        ENC=1         
-        DEC=0         
+    ENC=1         
+    DEC=0         
 
-        # Ack. Code from here. 
-        # http://stackoverflow.com/questions/5003626/problem-with-m2cryptos-aes
-        def AES_build_cipher(self, key, iv, op=ENC):             
-            """
-            Obtains a cipher from EVP 
-            """
-            return M2Crypto.EVP.Cipher(alg=self._enc_alg, 
-                                       key=key, iv=iv, op=op)          
-
+    # Ack. Code from here. 
+    # http://stackoverflow.com/questions/5003626/problem-with-m2cryptos-aes
+    def aes_build_cipher(self, key, iv, op=ENC):             
+        """
+        Obtains a cipher from EVP 
+        """
+        return EVP.Cipher(alg=self._enc_alg, 
+                          key=key, iv=iv, op=op)          
     
-        def aes_encrypt(self, key, msg, iv=None):
-            """
-            Encrypt msg from the key (which is assumed to be in plain
-            text - not encoded).
-            """             
-            #Decode the key and iv if necessary
-            #key = b64decode(key)             
-            if iv is None:                 
-                iv = '\0' * 16             
-            else:                 
-                iv = b64decode(iv)
     
-            # Return the encryption function             
-            def encrypt(data):                 
-                cipher = AES_build_cipher(key, iv, ENC)                 
-                v = cipher.update(data)                 
-                v = v + cipher.final()                 
-                del cipher                 
-                v = b64encode(v)                 
-                return v             
-
-            print "AES encryption successful\n"             
-            return encrypt(msg)         
+    def aes_encrypt(self, key, msg, iv=None):
+        """
+        Encrypt msg from the key (which is assumed to be in plain
+        text - not encoded).
+        """             
+        #Decode the key and iv if necessary
+        #key = b64decode(key)             
+        if iv is None:                 
+            iv = '\0' * 16             
+        else:                 
+            iv = base64.b64decode(iv)
+            
+        # Return the encryption function             
+        def encrypt(data):                 
+            cipher = self.aes_build_cipher(key, iv, self.ENC)                 
+            v = cipher.update(data)                 
+            v = v + cipher.final()                 
+            del cipher                 
+            v = base64.b64encode(v)                 
+            return v             
         
-        def aes_decryptor(self, key,msg, iv=None):             
-            """
-            Decrypt msg from the key (which is assumed to be in plain
-            text - not encoded).
-            """             
-            #Decode the key and iv             
-            #key = b64decode(key)             
-            if iv is None:                 
-                iv = '\0' * 16             
-            else:                 
-                iv = b64decode(iv)             
-
-            # Return the decryption function             
-            def decrypt(data):                 
-                data = b64decode(data)                 
-                cipher = AES_build_cipher(key, iv, DEC)                 
-                v = cipher.update(data)                 
-                v = v + cipher.final()                 
-                del cipher                 
-                return v             
-            print "AES dencryption successful\n"             
-            return decrypt(msg) 
+        #print "AES encryption successful\n"             
+        return encrypt(msg)         
+        
+    def aes_decrypt(self, key,msg, iv=None):             
+        """
+        Decrypt msg from the key (which is assumed to be in plain
+        text - not encoded).
+        """             
+            
+        # Decode the key and iv             
+        # key = b64decode(key)             
+        if iv is None:                 
+            iv = '\0' * 16             
+        else:                 
+            iv = base64.b64decode(iv)             
+            
+        # Return the decryption function             
+        def decrypt(data):                 
+            data = base64.b64decode(data)                 
+            cipher = self.aes_build_cipher(key, iv, self.DEC)                 
+            v = cipher.update(data)                 
+            v = v + cipher.final()                 
+            del cipher                 
+            return v             
+        #print "AES decryption successful\n"             
+        return decrypt(msg) 
     
 
 if __name__ == '__main__':
@@ -165,5 +166,14 @@ if __name__ == '__main__':
     print "certificate expiry = ", auth.x509_get_cert_expiry()
     auth.x509_test() 
 
-    msg=auth.aes_encryptor(key="123452345",msg="qwrtttrtyutyyyyy")
-    print auth.aes_decryptor(key="123452345",msg=msg) 
+    original_text = "qwrtttrtyutyyyyy"
+    msg=auth.aes_encrypt(key="123452345",msg=original_text)
+    print "AES Encryption testing"
+    print "Original text ", original_text
+    print "Encrypted encoded text ", msg
+    decrypted_text=auth.aes_decrypt(key="123452345",msg=msg) 
+    print "decrypted text ", decrypted_text
+    if (original_text == decrypted_text):
+        print "AES encryption successful"
+    else:
+        print "AES encryption FAILED!" 
