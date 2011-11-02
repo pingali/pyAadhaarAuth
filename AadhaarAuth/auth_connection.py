@@ -34,11 +34,12 @@ class AuthConnection():
     connection when done. Down the line it will keep connection open 
     and process multiple requests 
     """
+    
     def __init__(self, cfg, ac=None, keepopen=False): 
         self._ac = ac 
         self._keepopen = keepopen # To be used down the line
         self._cfg = cfg 
-    
+
     def set_ac(self, ac):
         """
         Update the AUA code

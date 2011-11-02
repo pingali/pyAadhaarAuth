@@ -39,7 +39,7 @@
 import sys
 sys.path.append("lib") 
 
-import libxml2
+#import libxml2
 from lxml import etree, objectify 
 
 import dumper 
@@ -61,11 +61,26 @@ class AuthRequest():
     could potentially use this with AppEngine and Django that are
     python-based. This interface supports only v1.5 and public AuAs 
     """
+
+    # Constants 
+    data_xmlns = "http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+    request_xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
     
     def __init__(self, cfg=None, biometrics=False, uid="", 
-                 tid="", lk="", txn=""):
+                 tid="public", lk="", txn=""):
         """
-        Constructor of AuthRequest. Pass cfg
+        Constructor of AuthRequest (see source for more details). 
+        
+        Set the configuration, flag to indicate whether this is
+        biometrics or demographics, and additional addtributes
+             
+        cfg: Config object (see fixtures/auth.cfg example) (default: None)
+        biometrics: Whether this request is for biometrics or not (default: False) 
+        uid: uid of the requestor (default="") 
+        tid: terminal id (default: "public") 
+        txn: transaction id (default: "") 
+        lk: License key (if not specified, then config file entry is used) (default: "") 
+
         """
         self._cfg = cfg 
         self._biometrics = biometrics
@@ -75,6 +90,9 @@ class AuthRequest():
 
         self._tid = tid
         self._lk = lk
+        if (self._lk == ""): 
+            self._lk = cfg.common.license_key
+
         self._ac = "public"
         self._ver = "1.5" 
         self._sa = "public" 
@@ -107,10 +125,10 @@ class AuthRequest():
             raise Exception("Payload (demographics/biometics) not set") 
 
     def xsd_check(self, xml_text=None):
-        
         """
         Check for whether the XML generated is compliant with the XSD
-        or not.
+        or not. Eventually this will be moved out into a separate
+        class and corresponding binary.
         """
 
         if xml_text == None: 
@@ -129,39 +147,60 @@ class AuthRequest():
         return obj
     
     def set_txn(self, txn=""):
+        """
+        Update the transaction information
+        """
         if (txn == ""):
             self._txn = random.randint(2**15, 2**16-1)
 
     def set_skey(self):
         """
-        Generate the session and set the Skey parameters 
+        Generate the session and set the Skey parameters. 
         """
         a = AuthCrypt(cfg.request.uid_cert_path, None) 
-        when = a.get_cert_expiry() #Jun 28 04:40:44 2012 GMT
+        when = a.x509_get_cert_expiry() #Jun 28 04:40:44 2012 GMT
         expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
         self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
         print "session_key = ", self._session_key 
         self._skey['_ci'] = expiry.strftime("%Y%M%d")
-        self._skey['_text'] = a.encrypt(self._session_key)
+        self._skey['_text'] = a.x509_encrypt(self._session_key)
 
     def get_skey(self):
+        """
+        Return the Skey 
+        """
         return { 
             'ci': self._skey['_ci'],
             'text': self._skey['_text'],
             }
 
     def set_data(self, data=""):
-        self._data = data 
+        """
+        Set the content of the data element using the pidxml
+        generated and stored as part of this class
+        """
+        if data == "":
+            if self._biometrics:
+                self._data = self._pidxml_biometrics
+            else:
+                self._data = self._pidxml_demographics                
+        else: 
+            self._data = data 
         
     def get_data(self):
-        self._data 
+        return self._data 
 
     def generate_xmldsig_template(self):
-        "" 
+        """
+        Not sure if this is required yet.
+        """
         
     def set_hmac(self): 
-        key = self._cfg.request.hmac_key 
-        ""
+        """
+        Computes the hmac. Not working yet.
+        """
+        key = self._session_key
+        
         
     def set_pidxml_biometrics(self, datatype="FMR", 
                               data=None, ts=None):
@@ -186,7 +225,7 @@ class AuthRequest():
             ts = Datetime.utcnow() 
 
         root = etree.Element('Pid', 
-                             xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0",
+                             xmlns=self.data_xmlns,
                              ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
                              ver="1.0")
         bios = etree.SubElement(root, "Bios")
@@ -216,7 +255,7 @@ class AuthRequest():
 
         # construct the demographics xml 
         root = etree.Element('Pid', 
-                             xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0",
+                             xmlns=self.data_xmlns, 
                              ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
                              ver="1.0")
         demo = etree.SubElement(root, "Demo")
@@ -229,12 +268,13 @@ class AuthRequest():
 
     def tostring(self):
         """
-        Generate the XML that must be sent across.
+        Generate the XML text that must be sent across to the uid
+        client.
         """
         self.validate()
 
         root = etree.Element('Auth', 
-                                xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0",
+                                xmlns=self.request_xmlns,
                                 ver=self._ver,
                                 tid=self._tid, 
                                 ac=self._ac, 
@@ -259,23 +299,25 @@ class AuthRequest():
         doc = etree.ElementTree(root) 
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
 
-    def load(self, xmlfile):        
+    def xsd_check_file(self, xmlfile):        
+        """
+        XSD-validate an xml file generated externally.
+        """
         xml_text = file(xmlfile).read() 
         o = self.xsd_check(xml_text) 
+        return True 
         
 if __name__ == '__main__':
     
     cfg = Config('fixtures/auth.cfg') 
-    x = AuthRequest(cfg, uid="123412341234", lk=cfg.common.license_key)
+    x = AuthRequest(cfg, uid="123412341234")
     x.set_skey() 
     x.set_pidxml_demographics(data="KKKK")
-    x.set_data("dfdsfdfds") 
+    x.set_data()
     s = x.tostring() 
     print s 
     x.xsd_check()
-
-    test_xml = file('fixtures/authrequest.xml').read() 
-    print "Validating this incoming XML" 
-    print test_xml
-    x.xsd_check(test_xml) 
+    
+    print "Validating file" 
+    x.xsd_check_file('fixtures/authrequest.xml')
     
