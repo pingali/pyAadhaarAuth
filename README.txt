@@ -2,6 +2,8 @@
 Python Client for Aadhaar Authentication Service
 ================================================
 
+*THIS IS STILL UNDER DEVELOPMENT. DO NOT USE IT YET" 
+
 This package supports biometrics and demographics authentication
 using the Aadhaar Authentication Service (also known as UID).
 
