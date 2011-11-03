@@ -1,0 +1,2 @@
+
+1. Should we take hexdigest of the SHA256 of data? 
