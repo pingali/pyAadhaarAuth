@@ -90,6 +90,7 @@ certificate information - done
 8. Make this into a module - in progress 
 9. Test with https connection 
 10. A batch-mode operation 
+11. Performance evaluation/statistics 
 
 Running 
 ======
