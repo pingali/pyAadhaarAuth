@@ -28,7 +28,7 @@ class AuthCrypt():
     Encryption/decryption functions required by the authentication
     classes. This should eventually move to 'lib' directory 
     """
-    def __init__(self, pub_key, priv_key):
+    def __init__(self, pub_key="", priv_key=""):
         self._public_key = pub_key
         self._private_key = priv_key
         self._enc_alg = 'aes_256_ecb'
