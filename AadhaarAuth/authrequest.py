@@ -44,14 +44,16 @@ from lxml import etree, objectify
 
 import dumper 
 import hashlib 
+import hmac
 from config import Config 
 import traceback 
 import base64 
 import random 
 from datetime import datetime
-from auth_crypt import AuthCrypt 
 from M2Crypto import Rand 
 
+from auth_crypt import AuthCrypt 
+from authrequest_signature import AuthRequestSignature
 from auth_validate import AuthValidate
 
 __author__ = "Venkata Pingali"
@@ -109,7 +111,7 @@ class AuthRequest():
         self._lk = lk
         if (self._lk == ""): 
             self._lk = cfg.common.license_key
-
+            
         self._ac = "public"
         self._ver = "1.5" 
         self._sa = "public" 
@@ -170,33 +172,42 @@ class AuthRequest():
             'text': self._skey['_text'],
             }
 
-    def set_data(self, data=""):
+    def set_data(self):
         """
         Set the content of the data element using the pidxml
         generated and stored as part of this class
         """
-        if data == "":
-            if self._biometrics:
-                self._data = self._pidxml_biometrics
-            else:
-                self._data = self._pidxml_demographics                
-        else: 
-            self._data = data 
-        
+        if self._biometrics:
+            data = self._pidxml_biometrics
+        else:
+            data = self._pidxml_demographics                
+
+        x = AuthCrypt() 
+        self._data = base64.b64encode(x.aes_encrypt(key=self._session_key, msg=data))
+        print "Data = ", self._data
+
     def get_data(self):
         return self._data 
 
-    def generate_xmldsig_template(self):
-        """
-        Not sure if this is required yet.
-        """
-        
     def set_hmac(self): 
         """
         Computes the hmac. Not working yet.
         """
-        key = self._session_key
+        if self._biometrics:
+            data = self._pidxml_biometrics
+        else:
+            data = self._pidxml_demographics                
         
+        sha256_data = hashlib.sha256(data).hexdigest()
+        print "Sha256 data = ", sha256_data
+
+        x = AuthCrypt() 
+        self._hmac = x.aes_encrypt(key=self._session_key, msg=sha256_data)
+        print "Hmac = ", self._hmac 
+        return self._hmac 
+
+    def get_hmac(self):
+        return self._hmac 
         
     def set_pidxml_biometrics(self, datatype="FMR", 
                               data=None, ts=None):
@@ -277,6 +288,7 @@ class AuthRequest():
                                 sa=self._sa,
                                 txn = self._txn,
                                 uid = self._uid,
+                                lk=self._lk
                                 )
         skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
         skey.text = base64.b64encode(self._skey['_text'])
@@ -290,7 +302,9 @@ class AuthRequest():
                                 pa=self._uses['_pa'])
         
         data = etree.SubElement(root, "Data")
-        data.text = base64.b64encode(self._data)
+        data.text = self._data
+        hmac = etree.SubElement(root, "Hmac")
+        hmac.text = self._hmac
 
         doc = etree.ElementTree(root) 
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
@@ -299,14 +313,37 @@ class AuthRequest():
 if __name__ == '__main__':
     
     cfg = Config('fixtures/auth.cfg') 
-    x = AuthRequest(cfg, uid="123412341234")
+    x = AuthRequest(cfg, uid="123412341237")
     x.set_skey() 
     x.set_pidxml_demographics(data="KKKK")
     x.set_data()
-    s = x.tostring() 
-    print s 
+    x.set_hmac() 
+    xml = x.tostring() 
     
-    v = AuthValidate(cfg.xsd.request) 
-    v.validate(s, is_file=False)
+    print "XML = ", xml
 
+    v = AuthValidate(cfg.xsd.request) 
+    res = v.validate(xml, is_file=False, signed=False)
+    if (res == False): 
+        print "Invalid XML generated" 
+
+    tmpfile='/tmp/xxxx'
+    signed_tmpfile = tmpfile + ".sig" 
+
+    fp = file(tmpfile, 'w')
+    fp.write(xml) 
+    fp.close() 
+    print "Have written tmp file", tmpfile 
+
+    sig = AuthRequestSignature() 
+    sig.init_xmlsec() 
+    res = sig.sign_file(tmpfile, 
+                      cfg.request.local_pkcs_path, 
+                      cfg.request.pkcs_password)
+    sig.shutdown_xmlsec() 
+
+    print "Result of signing ", res
     
+    res = v.validate(signed_tmpfile, is_file=True, signed=True)
+    
+    print "Result = ", res 
