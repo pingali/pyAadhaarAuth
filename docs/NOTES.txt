@@ -16,6 +16,9 @@ signatures. They specify the message structure without the
 dignature. The signature processing is pre/post processing step as
 required.
 
+3. Online XML signature validation 
+http://www.aleksey.com/xmlsec/xmldsig-verifier.html
+
 Background
 -----------
 The basic requirement is to generate XML messages to be sent 
