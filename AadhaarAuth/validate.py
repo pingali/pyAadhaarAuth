@@ -408,9 +408,9 @@ command options:
 
     if cfg.validate.command == 'xsd':
         v.set_xsd(cfg.validate.xsd)
-        v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
+        v.validate(cfg.validate.xml, is_file=True, signed=cfg.validate.signed)
     elif cfg.validate.command == 'xml-only':
-        v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
+        v.validate(cfg.validate.xml, is_file=True, signed=cfg.validate.signed)
     #elif cfg.validate.command == 'xml-with-signature':
     #    v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
     #    v.xmlsec_check(xmlfile, cfg.validate.cert)

@@ -95,7 +95,7 @@ certificate information - done
 Running 
 ======
 
-$ python authrequest.py 
+$ python request.py 
 <Auth txn="" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="123412341234" tid="" sa="public">
   <Skey ci="23233">ZWhoc2tz</Skey>
   <Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
@@ -129,7 +129,7 @@ Validating this incoming XML
 
 The XML generated is XSD compliant
 
-$ python authresponse.py
+$ python response.py
 <?xml version="1.0"?>
 <AuthRes info="" txn="" code="-1" err="100" ts="2011-10-30T13:30:35" ret="n" xmlns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"/>
 
@@ -155,7 +155,7 @@ tKDelktgIoo7w0EJ6MdVJ9Qzr5PJcYzX+ERgJEd/NNNVoPjFc2Al2odjToZdFN8+
       </Signature> 
 </Auth>
 
-$ python authrequest_signature.py fixtures/authrequest-with-sig.xml  > new-authrequest-with-sig.xml
+$ python signature.py fixtures/authrequest-with-sig.xml  > new-authrequest-with-sig.xml
 $ xmlsec --verify --pkcs12 fixtures/public.p12 --pwd public new-authrequest-with-sig.xml
 func=xmlSecOpenSSLX509StoreVerify:file=x509vfy.c:line=360:obj=x509-store:subj=X509_verify_cert:error=4:crypto library function failed:subj=/C=IN/ST=KA/L=Bangalore/O=Public AUA/OU=Public/CN=Public AUA;err=20;msg=unable to get local issuer certificate
 func=xmlSecOpenSSLX509StoreVerify:file=x509vfy.c:line=360:obj=x509-store:subj=X509_verify_cert:error=4:crypto library function failed:subj=/C=IN/ST=KA/L=Bangalore/O=Public AUA/OU=Public/CN=Public AUA;err=20;msg=unable to get local issuer certificate
@@ -166,7 +166,7 @@ Manifests References (ok/all): 0/0
 
 [Notes: The above error refers to the lack of CA certificate.] 
 
-$ python auth_crypt.py 
+$ python crypt.py 
 certificate expiry =  Jun 28 04:40:44 2012 GMT
 Encryption payload:  39jsjsfdhdshfd
 Encrypted base64 encoded data:
@@ -180,7 +180,7 @@ Encrypted encoded text  MrOFl55pSBCWKKl+0LSEwvC7UWpo5uh5KtNt/dN97Fo=
 decrypted text  qwrtttrtyutyyyyy
 AES encryption successful
 
-$python auth_connection.py
+$python connection.py
 <?xml version="1.0" encoding="UTF-8"?><AuthRes code="7f27e1ab8ec7480593835102b0582f44" err="931" info="015feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e90000000000000000000000000000000000000000000000000000000000000000100000000000" ret="n" ts="2011-11-02T14:22:16.916+05:30" txn=""><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>9dhWVTdnfu/DsYzZuHHGOClWWdDnY/FavATpmmAKpmI=</DigestValue></Reference></SignedInfo><SignatureValue>nerrU3qgtbVOJ8MroHpTT1vLf0CC4qZortlLk3XEu3FJbAgAA9TIFtBPQ1Bo6CrLjX9izlmkLukp
 rw7KiEhqkEf8hfyi+MAhcGhFrt3Tt0AyO2ZnHi3SzgFpJGj43wT35gYYPN7yZ5ZSDcNan8AR9Y1r
 K8rwnnifyYekDQzjvwMsEdTmdY3UYiTwzxUIYTiZ+1QY+9Air6WqRX3SPr3qAqf/k4mQNgp8oklH

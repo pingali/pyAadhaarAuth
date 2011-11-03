@@ -52,9 +52,9 @@ import random
 from datetime import datetime
 from M2Crypto import Rand 
 
-from auth_crypt import AuthCrypt 
-from authrequest_signature import AuthRequestSignature
-from auth_validate import AuthValidate
+from crypt import AuthCrypt 
+from signature import AuthRequestSignature
+from validate import AuthValidate
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 

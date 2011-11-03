@@ -183,6 +183,8 @@ class AuthRequestSignature():
                 print "Error: failed to add enveloped transform to reference"
                 return self.cleanup(doc)
         
+	    xmlsec.X509DATA_DEFAULT = xmlsec.X509DATA_CERTIFICATE_NODE | xmlsec.X509DATA_SUBJECTNAME_NODE
+
             # Add <dsig:KeyInfo/> and <dsig:X509Data/>
             keyInfoNode = signNode.ensureKeyInfo(None)
             if keyInfoNode is None:
