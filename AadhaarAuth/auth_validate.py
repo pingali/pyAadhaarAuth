@@ -1,3 +1,12 @@
+#!/usr/bin/env python 
+
+###################################################################
+###### WAIT! WAIT! WAIT! WAIT! WAIT! WAIT! WAIT! WAIT! WAIT! ######
+######                                                       ######
+###### THIS IS FROM THE MASTER BRANCH AND ALWAYS UNDER FLUX. ######
+###### PLEASE CHECK WITH AUTHOR FOR A STABLE VERSION ##############
+###################################################################
+
 #Copyright (C) 2011 by Venkata Pingali (pingali@gmail.com) & TCS 
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,11 +38,31 @@ from lxml import etree, objectify
 from config import Config
 import traceback 
 
+from checksum import VerhoeffChecksum
+
+__author__ = "Venkata Pingali"
+__copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
+__credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
+__license__ = "MIT"
+__version__ = "0.1"
+__maintainer__ = "Venkata Pingali"
+__email__ = "pingali@gmail.com"
+__status__ = "Pre-release"
+
 class AuthValidate(): 
-    
-    def __init__(self, request_xsd, testing=True): 
+    """
+    Validate Auth XMLs 
+    """
+    def __init__(self, request_xsd=None, testing=True): 
         self._testing = testing
         self._request_xsd = request_xsd 
+        return 
+    
+    def set_xsd(self, xsd):
+        """
+        Set the XSD file that will used for validation of the XML 
+        """
+        self._request_xsd = xsd
         return 
 
     def xsd_check_memory(self, xml_text):
@@ -61,18 +90,25 @@ class AuthValidate():
         xml_text = file(xmlfile).read() 
         return self.xsd_check_memory(xml_text) 
     
+
     def check_dom(self, obj, signed=False):
+        """
+        This is the main function. This goes through each of the XML
+        elements and run whatever checks are possible. 
+        """
 
         if obj == None: 
             return False
         
         result = True 
         
+        
         #print objectify.dump(obj) 
 
-        # => Root element
-        # UID present 
-        
+        #################################################
+        # => Auth element
+        #################################################
+
         #<Auth txn="" ac="public"
         #xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
         #ver="1.5" uid="123412341234" tid="public" sa="public">
@@ -82,6 +118,18 @@ class AuthValidate():
             print "UID attribute is either missing or has incorrect length",\
                 "Please check the UID attribute" 
             result = False
+            
+        # UID numbering scheme rules
+        # uid[1]: 0 = reserved, 
+        #         1 = entities 
+        #         2-9 = valid for individuals 
+        #
+        # uid[12]: Verhoeff's checksum 
+        c = VerhoeffChecksum() 
+        if not v.validateVerhoeff(uid):
+            print "Invalid UID. It  has failed integrity check" 
+            result = False
+
 
         # Indirect way of checking namespace 
         tag = obj.tag 
@@ -124,9 +172,12 @@ class AuthValidate():
         if (self._testing):
             if (lk != lk_default):
                 print "lk should be set to 'MK...xQ=' during testing"
-                return False
+                result = False
 
-        # => Skey element checks         
+        #################################################
+        # => Skey
+        #################################################
+
         #<Skey ci="20150922">YlZUdW9kek4yb3UrZ1dNL1ZqeDJmRlBIbHhSVTRwVjd4TkdRVGVGWmJ2eTV0WnQwbUZpYWFzRURyTWdXaXFkdU05Nm4zMXNxenVqR0phZTZvUDVJTXE3ZkVPRzBNemNBdThwWm1XbW9HMjkydCs2cFJkR0FobWVaSFVpZzBSQVFiS1ZVL3pnVDhocXp6d2xLNWljTTB0STNMSE1LT3paU3V1VmNVbGxKbTZ2SlF3aUZTUWwzWFRVQW51SGdaeXRMTHN0RkRCZXo2U0laRmNBckxRQytEL2xWWlhPdGE4RUIwMGdyVmtpZUc1aE8xVzlaemdTa295SC96dC9ic0trSXdZdTZhMGE2N25wQng1V0hWMGdsbnpZQkRlOE1CTkduWm9TWGE0RUdya0xLNnZTdlVFaEU5WnRKMDdJSkxUS3lsUTFFV3U4YVFXQnd6UEdsVk4vM2x3PT0=</Skey>
 
         # Check for uidai's cert expiry date
@@ -146,6 +197,10 @@ class AuthValidate():
                 print "Default value for session key length = %d" % (session_key_len_default)
                 result = False 
                 
+        #################################################
+        # => Uses
+        #################################################
+
         #<Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
         for attrib in ['pfa', 'bio', 'pin', 'pa', 'otp', 'pi']:
             attrib_val = obj["Uses"].get(attrib)
@@ -160,8 +215,11 @@ class AuthValidate():
             (pi == "y" and bio == "y")):
             print "pi and bio attributes are mutually exclusive"
             result = False 
-        
-        # Data element. 
+
+        #################################################
+        # => Data and Hmac
+        #################################################
+
         obj["Data"]  # raise an exception if this is not present
         obj["Hmac"]  # raise an exception if this is not present
         
@@ -183,15 +241,20 @@ class AuthValidate():
                 "'http://www.w3.org/2000/09/xmldsig#'"
             return False
 
+        #################################################
+        # => SignedInfo
+        #################################################
         signedinfo = signature.SignedInfo
-
+        
+        # => Canonicalization
         canonalg = signedinfo.CanonicalizationMethod.get("Algorithm")
         canonalg_default = "http://www.w3.org/2001/10/xml-exc-c14n#"
         if (canonalg != canonalg_default):
             print "CanonicalizationMethod algorithm is non-existent or invalid"
             print "The Algorithm should be ", canonalg_default
             result = False
-        
+         
+        # => SignatureMethod
         sigmethodalg = signedinfo.SignatureMethod.get("Algorithm")
         sigmethodalg_default="http://www.w3.org/2000/09/xmldsig#rsa-sha1"
         if (sigmethodalg != sigmethodalg_default):
@@ -199,6 +262,8 @@ class AuthValidate():
             print "The Algorithm should be ", sigmethodalg_default
             result = False            
   
+
+        # => Transform
         reference = signedinfo.Reference
         transformalg = reference.Transforms.Transform.get("Algorithm")
         transformalg_default="http://www.w3.org/2000/09/xmldsig#enveloped-signature" 
@@ -207,6 +272,7 @@ class AuthValidate():
             print "The Algorithm should be ", transformalg_default
             result = False
         
+        # => DigestMethod
         digestmethodalg = reference.DigestMethod.get("Algorithm")
         digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
         if (digestmethodalg != digestmethodalg_default):
@@ -214,16 +280,22 @@ class AuthValidate():
             print "The Algorithm should be ", digestmethodalg_default
             result = False
         
+        # => DigestValue
         digestvalue = reference.DigestValue.text
         if (digestvalue == None):
             print "Digest value should be non-null"
             result = False
 
+        # => SignatureValue
         sigvalue = signature.SignatureValue.text
         if (sigvalue == None):
             print "Signature value should be non-null"
             result = False
 
+
+        #################################################
+        # => KeyInfo
+        #################################################
         try:
             keyinfo = signature.KeyInfo
         except:
@@ -242,6 +314,7 @@ class AuthValidate():
                 print "X509SubjectName element is missing" 
                 result = False 
             
+            #=> If testing mode, check the name in the certificate
             if (self._testing): 
                 # First turn this 
                 #<X509SubjectName>CN=Public AUA,OU=Public,O=Public 
@@ -266,7 +339,11 @@ class AuthValidate():
                 print "XML is compliant and probably valid" 
                 return result
 
+    def xmlsec_check(self, xmlfile, certfile):
 
+        from authrequest_verify import AuthRequestVerify
+        v = AuthRequestVerify(certfile)
+        v.verify(xmlfile)
     
     def validate(self, xml,is_file=True, signed=False): 
 
@@ -295,42 +372,57 @@ if __name__ == '__main__':
     assert(sys.argv)
     if len(sys.argv) < 2:
         print """
-Error: wrong number of arguments.
+Error: command line should specify a config file.
 
-Usage: auth_validate.py <xml-file> [<xsd-file>]
+Usage: auth_validate.py <config-file>
 
-Examples: 
+$ cat example.cfg
+# Configuration for the AuthXML validator
+validate: {
+    command: 'xml-with-signature',
+    xsd: 'xsd/uid-auth-request.xsd',
+    xml: 'fixtures/authrequest-with-sig.xml',
+    signed: True, 
+    cert: 'fixtures/public.pem'
+}
 
-      $python auth_validate.py fixtures/authrequest.xml xsd/authrequest.xsd
+command options: 
 
+      'xsd'
       This assumes unsigned xml and validates the xml against the XSD.
       In addition it does XML element-by-element content validation" 
 
-      $python auth_validate.py fixtures/authrequest-with-sig.xml
-
-      This assumes signed xml and does not use XSD for validation.
+      'xml-only' 
       The script only does XML element-by-element content validation
+      This does not do any XSD validation 
+      
+      'xml-with-signature'
+      This is 'xml-only' plus signature validation 
+
 """
         exit(1)
 
-    xsdfile = None
-    signed=True  # default 
-    xmlfile = sys.argv[1]
-    if (len(sys.argv) > 2):
-        # XSD file provided.
-        xsdfile = sys.argv[2]
-        signed=False
 
-    #cfg = Config('fixtures/auth.cfg') 
-    #v = AuthValidate(cfg.xsd.request) 
-    v=AuthValidate(xsdfile)
-    print "Validating Auth Request XML" 
-    #v.validate('fixtures/authrequest-with-sig.xml',signed=True)
-    v.validate(xmlfile, signed)
+    cfg = Config(sys.argv[1]) 
+    
+    v=AuthValidate()
+
+    if cfg.validate.command == 'xsd':
+        v.set_xsd(cfg.validate.xsd)
+        v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
+    elif cfg.validate.command == 'xml-only':
+        v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
+    #elif cfg.validate.command == 'xml-with-signature':
+    #    v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
+    #    v.xmlsec_check(xmlfile, cfg.validate.cert)
+    else:
+        print "Unknown validate command: ", cfg.validate.command
+        exit(1)
+
 
 #
 #========================================================
-#================ Sample Certificate ====================
+#================ Sample XML ====================
 #========================================================
 #<?xml version="1.0"?> 
 #<Auth xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" 
