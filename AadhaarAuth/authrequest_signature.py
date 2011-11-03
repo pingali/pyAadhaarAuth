@@ -218,10 +218,10 @@ class AuthRequestSignature():
         
         # Load certificate and add to the key
         # if not check_filename(cert_file):
-        #    return cleanup(doc, dsig_ctx)
+        #    return self.cleanup(doc, dsig_ctx)
         # if xmlsec.cryptoAppKeyCertLoad(key, cert_file, xmlsec.KeyDataFormatPem) < 0:
         #    print "Error: failed to load pem certificate \"%s\"" % cert_file
-        #    return cleanup(doc, dsig_ctx)
+        #    return self.cleanup(doc, dsig_ctx)
         
         # Set key name to the file name, this is just an example!
         if key.setName(pkcs_file) < 0:
@@ -237,84 +237,64 @@ class AuthRequestSignature():
         #doc.dump("-")
         #doc.formatDump("-", 0)
         import libxml2mod
-        libxml2mod.xmlDocFormatDump("-", doc._o, 0)
-
+        
+        output_file = xml_file + ".sig"
+        fp = file(output_file, "w")
+        libxml2mod.xmlDocFormatDump(fp, doc._o, 0)
+        fp.close()
+        
+        print "Please check output file ", output_file
+        
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
 
-    #=> From verify3 
-    # Creates simple keys manager and load trusted certificates from
-    # PEM files.  The caller is responsible for destroying returned
-    # keys manager using destroy method.
-    #
-    # Returns the newly created keys manager or None if an error occurs.
-    def load_trusted_certs(self, cert):
-        """
-        Create and initialize keys manager, we use a simple list based
-        keys manager, implement your own KeysStore klass if you need
-        something more sophisticated
-        """
+    #=> From verify1
+    # Verifies XML signature in xml_file using public key from key_file.
+    # Returns 0 on success or a negative value if an error occurs.
+    def verify_file(self, xml_file, key_file):
+        assert(xml_file)
+        assert(key_file)
 
-        mngr = xmlsec.KeysMngr()
-        if mngr is None:
-            print "Error: failed to create keys manager."
-            return None
-
-        if xmlsec.cryptoAppDefaultKeysMngrInit(mngr) < 0:
-            print "Error: failed to initialize keys manager."
-            mngr.destroy()
-            return None
-
-        if not self.check_filename(file):
-            mngr.destroy()
-            return None
-
-        # Load trusted cert
-        if mngr.certLoad(cert, xmlsec.KeyDataFormatPem,
-                         xmlsec.KeyDataTypeTrusted) < 0:
-            print "Error: failed to load pem certificate from \"%s\"", file
-            mngr.destroy()
-            return None
-        return mngr
-
-
-    def verify_file(self, xml_file, cert):
-        # Verifies XML signature in xml_file.
-        # Returns 0 on success or a negative value if an error occurs.
-
-        # Create keys manager and load trusted certificates
-        mngr = self.load_trusted_certs(cert)
-        if (mngr == None):
-            return -1
-        
         # Load XML file
         if not self.check_filename(xml_file):
             return -1
-        
+
         doc = libxml2.parseFile(xml_file)
         if doc is None or doc.getRootElement() is None:
             print "Error: unable to parse file \"%s\"" % tmpl_file
-            return cleanup(doc)
-        
+            return self.cleanup(doc)
+
         # Find start node
         node = xmlsec.findNode(doc.getRootElement(),
                                xmlsec.NodeSignature, xmlsec.DSigNs)
-        if node is None:
-            print "Error: start node not found in \"%s\"", xml_file
-            return cleanup(doc) 
 
-        # Create signature context
-        dsig_ctx = xmlsec.DSigCtx(mngr)
+        # Create signature context, we don't need keys manager in this example
+        dsig_ctx = xmlsec.DSigCtx()
         if dsig_ctx is None:
             print "Error: failed to create signature context"
-            mngr.destroy()
-            return cleanup(doc)
+            return self.cleanup(doc)
+
+        # Load private key, assuming that there is not password
+        key = xmlsec.cryptoAppKeyLoad(key_file, xmlsec.KeyDataFormatPem,
+                                      None, None, None)
+        if key is None:
+            print "Error: failed to load private pem key from \"%s\"" % key_file
+            return self.cleanup(doc, dsig_ctx)
+
+        dsig_ctx.signKey = key
+
+        # Set key name to the file name, this is just an example!
+        if not self.check_filename(key_file):
+            return self.cleanup(doc, dsig_ctx)
+
+        if key.setName(key_file) < 0:
+            print "Error: failed to set key name for key from \"%s\"" % key_file
+            return self.cleanup(doc, dsig_ctx)
 
         # Verify signature
         if dsig_ctx.verify(node) < 0:
             print "Error: signature verify"
-            mngr.destroy()
-            return cleanup(doc, dsig_ctx)
+            return self.cleanup(doc, dsig_ctx)
 
         # Print verification result to stdout
         if dsig_ctx.status == xmlsec.DSigStatusSucceeded:
@@ -323,8 +303,7 @@ class AuthRequestSignature():
             print "Signature is INVALID"
 
         # Success
-        mngr.destroy()
-        return cleanup(doc, dsig_ctx, 1)
+        return self.cleanup(doc, dsig_ctx, 1)
     
     def cleanup(self, doc=None, dsig_ctx=None, res=-1):
         if dsig_ctx is not None:
@@ -361,15 +340,14 @@ if __name__ == "__main__":
     x = AuthRequestSignature(cfg.request.use_template) 
     x.init_xmlsec() 
     res = x.sign_file(sys.argv[1], 
-                      cfg.request.local_pkcs_path, 
+                      cfg.request.local_pkcs_path,
                       cfg.request.pkcs_password)
     x.shutdown_xmlsec() 
 
     # For verification 
     y = AuthRequestSignature()
-    x.init_xmlsec() 
-    res = x.verify_file(sys.argv[1], "fixtures/public.pem")                        
-    x.shutdown_xmlsec() 
-    
-    
+    y.init_xmlsec() 
+    res = y.verify_file(sys.argv[1] + ".sig", "fixtures/public_key.pem")
+    y.shutdown_xmlsec() 
+
     sys.exit(res)
