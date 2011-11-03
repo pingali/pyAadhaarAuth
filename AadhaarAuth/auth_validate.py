@@ -126,10 +126,9 @@ class AuthValidate():
         #
         # uid[12]: Verhoeff's checksum 
         c = VerhoeffChecksum() 
-        if not v.validateVerhoeff(uid):
+        if not c.validateVerhoeff(uid):
             print "Invalid UID. It  has failed integrity check" 
             result = False
-
 
         # Indirect way of checking namespace 
         tag = obj.tag 
