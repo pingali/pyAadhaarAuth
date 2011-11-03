@@ -13,10 +13,13 @@ FEATURES
 Mostly a wishlist right now. By Python will help achieve a 
 lot of these painlessly. 
 
-1. Easy configuration file
-2. Automatic XSD validation and other checks 
-3. Cross platform 
-4. Integration with web applications 
+1. Simple api 
+
+2. Automatic UID numbering scheme checks, XSD validation and other
+checks
+3. Cross platform availability 
+4. Down the line integration with web applications 
+5. High enough quality to be a reference platform
 
 USAGE 
 =====
@@ -86,6 +89,7 @@ XSD is providing (e.g., sanity checks)
 certificate information - done
 8. Make this into a module - in progress 
 9. Test with https connection 
+10. A batch-mode operation 
 
 Running 
 ======
