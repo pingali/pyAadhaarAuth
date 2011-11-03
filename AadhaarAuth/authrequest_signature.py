@@ -70,6 +70,15 @@ import xmlsec
 from config import Config 
 from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
 
+__author__ = "Venkata Pingali"
+__copyright__ = "Copyright 2011,Venkata Pingali and TCS (for derived parts only)" 
+__credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
+__license__ = "MIT"
+__version__ = "0.1"
+__maintainer__ = "Venkata Pingali"
+__email__ = "pingali@gmail.com"
+__status__ = "Pre-release"
+
 
 class AuthRequestSignature(): 
     

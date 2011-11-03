@@ -49,6 +49,15 @@ sys.path.insert(0, '../')
 import libxml2
 import xmlsec
 
+__author__ = "Venkata Pingali"
+__copyright__ = "Copyright 2011,Venkata Pingali and TCS (for derived parts only)" 
+__credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
+__license__ = "MIT"
+__version__ = "0.1"
+__maintainer__ = "Venkata Pingali"
+__email__ = "pingali@gmail.com"
+__status__ = "Pre-release"
+
 def main():
     assert(sys.argv)
     if len(sys.argv) < 3:

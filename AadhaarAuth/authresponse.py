@@ -32,6 +32,15 @@ import traceback
 import base64 
 from datetime import * 
 
+__author__ = "Venkata Pingali"
+__copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
+__credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
+__license__ = "MIT"
+__version__ = "0.1"
+__maintainer__ = "Venkata Pingali"
+__email__ = "pingali@gmail.com"
+__status__ = "Pre-release"
+
 
 #<AuthRes ret="n" code="" txn="" err="" info="" ts="">
 #</AuthRes>
