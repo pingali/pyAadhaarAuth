@@ -22,16 +22,18 @@ import os, sys
 import hashlib 
 from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
 import base64 
+import random 
 
 class AuthCrypt():
     """
     Encryption/decryption functions required by the authentication
     classes. This should eventually move to 'lib' directory 
     """
-    def __init__(self, pub_key="", priv_key=""):
+    def __init__(self, cfg, pub_key="", priv_key=""):
+        self._cfg = cfg 
         self._public_key = pub_key
         self._private_key = priv_key
-        self._enc_alg = 'aes_256_ecb'
+        self._enc_alg = cfg.common.encryption_algorithm
         return 
     
     def x509_get_cert_expiry(self): 
@@ -135,7 +137,7 @@ class AuthCrypt():
         #print "AES encryption successful\n"             
         return encrypt(msg)         
         
-    def aes_decrypt(self, key,msg, iv=None):             
+    def aes_decrypt(self, key, msg, iv=None):             
         """
         Decrypt msg from the key (which is assumed to be in plain
         text - not encoded).
@@ -158,22 +160,67 @@ class AuthCrypt():
             return v             
         #print "AES decryption successful\n"             
         return decrypt(msg) 
-    
+
+    def aes_test(self, key, msg):
+        
+        # some random lengths 
+        msg_len = 50
+        key_len 10 
+        
+        # Generate randome strings if necessary
+        chars=string.ascii_uppercase + string.digits
+        if msg == None: 
+            msg = return ''.join(random.choice(chars) \
+                                     for x in range(msg_len)) 
+        if key == None: 
+            key = return ''.join(random.choice(chars) \
+                                     for x in range(key_len)) 
+
+        enc_msg=auth.aes_encrypt(key=key,msg=msg)
+
+        print "AES Encryption testing"
+        print "Original text ", msg
+        print "Encrypted encoded text ", enc_msg
+
+        dec_msg=auth.aes_decrypt(key=key,msg=enc_msg) 
+        print "decrypted text ", dec_msg
+        if (msg == dec_msg):
+            print "AES encryption successful"
+        else:
+            print "AES encryption FAILED!" 
 
 if __name__ == '__main__':
-    
-    auth = AuthCrypt("fixtures/public.pem", "fixtures/public.pem") 
-    print "certificate expiry = ", auth.x509_get_cert_expiry()
-    auth.x509_test() 
+      assert(sys.argv)
+    if len(sys.argv) < 2:
+        print """
+Error: command line should specify a config file.
 
-    original_text = "qwrtttrtyutyyyyy"
-    msg=auth.aes_encrypt(key="123452345",msg=original_text)
-    print "AES Encryption testing"
-    print "Original text ", original_text
-    print "Encrypted encoded text ", msg
-    decrypted_text=auth.aes_decrypt(key="123452345",msg=msg) 
-    print "decrypted text ", decrypted_text
-    if (original_text == decrypted_text):
-        print "AES encryption successful"
+Usage: crypt.py <config-file>
+
+$ cat example.cfg
+common: { 
+    private_key: 'fixtures/public_key.pem', # note that public refers to
+    public_cert: 'fixtures/public_cert.pem', # public AuA 
+}
+crypt: {
+    command: "test",
+    msg: "qwrtttrtyutyyyyy",
+    key: "sdkfsdfldfh123213213" 
+}
+"""    
+    cfg = Config(sys.argv[1]) 
+    
+    if (cfg.crypt.command == "test"):
+        auth = AuthCrypt(cfg.common.public_cert, # use uid_cert in 
+                         cfg.common.private_key) # production
+
+        print "certificate expiry = ", auth.x509_get_cert_expiry()
+        auth.x509_test() 
+
+        msg = cfg.crypt.msg 
+        key = cfg.crypt.key
+        auth.aes_test(key, msg) 
+
     else:
-        print "AES encryption FAILED!" 
+        raise Exception("Unknown command") 
+    

@@ -91,12 +91,12 @@ class AuthResponse():
     def get_ts(self):
         self._ts 
 
-    def xsd_check(self, xml_text=None):
+    def xsd_check(self, xml_text,xsd):
         
         if xml_text == None: 
             xml_text = self.tostring() 
-
-        f = file(cfg.xsd.response)
+        
+        f = file(xsd)
         schema = etree.XMLSchema(file=f)
         parser = objectify.makeparser(schema = schema)
         try: 
@@ -129,20 +129,41 @@ class AuthResponse():
         doc = etree.ElementTree(root) 
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
 
-    def load(self, xmlfile):        
-        xml_text = file(xmlfile).read() 
-        o = self.xsd_check(xml_text) 
-        
-if __name__ == '__main__':
+    #def load(self, xmlfile, xsdfile):
+    #    xml_text = file(xmlfile).read() 
+    #    o = self.xsd_check(xml_text, xsdfile) 
     
-    cfg = Config('fixtures/auth.cfg') 
-    x = AuthResponse(cfg, err=100, ts=datetime.utcnow())
-    x.validate() 
-    s = x.tostring() 
-    print s 
-    x.xsd_check()
+    
+if __name__ == '__main__':
+    assert(sys.argv)
+    if len(sys.argv) < 2:
+        print """
+Error: command line should specify a config file.
 
-    test_xml = file('fixtures/authresponse.xml').read() 
-    print "Validating this incoming XML" 
-    print test_xml
-    x.xsd_check(test_xml) 
+Usage: validate.py <config-file>
+
+$ cat example.cfg
+common: { 
+    response_xsd: 'xsd/uid-auth-response.xsd'   
+}
+response: { 
+    command: "validate",
+    xml: "fixtures/authresponse.xml'
+}
+"""    
+    cfg = Config(sys.argv[1]) 
+    if (cfg.response.command == "generate"):
+        x = AuthResponse(cfg, err=100, ts=datetime.utcnow())
+        x.validate() 
+        xml = x.tostring() 
+        print s 
+        x.xsd_check(xml, cfg.common.response_xsd)
+    elif (cfg.response.command == "validate"): 
+        test_xml = file(cfg.response.xml).read() 
+        print "Validating this incoming XML" 
+        print test_xml
+        x.xsd_check(test_xml, cfg.common.response_xsd) 
+    else:
+        print "Unknown command %s " % cfg.response.command
+        sys.exit(1) 
+        

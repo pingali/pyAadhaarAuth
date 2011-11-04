@@ -36,19 +36,18 @@
 #</Auth> 
 #
 
-import sys
+import os, sys
 sys.path.append("lib") 
+
+from os import tempfile 
 
 #import libxml2
 from lxml import etree, objectify 
 
 import dumper 
-import hashlib 
-import hmac
+import hashlib, hmac, base64, random 
 from config import Config 
 import traceback 
-import base64 
-import random 
 from datetime import datetime
 from M2Crypto import Rand 
 
@@ -120,6 +119,10 @@ class AuthRequest():
         self._skey = { 
             '_ci': None, 
             '_text': None}
+        self._txn_elem = { 
+            '_type': "",
+            '_num': ""
+            }
         self._uses  = { 
             '_otp': "n", 
             '_pin': "n",
@@ -130,12 +133,32 @@ class AuthRequest():
             }
         self._hmac = ""
         self._data = ""
+        self._meta = {
+            '_idc': "",
+            '_apc': "",
+            '_fdc': "",
+            }
+        self._locn = {
+            '_lat': "",
+            '_lng': "",
+            '_vtc': "",
+            '_subdist': "",
+            '_dist': "",
+            '_state': "",
+            '_pc': ""
+            }
 
     def validate(self): 
         """
         Check for whether the data is complete enough to be able to 
         generate an authentication request. 
         """
+        
+        # Max length of ac = 10 
+        if (self._ac == None or len(self._ac) > 10): 
+            raise Exception("Invalid ac. " + 
+                            "It is mandatory and maxlength is 10")
+
         if ((self._skey['_ci'] == None) or (self._skey['_text'] == None)):
             raise Exception("Invalid Skey ci or text")
         
@@ -155,7 +178,7 @@ class AuthRequest():
         """
         Generate the session and set the Skey parameters. 
         """
-        a = AuthCrypt(cfg.request.uid_cert_path, None) 
+        a = AuthCrypt(cfg.common.uid_cert_path, None) 
         when = a.x509_get_cert_expiry() #Jun 28 04:40:44 2012 GMT
         expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
         self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
@@ -183,7 +206,8 @@ class AuthRequest():
             data = self._pidxml_demographics                
 
         x = AuthCrypt() 
-        self._data = base64.b64encode(x.aes_encrypt(key=self._session_key, msg=data))
+        encrypted_pid = x.aes_encrypt(key=self._session_key, msg=data)
+        self._data = base64.b64encode(encrypted_pid)
         print "Data = ", self._data
 
     def get_data(self):
@@ -198,17 +222,36 @@ class AuthRequest():
         else:
             data = self._pidxml_demographics                
         
-        sha256_data = hashlib.sha256(data).hexdigest()
-        print "Sha256 data = ", sha256_data
+        # This should be digest and not hexdigest 
+        hash_digest = hashlib.sha256(data).digest()
+        print "Sha256 data = ", hash_digest
 
         x = AuthCrypt() 
-        self._hmac = x.aes_encrypt(key=self._session_key, msg=sha256_data)
+        encrypted_hash = x.aes_encrypt(key=self._session_key, 
+                                       msg=hash_digest)
+        self._hmac = base64.b64encode(encrypted_hash) 
         print "Hmac = ", self._hmac 
         return self._hmac 
 
     def get_hmac(self):
         return self._hmac 
-        
+    
+    #<Pid ts="" ver="">
+    #  <Meta fdc="" idc="" apc="">
+    #	<Locn lat="" lng="" vtc="" subdist="" dist="" state="" pc=""/>
+    #  </Meta>
+    #  <Demo lang="">
+    #	<Pi ms=¡±E|P¡± mv="" name="" lname="" lmv="" gender=¡±M|F|T¡± dob="" dobt=¡±V|D|A¡± age="" phone="" email=""/>
+    #	<Pa ms=¡±E¡± co="" house="" street="" lm="" loc=""
+    #	    vtc="" subdist="" dist="" state="" pc="" po=""/> 
+    #	<Pfa ms=¡±E|P¡± mv="" av="" lav="" lmv=""/>
+    #  </Demo>
+    #  <Bios>
+    #	<Bio type=¡±FMR|FIR|IIR¡± pos="">encoded biometric</Bio>
+    #  </Bios>
+    #  <Pv otp="" pin=""/>
+    #</Pid>
+
     def set_pidxml_biometrics(self, datatype="FMR", 
                               data=None, ts=None):
         
@@ -229,7 +272,7 @@ class AuthRequest():
         # timestamp may be set there. If it not set, set it to 
         # local time 
         if ts == None:
-            ts = Datetime.utcnow() 
+            ts = Datetime.now() 
 
         root = etree.Element('Pid', 
                              xmlns=self.data_xmlns,
@@ -248,7 +291,7 @@ class AuthRequest():
 
     def set_pidxml_demographics(self, datatype="Name", 
                                 data=None, ts=None):
-        """
+        """ 
         Generate the demographics XML payload.
         """
 
@@ -258,7 +301,7 @@ class AuthRequest():
         self._uses['_pi'] = "y" 
         
         if ts == None:
-            ts = datetime.utcnow() 
+            ts = datetime.now() 
 
         # construct the demographics xml 
         root = etree.Element('Pid', 
@@ -281,15 +324,24 @@ class AuthRequest():
         self.validate()
 
         root = etree.Element('Auth', 
-                                xmlns=self.request_xmlns,
-                                ver=self._ver,
-                                tid=self._tid, 
-                                ac=self._ac, 
-                                sa=self._sa,
-                                txn = self._txn,
-                                uid = self._uid,
-                                lk=self._lk
-                                )
+                             xmlns=self.request_xmlns,
+                             ver=self._ver,
+                             tid=self._tid, 
+                             ac=self._ac, 
+                             sa=self._sa,
+                             txn = self._txn,
+                             uid = self._uid,
+                             lk=self._lk
+                             )
+
+        #meta = etree.SubElement(root, "Meta",
+        #                        fdc=self._meta['fdc'],
+        #                        ipc=self._meta['ipc'],
+        #                        apc=self._meta['apc'])
+        #txn = etree.SubElement(root, "Txn",
+        #                        type=self._txn_elem['_type'],
+        #                        num=self._txn_elem['_num'])
+        
         skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
         skey.text = base64.b64encode(self._skey['_text'])
         
@@ -312,38 +364,187 @@ class AuthRequest():
         
 if __name__ == '__main__':
     
-    cfg = Config('fixtures/auth.cfg') 
-    x = AuthRequest(cfg, uid="123412341237")
-    x.set_skey() 
-    x.set_pidxml_demographics(data="KKKK")
-    x.set_data()
-    x.set_hmac() 
-    xml = x.tostring() 
+  now() 
+
+        # construct the demographics xml 
+        root = etree.Element('Pid', 
+                             xmlns=self.data_xmlns, 
+                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
+                             ver="1.0")
+        demo = etree.SubElement(root, "Demo")
+        pi=etree.SubElement(demo, "Pi", ms="E", name=data)
+        doc = etree.ElementTree(root) 
+        
+        # update the internal state 
+        self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
+        return True 
+
+    def tostring(self):
+        """
+        Generate the XML text that must be sent across to the uid
+        client.
+        """
+        self.validate()
+
+        root = etree.Element('Auth', 
+                             xmlns=self.request_xmlns,
+                             ver=self._ver,
+                             tid=self._tid, 
+                             ac=self._ac, 
+                             sa=self._sa,
+                             txn = self._txn,
+                             uid = self._uid,
+                             lk=self._lk
+                             )
+
+        #meta = etree.SubElement(root, "Meta",
+        #                        fdc=self._meta['fdc'],
+        #                        ipc=self._meta['ipc'],
+        #                        apc=self._meta['apc'])
+        #txn = etree.SubElement(root, "Txn",
+        #                        type=self._txn_elem['_type'],
+        #                        num=self._txn_elem['_num'])
+        
+        skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
+        skey.text = base64.b64encode(self._skey['_text'])
+        
+        uses = etree.SubElement(root, "Uses", 
+                                otp=self._uses['_otp'],
+                                pin=self._uses['_pin'],
+                                bio=self._uses['_bio'],
+                                pfa=self._uses['_pfa'],
+                                pi=self._uses['_pi'],
+                                pa=self._uses['_pa'])
+        
+        data = etree.SubElement(root, "Data")
+        data.text = self._data
+        hmac = etree.SubElement(root, "Hmac")
+        hmac.text = self._hmac
+
+        doc = etree.ElementTree(root) 
+        return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
+
+        
+if __name__ == '__main__':
+       
+    assert(sys.argv)
+    if len(sys.argv) < 2:
+        print """
+Error: command line should specify a config file.
+
+Usage: request.py <config-file>
+
+$ cat example.cfg 
+common: { 
+    # Specific to this AuA
+    license_key:  "MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=",
+    private_key: 'fixtures/public_key.pem',  # note that public refers to
+    public_cert: 'fixtures/public_cert.pem', # public AuA 
+    pkcs_path: "fixtures/public.p12",
+    pkcs_password: "public",
+    uid_cert_path: "fixtures/uidai_auth_stage.cer",
+
+    # shared by all 
+    rsa_key_len: 32, 
+    sha256_length: 256,    
+    auth_url: 'http://auth.uidai.gov.in/1.5/'    
+    request_xsd: 'xsd/uid-auth-request.xsd',
+    response_xsd: 'xsd/uid-auth-response.xsd'   
+
+}
+
+request: { 
     
-    print "XML = ", xml
+    #=> parameters 
+    use_template: False, 
 
-    v = AuthValidate(cfg.xsd.request) 
-    res = v.validate(xml, is_file=False, signed=False)
-    if (res == False): 
-        print "Invalid XML generated" 
-
-    tmpfile='/tmp/xxxx'
-    signed_tmpfile = tmpfile + ".sig" 
-
-    fp = file(tmpfile, 'w')
-    fp.write(xml) 
-    fp.close() 
-    print "Have written tmp file", tmpfile 
-
-    sig = AuthRequestSignature() 
-    sig.init_xmlsec() 
-    res = sig.sign_file(tmpfile, 
-                      cfg.request.local_pkcs_path, 
-                      cfg.request.pkcs_password)
-    sig.shutdown_xmlsec() 
-
-    print "Result of signing ", res
+    #=> Input data
+    command: "generate",
+    uid: "123412341237",
+    name: "KKKKK", 
     
-    res = v.validate(signed_tmpfile, is_file=True, signed=True)
+    xml: "/tmp/request.xml",
+    signedxml: "/tmp/request.xml.sig",
+    xmlcleanup: False
+}
+
+"""
     
-    print "Result = ", res 
+    cfg = Config(sys.argv[1])
+    checker = AuthValidate(cfg.common.request_xsd) 
+    
+    if cfg.request.command == "generate": 
+
+        # => Generate the XML file 
+        req = AuthRequest(cfg, cfg.request.uid)
+        req.set_skey() 
+        req.set_pidxml_demographics(data=cfg.request.name)
+        req.set_data()
+        req.set_hmac() 
+        xml = req.tostring()  # dump it 
+        
+        print "Unsigned XML:"
+        print xml
+    
+        # Now validate the xml generated 
+        res = checker.validate(xml, is_file=False, signed=False)
+        if (res == False): 
+            print "Invalid XML generated" 
+
+        # => Store the xml and generated a signed version
+        if (cfg.request.xml == None): 
+            tmpfp = tempfile.NamedTemporaryFile(delete=False) 
+            tmpfp_unsigned = tmpfp.name
+        else:
+            tmpfp_unsigned = cfg.request.xml
+            tmpfp = file(tmpfp_unsigned)
+        tmpfp.write(xml) 
+        tmpfp.flush() 
+        tmpfp.close() 
+        
+        #=> Generate the signed version
+        if (cfg.request.signedxml == None): 
+            tmpfp_signed = cfg.request.signedxml 
+        else:
+            tmpfp_signed = tmpfp_name + ".sig" 
+         
+        # => Sign the XML generated
+        sig = AuthRequestSignature() 
+        sig.init_xmlsec() 
+        res = sig.sign_file(tmpfp_unsigned, 
+                            tmpfp_signed, 
+                            cfg.common.local_pkcs_path, 
+                            cfg.common.pkcs_password)
+        sig.shutdown_xmlsec() 
+        print "Result of signing ", res
+
+        signed_content = file(tmpfp_signed).read() 
+        print "Signed XML (%s):" % tmpfp_signed
+        print signed_content 
+        
+        # Validate the signed file 
+        res = checker.validate(tmpfp_signed, is_file=True, signed=True)
+        print "Validated XML generated with result = ", res
+
+        # Now cleanup 
+        if (cfg.request.xmlcleanup is not None or 
+            cfg.request.xmlcleanup is true): 
+            os.unlink(tmpfp_unsigned) 
+            os.unlink(tmpfp_signed)
+
+    elif (cfg.request.command == "validate"): 
+
+        # Validate the signed file 
+        tmpfp_signed = cfg.request.signedxml
+        res = checker.validate(tmpfp_signed, 
+                               is_file=True, signed=True)
+        print "Validated XML generated with result = ", res
+
+    elif (cfg.request.command == "extract"): 
+        # Now extract the contents 
+        res = checker.extract(tmpfp_signed, 
+                              cfg.common.private_key)
+        print "Extracted XML with result = ", res
+    else: 
+        raise Exception("Unknown command") 
+    

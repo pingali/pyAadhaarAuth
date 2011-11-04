@@ -137,7 +137,7 @@ class AuthRequestSignature():
     # created enveloped signature template. The certificate from cert_file
     # is placed in the <dsig:X509Data/> node.
     # Returns 0 on success or a negative value if an error occurs.
-    def sign_file(self, xml_file, pkcs_file, password):
+    def sign_file(self, xml_file, signed_xml_file, pkcs_file, password):
         assert(xml_file)
         assert(pkcs_file)
         assert(password)
@@ -240,8 +240,7 @@ class AuthRequestSignature():
         #doc.formatDump("-", 0)
         import libxml2mod
         
-        output_file = xml_file + ".sig"
-        fp = file(output_file, "w")
+        fp = file(signed_xml_file, "w")
         libxml2mod.xmlDocFormatDump(fp, doc._o, 0)
         fp.close()
         
@@ -325,31 +324,59 @@ class AuthRequestSignature():
 if __name__ == "__main__":
     assert(sys.argv)
     if len(sys.argv) < 2:
-        print "Error: wrong number of arguments."
-        print "Usage: %s <xml-tmpl> " % sys.argv[0]
-        print "" 
-        print "Note that there are three implicit arguments (from config file)"
-        print "    pkcs12 - signer's p12 files"
-        print "    password - password for the p12 files" 
-        print "    use_template - whether the xml has signature template or not"
-        print "They are obtained from the auth.cfg file" 
-        print "" 
-        sys.exit(1)
-    
-    cfg = Config('fixtures/auth.cfg')  
-    
-    # For signatures
-    x = AuthRequestSignature(cfg.request.use_template) 
-    x.init_xmlsec() 
-    res = x.sign_file(sys.argv[1], 
-                      cfg.request.local_pkcs_path,
-                      cfg.request.pkcs_password)
-    x.shutdown_xmlsec() 
+        print """
+Error: command line should specify a config file.
 
-    # For verification 
-    y = AuthRequestSignature()
-    y.init_xmlsec() 
-    res = y.verify_file(sys.argv[1] + ".sig", "fixtures/public_key.pem")
-    y.shutdown_xmlsec() 
+Usage: signature.py <config-file>
 
+$ cat example.cfg
+# Sign a given XML using the pkcs 
+common: { 
+    local_pkcs_path: 'fixtures/public.p12',
+    pkcs_password: 'public',
+    private_key: 'fixtures/public_key.pem',
+....
+}
+sign: {
+    command: 'sign'
+    xml: 'fixtures/authrequest.xml',
+    signedxml: 'fixtures/authrequest.xml.sig',
+}
+$ cat example2.cfg 
+# Verify the signature in a signed xml
+sign: {
+    command: 'verify'
+    signedxml: 'fixtures/authrequest.xml.sig',
+}
+"""
+
+    #=> Read the configuration. 
+    # XXX Document the format of the configuration file
+    cfg = Config(sys.argv[1])
+    
+    if cfg.sign.command == "sign": 
+
+        # Sign the XML file 
+        # XXX Should probably move the init_xmlsec into sign_file itself
+        sign = AuthRequestSignature() 
+        sign.init_xmlsec() 
+        res = sign.sign_file(cfg.sign.xml,
+                             cfg.sign.signedxml,
+                             cfg.common.local_pkcs_path,
+                             cfg.common.pkcs_password)
+        sign.shutdown_xmlsec() 
+    
+        print "Please check the output in %s " % signed_xml_file 
+    elif cfg.sign.command == "verify": 
+
+        # Load this or another file for verification using the 
+        # private key of public.12 
+        verify = AuthRequestSignature()
+        verify.init_xmlsec() 
+        res = verify.verify_file(cfg.sign.signedxml, 
+                                 cfg.common.private_key)
+        verify.shutdown_xmlsec() 
+    else:
+        raise Exception("Unknown error") 
+    
     sys.exit(res)

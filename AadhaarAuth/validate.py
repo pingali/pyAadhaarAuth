@@ -338,11 +338,11 @@ class AuthValidate():
                 print "XML is compliant and probably valid" 
                 return result
 
-    def xmlsec_check(self, xmlfile, certfile):
-
-        from authrequest_verify import AuthRequestVerify
-        v = AuthRequestVerify(certfile)
-        v.verify(xmlfile)
+    #def xmlsec_check(self, xmlfile, certfile):
+    #
+    #    from authrequest_verify import AuthRequestVerify
+    #    v = AuthRequestVerify(certfile)
+    #    v.verify(xmlfile)
     
     def validate(self, xml,is_file=True, signed=False): 
 
@@ -366,6 +366,51 @@ class AuthValidate():
             obj = objectify.fromstring(xml_text)
             return self.check_dom(obj,signed)
         
+    # Check the contents of the payload 
+    def extract(self, xml, is_file, key):
+        """
+        Extractor of the XML content using private key
+        """
+        
+        #=> First extract the dom 
+        if is_file:
+            xml_text = file(xml).read()
+        else:
+            xml_text = xml 
+        obj = objectify.fromstring(xml_text)
+
+        # Load the private key
+        crypt = AuthCrypt(pub_key="", priv_key=key)
+        
+        # Extract the session key 
+        encrypted_skey = obj.Skey.text 
+        skey = crypt.x509_decrypt(encrypted_skey)
+        print "Extracted skey (encoded) = ",  \
+            base64.b64encode(decrypted_skey)
+
+        # Extract the data
+        data = obj.Data.text 
+        encrypted_pid = base64.b64decode(data) 
+        
+        #=> Decrypt the data
+        decrypted_pid = crypt.aes_decrypt(skey, encrypted_pid)
+        
+        #=> Decrypt the hmac 
+        encoded_hmac = obj.Hmac.text 
+        decoded_hmac = base64.b64decode(encoded_hmac) 
+        payload_pid_hash = crypt.aes_decrypt(skey, decoded_hmac) 
+        
+        #=> Compute the hmac now for the pid element
+        computed_pid_hash = hashlib.sha356(decypted_pid).digest() 
+        
+        #=> Check for consistency 
+        if (payload_pid_hash != computed_pid_hash): 
+            raise Exception("Pid Element's hash in the " + \
+                            "payload and computed value do not match")
+        
+        print "Extracted data" 
+        print decrypted_pid 
+
 if __name__ == '__main__':
     
     assert(sys.argv)
@@ -373,16 +418,26 @@ if __name__ == '__main__':
         print """
 Error: command line should specify a config file.
 
-Usage: auth_validate.py <config-file>
+Usage: validate.py <config-file>
 
 $ cat example.cfg
 # Configuration for the AuthXML validator
+common: {
+    request_xsd: 'xsd/uid-auth-request.xsd',
+...
+    private_key: 'fixtures/public_key.pem' # note: this is pvt key of public AUA
+}
 validate: {
-    command: 'xml-with-signature',
-    xsd: 'xsd/uid-auth-request.xsd',
+    command: 'xml-only',
     xml: 'fixtures/authrequest-with-sig.xml',
     signed: True, 
-    cert: 'fixtures/public.pem'
+}
+
+$ cat example2.cfg 
+# Configuration for the AuthXML validator
+validate: {
+    command: 'extract',
+    xml: 'fixtures/authrequest-with-sig.xml',
 }
 
 command options: 
@@ -395,8 +450,15 @@ command options:
       The script only does XML element-by-element content validation
       This does not do any XSD validation 
       
-      'xml-with-signature'
+      'extract' 
+      Extract the session and payload (pid) data, and check for 
+      integrity 
+
+      'xml-with-signature' (not supported yet)
       This is 'xml-only' plus signature validation 
+  
+      'extract'
+      Extract the contents using specified private key and show
 
 """
         exit(1)
@@ -404,16 +466,21 @@ command options:
 
     cfg = Config(sys.argv[1]) 
     
-    v=AuthValidate()
+    checker=AuthValidate()
 
     if cfg.validate.command == 'xsd':
-        v.set_xsd(cfg.validate.xsd)
-        v.validate(cfg.validate.xml, is_file=True, signed=cfg.validate.signed)
+        checker.set_xsd(cfg.common.response_xsd)
+        checker.validate(cfg.validate.xml, is_file=True, 
+                         signed=cfg.validate.signed)
     elif cfg.validate.command == 'xml-only':
-        v.validate(cfg.validate.xml, is_file=True, signed=cfg.validate.signed)
+        checker.validate(cfg.validate.xml, is_file=True, 
+                         signed=cfg.validate.signed)
     #elif cfg.validate.command == 'xml-with-signature':
     #    v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
     #    v.xmlsec_check(xmlfile, cfg.validate.cert)
+    elif cfg.validate.command == 'extract':
+        checker.extract(cfg.validate.xml, is_file=True, 
+                        key=cfg.common.private_key)
     else:
         print "Unknown validate command: ", cfg.validate.command
         exit(1)
