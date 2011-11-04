@@ -401,22 +401,29 @@ class AuthValidate():
         
         #=> Decrypt the data
         decrypted_pid = crypt.aes_decrypt(skey, encrypted_pid)
+        print "Extracted data" 
+        print decrypted_pid 
         
         #=> Decrypt the hmac 
         encoded_hmac = obj.Hmac.text 
         decoded_hmac = base64.b64decode(encoded_hmac) 
         payload_pid_hash = crypt.aes_decrypt(skey, decoded_hmac) 
-        
+        print "Processing hmac ", encoded_hmac 
+        print "Sha256 hash contained in XML (b64 encoded) = ", \
+            base64.b64encode(payload_pid_hash)
+
         #=> Compute the hmac now for the pid element
         computed_pid_hash = hashlib.sha256(decrypted_pid).digest() 
-        
+        print "Sha256 hash of extract Pid XML (b64 encoded)= ", \
+            base64.b64encode(computed_pid_hash)
+
         #=> Check for consistency 
         if (payload_pid_hash != computed_pid_hash): 
             raise Exception("Pid Element's hash in the " + \
                             "payload and computed value do not match")
+        else:
+            print "Success! The hashes matched" 
         
-        print "Extracted data" 
-        print decrypted_pid 
         return True 
 
 if __name__ == '__main__':
