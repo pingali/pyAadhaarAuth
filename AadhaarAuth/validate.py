@@ -34,10 +34,13 @@ import sys
 sys.path.append('lib') 
 import dumper 
 
+import hashlib
 from lxml import etree, objectify 
 from config import Config
 import traceback 
+import base64 
 
+from crypt import AuthCrypt 
 from checksum import VerhoeffChecksum
 
 __author__ = "Venkata Pingali"
@@ -53,7 +56,9 @@ class AuthValidate():
     """
     Validate Auth XMLs 
     """
-    def __init__(self, request_xsd=None, testing=True): 
+    def __init__(self, cfg=None, 
+                 request_xsd=None, testing=True): 
+        self._cfg = cfg 
         self._testing = testing
         self._request_xsd = request_xsd 
         return 
@@ -307,36 +312,36 @@ class AuthValidate():
             if x509cert.text == None:
                 print "X509Certificate element is missing" 
                 result = False
-            
-            x509name = keyinfo.X509Data.X509SubjectName
-            if x509name.text == None:
-                print "X509SubjectName element is missing" 
-                result = False 
-            
-            #=> If testing mode, check the name in the certificate
-            if (self._testing): 
-                # First turn this 
-                #<X509SubjectName>CN=Public AUA,OU=Public,O=Public 
-                #              AUA,L=Bangalore,ST=KA,C=IN</X509SubjectName>
-                # into 
-                #CN=Public AUA,OU=Public,O=Public AUA,L=Bangalore,ST=KA,C=IN
 
-                l = x509name.text.splitlines()
-                l = [x.lstrip() for x in l]
-                t = ''.join(l)
-                t_default = "CN=Public AUA,OU=Public,O=Public AUA,L=Bangalore,ST=KA,C=IN"
-                if (t != t_default):
-                    print "X509SubjectName element body is inconsistent",\
-                        "with that expected in testing mode. Please check",\
-                        "the local certificate being used"
-                    print "Expected: ", t_default
+            if False: # XXX fix this...
+                x509name = keyinfo.X509Data.X509SubjectName
+                if x509name.text == None:
+                    print "X509SubjectName element is missing" 
+                    result = False 
+            
+                # => If testing mode, check the name in the certificate
+                if (self._testing): 
+                    # First turn this <X509SubjectName>CN=Public
+                    # AUA,OU=Public,O=Public
+                    # AUA,L=Bangalore,ST=KA,C=IN</X509SubjectName>
+                    # into CN=Public AUA,OU=Public,O=Public
+                    # AUA,L=Bangalore,ST=KA,C=IN
+
+                    l = x509name.text.splitlines()
+                    l = [x.lstrip() for x in l]
+                    t = ''.join(l)
+                    t_default = "CN=Public AUA,OU=Public,O=Public AUA,L=Bangalore,ST=KA,C=IN"
+                    if (t != t_default):
+                        print "X509SubjectName element body is inconsistent",\
+                            "with that expected in testing mode. Please check",\
+                            "the local certificate being used"
+                        print "Expected: ", t_default
         
-        if not signed:
-            if result == False:
-                print "XML is compliant but invalid" 
-            else:
-                print "XML is compliant and probably valid" 
-                return result
+        if result == False:
+            print "XML is compliant but invalid" 
+        else:
+            print "XML is compliant and probably valid" 
+        return result
 
     #def xmlsec_check(self, xmlfile, certfile):
     #
@@ -380,13 +385,15 @@ class AuthValidate():
         obj = objectify.fromstring(xml_text)
 
         # Load the private key
-        crypt = AuthCrypt(pub_key="", priv_key=key)
+        crypt = AuthCrypt(cfg=self._cfg, 
+                          pub_key="", 
+                          priv_key=key)
         
         # Extract the session key 
         encrypted_skey = obj.Skey.text 
         skey = crypt.x509_decrypt(encrypted_skey)
         print "Extracted skey (encoded) = ",  \
-            base64.b64encode(decrypted_skey)
+            base64.b64encode(skey)
 
         # Extract the data
         data = obj.Data.text 
@@ -401,7 +408,7 @@ class AuthValidate():
         payload_pid_hash = crypt.aes_decrypt(skey, decoded_hmac) 
         
         #=> Compute the hmac now for the pid element
-        computed_pid_hash = hashlib.sha356(decypted_pid).digest() 
+        computed_pid_hash = hashlib.sha256(decrypted_pid).digest() 
         
         #=> Check for consistency 
         if (payload_pid_hash != computed_pid_hash): 
@@ -410,6 +417,7 @@ class AuthValidate():
         
         print "Extracted data" 
         print decrypted_pid 
+        return True 
 
 if __name__ == '__main__':
     

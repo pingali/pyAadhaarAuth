@@ -39,7 +39,7 @@
 import os, sys
 sys.path.append("lib") 
 
-from os import tempfile 
+import tempfile 
 
 #import libxml2
 from lxml import etree, objectify 
@@ -101,11 +101,18 @@ class AuthRequest():
 
         """
         self._cfg = cfg 
+        if (cfg.common.mode == 'testing'): 
+            self._x509_cert = cfg.common.public_cert
+        else: 
+            self._x509_cert = cfg.common.uid_cert_path
+
         self._biometrics = biometrics
+        if (type(biometrics) != bool):
+            raise Exception("Type of biometrics flag should be boolean. Given %s %s " % (type(biometrics), type(True)))
+
         self._pidxml_biometrics = None
         self._pidxml_demographics = None 
         self._session_key = None
-
         self._tid = tid
         self._lk = lk
         if (self._lk == ""): 
@@ -178,7 +185,11 @@ class AuthRequest():
         """
         Generate the session and set the Skey parameters. 
         """
-        a = AuthCrypt(cfg.common.uid_cert_path, None) 
+
+        a = AuthCrypt(cfg=self._cfg, 
+                      pub_key=self._x509_cert,
+                      priv_key=None) 
+
         when = a.x509_get_cert_expiry() #Jun 28 04:40:44 2012 GMT
         expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
         self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
@@ -205,7 +216,12 @@ class AuthRequest():
         else:
             data = self._pidxml_demographics                
 
-        x = AuthCrypt() 
+        if (data == None or data == ""): 
+            raise Exception("Pid data cannot be empty") 
+            
+        #print "Setting data = %s" % data 
+
+        x = AuthCrypt(cfg=self._cfg) 
         encrypted_pid = x.aes_encrypt(key=self._session_key, msg=data)
         self._data = base64.b64encode(encrypted_pid)
         print "Data = ", self._data
@@ -226,7 +242,7 @@ class AuthRequest():
         hash_digest = hashlib.sha256(data).digest()
         print "Sha256 data = ", hash_digest
 
-        x = AuthCrypt() 
+        x = AuthCrypt(cfg=self._cfg) 
         encrypted_hash = x.aes_encrypt(key=self._session_key, 
                                        msg=hash_digest)
         self._hmac = base64.b64encode(encrypted_hash) 
@@ -241,13 +257,13 @@ class AuthRequest():
     #	<Locn lat="" lng="" vtc="" subdist="" dist="" state="" pc=""/>
     #  </Meta>
     #  <Demo lang="">
-    #	<Pi ms=¡±E|P¡± mv="" name="" lname="" lmv="" gender=¡±M|F|T¡± dob="" dobt=¡±V|D|A¡± age="" phone="" email=""/>
-    #	<Pa ms=¡±E¡± co="" house="" street="" lm="" loc=""
+    #	<Pi ms="E|P" mv="" name="" lname="" lmv="" gender="M|F|T" dob="" dobt="V|D|A" age="" phone="" email=""/>
+    #	<Pa ms="E" co="" house="" street="" lm="" loc=""
     #	    vtc="" subdist="" dist="" state="" pc="" po=""/> 
-    #	<Pfa ms=¡±E|P¡± mv="" av="" lav="" lmv=""/>
+    #	<Pfa ms="E|P" mv="" av="" lav="" lmv=""/>
     #  </Demo>
     #  <Bios>
-    #	<Bio type=¡±FMR|FIR|IIR¡± pos="">encoded biometric</Bio>
+    #	<Bio type="FMR|FIR|IIR" pos="">encoded biometric</Bio>
     #  </Bios>
     #  <Pv otp="" pin=""/>
     #</Pid>
@@ -314,6 +330,7 @@ class AuthRequest():
         
         # update the internal state 
         self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
+        #print "PID demographics XML = ", self._pidxml_demographics 
         return True 
 
     def tostring(self):
@@ -343,7 +360,7 @@ class AuthRequest():
         #                        num=self._txn_elem['_num'])
         
         skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
-        skey.text = base64.b64encode(self._skey['_text'])
+        skey.text = self._skey['_text']
         
         uses = etree.SubElement(root, "Uses", 
                                 otp=self._uses['_otp'],
@@ -360,70 +377,6 @@ class AuthRequest():
 
         doc = etree.ElementTree(root) 
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
-
-        
-if __name__ == '__main__':
-    
-  now() 
-
-        # construct the demographics xml 
-        root = etree.Element('Pid', 
-                             xmlns=self.data_xmlns, 
-                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
-                             ver="1.0")
-        demo = etree.SubElement(root, "Demo")
-        pi=etree.SubElement(demo, "Pi", ms="E", name=data)
-        doc = etree.ElementTree(root) 
-        
-        # update the internal state 
-        self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
-        return True 
-
-    def tostring(self):
-        """
-        Generate the XML text that must be sent across to the uid
-        client.
-        """
-        self.validate()
-
-        root = etree.Element('Auth', 
-                             xmlns=self.request_xmlns,
-                             ver=self._ver,
-                             tid=self._tid, 
-                             ac=self._ac, 
-                             sa=self._sa,
-                             txn = self._txn,
-                             uid = self._uid,
-                             lk=self._lk
-                             )
-
-        #meta = etree.SubElement(root, "Meta",
-        #                        fdc=self._meta['fdc'],
-        #                        ipc=self._meta['ipc'],
-        #                        apc=self._meta['apc'])
-        #txn = etree.SubElement(root, "Txn",
-        #                        type=self._txn_elem['_type'],
-        #                        num=self._txn_elem['_num'])
-        
-        skey = etree.SubElement(root, "Skey", ci=self._skey['_ci'])
-        skey.text = base64.b64encode(self._skey['_text'])
-        
-        uses = etree.SubElement(root, "Uses", 
-                                otp=self._uses['_otp'],
-                                pin=self._uses['_pin'],
-                                bio=self._uses['_bio'],
-                                pfa=self._uses['_pfa'],
-                                pi=self._uses['_pi'],
-                                pa=self._uses['_pa'])
-        
-        data = etree.SubElement(root, "Data")
-        data.text = self._data
-        hmac = etree.SubElement(root, "Hmac")
-        hmac.text = self._hmac
-
-        doc = etree.ElementTree(root) 
-        return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
-
         
 if __name__ == '__main__':
        
@@ -436,6 +389,8 @@ Usage: request.py <config-file>
 
 $ cat example.cfg 
 common: { 
+    mode: 'testing',
+
     # Specific to this AuA
     license_key:  "MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=",
     private_key: 'fixtures/public_key.pem',  # note that public refers to
@@ -469,16 +424,21 @@ request: {
 }
 
 """
+        sys.exit(1) 
     
     cfg = Config(sys.argv[1])
-    checker = AuthValidate(cfg.common.request_xsd) 
+
+    checker = AuthValidate(cfg=cfg, 
+                           request_xsd=cfg.common.request_xsd,
+                           testing=True) 
     
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
-        req = AuthRequest(cfg, cfg.request.uid)
+        req = AuthRequest(cfg=cfg, uid=cfg.request.uid)
         req.set_skey() 
         req.set_pidxml_demographics(data=cfg.request.name)
+        #print req._pidxml_demographics 
         req.set_data()
         req.set_hmac() 
         xml = req.tostring()  # dump it 
@@ -487,17 +447,22 @@ request: {
         print xml
     
         # Now validate the xml generated 
-        res = checker.validate(xml, is_file=False, signed=False)
+        res = checker.validate(xml, 
+                               is_file=False, signed=False)
         if (res == False): 
             print "Invalid XML generated" 
 
+        res = checker.extract(xml=xml,
+                              is_file=False,
+                              key=cfg.common.private_key)
+        
         # => Store the xml and generated a signed version
         if (cfg.request.xml == None): 
             tmpfp = tempfile.NamedTemporaryFile(delete=False) 
             tmpfp_unsigned = tmpfp.name
         else:
             tmpfp_unsigned = cfg.request.xml
-            tmpfp = file(tmpfp_unsigned)
+            tmpfp = file(tmpfp_unsigned, 'w')
         tmpfp.write(xml) 
         tmpfp.flush() 
         tmpfp.close() 
@@ -506,14 +471,14 @@ request: {
         if (cfg.request.signedxml == None): 
             tmpfp_signed = cfg.request.signedxml 
         else:
-            tmpfp_signed = tmpfp_name + ".sig" 
+            tmpfp_signed = tmpfp_unsigned + ".sig" 
          
         # => Sign the XML generated
         sig = AuthRequestSignature() 
         sig.init_xmlsec() 
         res = sig.sign_file(tmpfp_unsigned, 
                             tmpfp_signed, 
-                            cfg.common.local_pkcs_path, 
+                            cfg.common.pkcs_path, 
                             cfg.common.pkcs_password)
         sig.shutdown_xmlsec() 
         print "Result of signing ", res
@@ -527,8 +492,7 @@ request: {
         print "Validated XML generated with result = ", res
 
         # Now cleanup 
-        if (cfg.request.xmlcleanup is not None or 
-            cfg.request.xmlcleanup is true): 
+        if (cfg.request.xmlcleanup is True): 
             os.unlink(tmpfp_unsigned) 
             os.unlink(tmpfp_signed)
 
@@ -537,13 +501,15 @@ request: {
         # Validate the signed file 
         tmpfp_signed = cfg.request.signedxml
         res = checker.validate(tmpfp_signed, 
-                               is_file=True, signed=True)
+                               is_file=True, 
+                               signed=True)
         print "Validated XML generated with result = ", res
 
     elif (cfg.request.command == "extract"): 
         # Now extract the contents 
-        res = checker.extract(tmpfp_signed, 
-                              cfg.common.private_key)
+        res = checker.extract(xml=cfg.request.xml,
+                              is_file=True,
+                              key=cfg.common.private_key)
         print "Extracted XML with result = ", res
     else: 
         raise Exception("Unknown command") 

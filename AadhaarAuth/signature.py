@@ -244,7 +244,7 @@ class AuthRequestSignature():
         libxml2mod.xmlDocFormatDump(fp, doc._o, 0)
         fp.close()
         
-        print "Please check output file ", output_file
+        print "Please check output file ", signed_xml_file
         
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
@@ -332,7 +332,7 @@ Usage: signature.py <config-file>
 $ cat example.cfg
 # Sign a given XML using the pkcs 
 common: { 
-    local_pkcs_path: 'fixtures/public.p12',
+    pkcs_path: 'fixtures/public.p12',
     pkcs_password: 'public',
     private_key: 'fixtures/public_key.pem',
 ....
@@ -362,7 +362,7 @@ sign: {
         sign.init_xmlsec() 
         res = sign.sign_file(cfg.sign.xml,
                              cfg.sign.signedxml,
-                             cfg.common.local_pkcs_path,
+                             cfg.common.pkcs_path,
                              cfg.common.pkcs_password)
         sign.shutdown_xmlsec() 
     

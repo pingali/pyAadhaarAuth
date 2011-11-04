@@ -18,19 +18,23 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-import os, sys
+import os, sys, string
 import hashlib 
 from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
 import base64 
 import random 
+from config import Config 
 
 class AuthCrypt():
     """
     Encryption/decryption functions required by the authentication
     classes. This should eventually move to 'lib' directory 
     """
-    def __init__(self, cfg, pub_key="", priv_key=""):
+    def __init__(self, cfg, pub_key=None, priv_key=None):
         self._cfg = cfg 
+        if (self._cfg == None): 
+            raise Exception("AuthCrypt requires a configuration file") 
+
         self._public_key = pub_key
         self._private_key = priv_key
         self._enc_alg = cfg.common.encryption_algorithm
@@ -51,12 +55,14 @@ class AuthCrypt():
         if (data == None or data == ""):
             raise Exception("No data to encrypt") 
         
+        print "x509 Encrypting using cert", self._public_key
+        
         x509 = X509.load_cert(self._public_key)
         rsa = x509.get_pubkey().get_rsa()
         enc_data=rsa.public_encrypt(data, RSA.pkcs1_padding)
         #res = enc_data.encode('base64')  
         res = base64.b64encode(enc_data)
-        #print "\"%s\"" % (res)
+        print "Encrypted data: \"%s\"" % (res)
         return res 
     
     # Decryption of data requires private key. Assumes the data is 
@@ -68,7 +74,10 @@ class AuthCrypt():
         """
         if (data == None or data == ""):
             raise Exception("No data to encrypt") 
-        
+
+        print "x509 Decrypting using cert", self._private_key
+        print "Decrypting data: \"%s\"" % (data)
+
         dec_data = base64.b64decode(data)
         rsa = RSA.load_key(self._private_key) 
         res = rsa.private_decrypt(dec_data, RSA.pkcs1_padding)
@@ -165,15 +174,15 @@ class AuthCrypt():
         
         # some random lengths 
         msg_len = 50
-        key_len 10 
+        key_len = 10 
         
         # Generate randome strings if necessary
         chars=string.ascii_uppercase + string.digits
         if msg == None: 
-            msg = return ''.join(random.choice(chars) \
+            msg = ''.join(random.choice(chars) \
                                      for x in range(msg_len)) 
         if key == None: 
-            key = return ''.join(random.choice(chars) \
+            key = ''.join(random.choice(chars) \
                                      for x in range(key_len)) 
 
         enc_msg=auth.aes_encrypt(key=key,msg=msg)
@@ -190,7 +199,7 @@ class AuthCrypt():
             print "AES encryption FAILED!" 
 
 if __name__ == '__main__':
-      assert(sys.argv)
+    assert(sys.argv)
     if len(sys.argv) < 2:
         print """
 Error: command line should specify a config file.
@@ -208,11 +217,14 @@ crypt: {
     key: "sdkfsdfldfh123213213" 
 }
 """    
+        sys.exit(1) 
+
     cfg = Config(sys.argv[1]) 
     
     if (cfg.crypt.command == "test"):
-        auth = AuthCrypt(cfg.common.public_cert, # use uid_cert in 
-                         cfg.common.private_key) # production
+        auth = AuthCrypt(cfg=cfg,
+                         pub_key=cfg.common.public_cert,
+                         priv_key=cfg.common.private_key) # production
 
         print "certificate expiry = ", auth.x509_get_cert_expiry()
         auth.x509_test() 
