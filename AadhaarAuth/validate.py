@@ -443,6 +443,8 @@ validate: {
 
 $ cat example2.cfg 
 # Configuration for the AuthXML validator
+common: {...
+}
 validate: {
     command: 'extract',
     xml: 'fixtures/authrequest-with-sig.xml',
@@ -474,7 +476,7 @@ command options:
 
     cfg = Config(sys.argv[1]) 
     
-    checker=AuthValidate()
+    checker=AuthValidate(cfg=cfg)
 
     if cfg.validate.command == 'xsd':
         checker.set_xsd(cfg.common.response_xsd)
@@ -487,7 +489,8 @@ command options:
     #    v.validate(xmlfile, is_file=True, signed=cfg.validate.signed)
     #    v.xmlsec_check(xmlfile, cfg.validate.cert)
     elif cfg.validate.command == 'extract':
-        checker.extract(cfg.validate.xml, is_file=True, 
+        checker.extract(cfg.validate.xml, 
+                        is_file=True, 
                         key=cfg.common.private_key)
     else:
         print "Unknown validate command: ", cfg.validate.command
