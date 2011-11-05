@@ -313,7 +313,7 @@ class AuthValidate():
                 print "X509Certificate element is missing" 
                 result = False
 
-            if False: # XXX fix this...
+            if True: # XXX fix this...
                 x509name = keyinfo.X509Data.X509SubjectName
                 if x509name.text == None:
                     print "X509SubjectName element is missing" 
