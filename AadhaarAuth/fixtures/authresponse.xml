@@ -1,5 +1,5 @@
-<?xml version="1.0"?> 
-<AuthRes  xmlns="http://www.uidai.gov.in/authentication/uid-auth-response/1.0"
-	  ret="y" code="52" 
-	  txn="322hfdjhsjkdhfjkds" err="100" info="" 
-	  ts="2011-10-30T13:26:19"></AuthRes>
+<?xml version="1.0" encoding="UTF-8"?><AuthRes code="eba8c959e7c042e99b0f69e35612c7c1" err="937" info="0149951232b1f45f281c7d4f70f3cbbc57c2afd9c0d6bb5f44578bf1304d4868d40000000000000000000000000000000000000000000000000000000000000000100000000000" ret="n" ts="2011-11-05T10:16:23.564+05:30" txn=""><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>cvU5QLBWNKy6C2/OvjF11aqaflMApgV2+E+eWdXx3rw=</DigestValue></Reference></SignedInfo><SignatureValue>fEolj4sLl5q+J0KHnHMi3P+NaTc0AaVwhB9YYZKWQgTO/HuILxjJmZJcdxmXReI2hE1MH8DMsyNW
+I2K0p2X4PF76MYWPoN0bTiaiH4/RtVWFI7lPNcurwOO5BanzyHMJ4Chec3rl4+Yj5g5il4Crw/1X
+otiaQq+krimmCISxbvmw9vvZVUgMGM18VQIuTBf/jxJBovU2ZnDAvtOoh36P/Ye0zm/OlAQJpdMi
+C6RheiuEUDtSJzLXzJzpX3sZIrRklOYVo2wPE9YBfdDZckyZPVgFJBvBO2cjTE6BCHDqE0p2AUJv
+l2uq8HdTw5fkE8bSCbRmkOxs8d/E+3x2IpdoEA==</SignatureValue></Signature></AuthRes>
