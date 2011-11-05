@@ -51,7 +51,7 @@ class AuthConnection():
         Open a connection to auth server, post the xml and look at
         the response 
         """
-        url_base=cfg.common.auth_url
+        url_base=self._cfg.common.auth_url
         url = "%s/%s/%s/%s" %(url_base, self._ac, uid[0],uid[1])
         try: 
             r = requests.post(url, data) 
