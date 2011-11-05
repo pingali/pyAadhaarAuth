@@ -55,6 +55,7 @@ from crypt import AuthCrypt
 from signature import AuthRequestSignature
 from validate import AuthValidate
 from connection import AuthConnection 
+from response import AuthResponse
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -113,7 +114,7 @@ class AuthRequest():
 
         self._pidxml_biometrics = None
         self._pidxml_demographics = None 
-        self._pidxml_demographics_hash = None        
+        self._demo_hash = None        
         self._session_key = None
         self._tid = tid
         self._lk = lk
@@ -132,10 +133,13 @@ class AuthRequest():
         self._skey = { 
             '_ci': None, 
             '_text': None}
-        self._txn_elem = { 
+        
+        #token e.g., mobile number, NFC 
+        self._token = { 
             '_type': "",
             '_num': ""
             }
+
         self._uses  = { 
             '_otp': "n", 
             '_pin': "n",
@@ -185,10 +189,11 @@ class AuthRequest():
     
     def set_txn(self, txn=""):
         """
-        Update the transaction information
+        Update the transaction id 
         """
         if (txn == ""):
-            self._txn = random.randint(2**15, 2**16-1)
+            self._txn = self._ac + ":" + random.randint(2**28, 2**32-1).__str__() 
+
 
     def set_skey(self):
         """
@@ -248,8 +253,8 @@ class AuthRequest():
             data = self._pidxml_demographics                
         
         # This should be digest and not hexdigest 
-        hash_digest = hashlib.sha256(data).digest()
-        print "Sha256 data = ", hash_digest
+        hash_digest = hashlib.sha256(data).hexdigest()
+        print "Sha256 of data (encoded) = ", hash_digest
 
         x = AuthCrypt(cfg=self._cfg) 
         encrypted_hash = x.aes_encrypt(key=self._session_key, 
@@ -339,13 +344,18 @@ class AuthRequest():
         
         # update the internal state 
         self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
-        self._pidxml_demographics_hash = hashlib.sha256(self._pidxml_demographics).hexdigest()
+        
+        # text of only the demo object 
+        demo_doc = etree.ElementTree(demo)
+        demo_string = etree.tostring(demo_doc, pretty_print=False)
+        self._demo_hash = hashlib.sha256(demo_string).hexdigest()
 
-        #print "PID demographics XML = ", self._pidxml_demographics 
+        print "PID demographics XML = ", demo_string
+        print "PID demographics hash = ", self._demo_hash
         return True 
     
-    def pidxml_demographics_hash(self):
-        return self._pidxml_demographics_hash 
+    def get_demo_hash(self):
+        return self._demo_hash
 
     def tostring(self):
         """
@@ -451,6 +461,7 @@ request: {
         # => Generate the XML file 
         req = AuthRequest(cfg=cfg, 
                           uid=cfg.request.uid, ac=cfg.common.ac)
+        req.set_txn()
         req.set_skey() 
         req.set_pidxml_demographics(data=cfg.request.name)
         #print req._pidxml_demographics 
@@ -497,7 +508,11 @@ request: {
                             cfg.common.pkcs_path, 
                             cfg.common.pkcs_password)
         sig.shutdown_xmlsec() 
-        print "Result of signing ", res
+        if (res == 1): 
+            print "Signed successfully!"
+        else: 
+            print "Signing unsuccessful for some reason \"%s\"" %res
+            raise Exception("Unsuccessful signature") 
 
         signed_content = file(tmpfp_signed).read() 
         print "Signed XML (%s):" % tmpfp_signed
@@ -507,15 +522,36 @@ request: {
         res = checker.validate(tmpfp_signed, is_file=True, signed=True)
         print "Validated XML generated with result = ", res
         
-        conn = AuthConnection(cfg, ac=cfg.common.ac)
-        try: 
-            res = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
-        except: 
-            traceback.print_exc(file=sys.stdout)
-            print "Found an exception. Unable to complete authentication"
+        # Testing will use the local cert instead of UIDAI's public
+        # cert for encryption. Therefore will fail the tests at the
+        # authentication server.
+        
+        if (cfg.common.mode != "testing"):
+            conn = AuthConnection(cfg, ac=cfg.common.ac)
+            try: 
+                xml = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
+            except: 
+                traceback.print_exc(file=sys.stdout)
+                print "Found an exception. Unable to complete authentication"
+                
+            print "Response from Auth Server" 
+            print xml 
+            res = AuthResponse(cfg=cfg, 
+                               uid=cfg.request.uid)
 
-        print "Response from Auth Server" 
-        print res
+
+            res.load_string(xml) 
+            print "UID Hash = ", res.get_uid_hash() 
+            print "Request uid hash = ", req.get_uid_hash() 
+            
+            print "Demo hash = ", res.get_demo_hash() 
+            print "Request Demo hash = ", req.get_demo_hash() 
+
+            res.lookup_error()
+            print "Flags that are set: ", res.lookup_usage_bits()
+        else:
+            print "Skpping contacting the server in the 'testing' mode"
+            print "Please change cfg >> common >> mode to enable server posting" 
 
         # Now cleanup 
         if (cfg.request.xmlcleanup is True): 
