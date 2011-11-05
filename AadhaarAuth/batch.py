@@ -117,6 +117,16 @@ class AuthBatchRequest():
         pi=etree.SubElement(demo, "Pi", ms="E",
                             email=person['phone'])
 
+    #def pin_otp(self, root, person):  
+    #
+    #    uses = root.find('Uses')
+    #    uses.set("pi","y")
+    #    pid = root.find('Pid')
+    #    demo = etree.SubElement(pid, "Demo")
+    #    pi=etree.SubElement(demo, "Pv", 
+    #                        pin=person['pin'],
+    #                        otp=person['otp'])
+
     def bio_fmr(self, root, person): 
 
         uses = root.find('Uses')
@@ -124,7 +134,8 @@ class AuthBatchRequest():
         uses.set("bt","FMR")
         pid = root.find('Pid')
         bios = etree.SubElement(pid, "Bios")
-        bio = etree.SubElement(bios, "Bio")
+        bio = etree.SubElement(bios, "Bio", 
+                               type="FMR")
         bio.text = person['bio']
     
     def register_processing_functions(self): 
