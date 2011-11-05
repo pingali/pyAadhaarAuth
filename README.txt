@@ -188,6 +188,34 @@ jQNOsS/7J0kZhLGDXUUi5MW8y5BjLxGTOQsTQBikWoYncXzic6e3V/eKMVh3UBbZzZYAdStYUXui
 JUU0ryKIXy88SAkjGbb4jPILBw7yQRS7h7UYkw==</SignatureValue></Signature></AuthRes>
 
 
+$python batch.py fixtures/auth.cfg 
+Batch XML generation tool 
+....
+UID,Test Name
+999999990019,Exact Email
+<Auth txn="batch:730102025" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="999999990019" lk="MKg8njN6O+QRUmYF+
+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" tid="public" sa="public">
+  <Uses pfa="n" bio="n" pin="n" pa="n" otp="n" pi="y"/>
+  <Pid xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0" ver="1.0" ts="2011-11-05T23:57:55">
+    <Demo>
+      <Pi email="sschoudhury@dummyemail.com" ms="E"/>
+    </Demo>
+  </Pid>
+</Auth>
+
+------
+UID,Test Name
+999999990019,Exact address
+<Auth txn="batch:340689969" ac="public" xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0" ver="1.5" uid="999999990019" lk="MKg8njN6O+QRUmYF+
+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" tid="public" sa="public">
+  <Uses pfa="n" bio="n" pin="n" pa="y" otp="n" pi="n"/>
+  <Pid xmlns="http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0" ver="1.0" ts="2011-11-05T23:57:55">
+    <Demo>
+      <Pa vtc="New Delhi" subdist="New Delhi" district="New Delhi" pincode="110002" state="New delhi" street="12 Maulana Azad Marg" ms="E"/>
+    </Demo>
+  </Pid>
+
+
 THANKS
 ======
 
