@@ -22,7 +22,9 @@
 
 import os, sys
 sys.path.append("lib") 
+import copy 
 
+from lxml import etree, objectify 
 import tempfile 
 import dumper 
 import hashlib, hmac, base64, random 
@@ -38,6 +40,9 @@ from connection import AuthConnection
 from response import AuthResponse
 from request import AuthRequest
 
+import json
+from pprint import pprint
+
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
 __credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
@@ -52,6 +57,143 @@ __status__ = "Pre-release"
 Issue batch requests to the server
 """
 class AuthBatchRequest():
+
+    data_xmlns = "http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
+    
+    def __init__(self, cfg): 
+        self._cfg = cfg 
+        self._json_file = cfg.batch.json
+        self._data = None 
+        self._xml_hash = {} 
+        self._processing_functions = {} 
+
+    def name_exact(self, root, person): 
+
+        uses = root.find('Uses')
+        uses.set("pi","y")
+        pid = root.find('Pid')
+        demo = etree.SubElement(pid, "Demo")
+        pi=etree.SubElement(demo, "Pi", ms="E", name=person['name'])
+
+    def name_partial(self, root, person): 
+
+        uses = root.find('Uses')
+        uses.set("pi","y")
+        pid = root.find('Pid')
+        demo = etree.SubElement(pid, "Demo")
+        pi=etree.SubElement(demo, "Pi", ms="P", mv="70", 
+                            name=person['name'])
+
+    def address_exact(self, root, person):
+
+        uses = root.find('Uses')
+        uses.set("pa","y")
+        pid = root.find('Pid')
+        demo = etree.SubElement(pid, "Demo")
+        pi=etree.SubElement(demo, "Pa", 
+                            ms="E", 
+                            street=person['street'],
+                            vtc=person['vtc'],
+                            subdist=person['subdist'],
+                            district=person['district'],
+                            state=person['state'],
+                            pincode=person['pincode'])
+    
+    def email_exact(self, root, person): 
+
+        uses = root.find('Uses')
+        uses.set("pi","y")
+        pid = root.find('Pid')
+        demo = etree.SubElement(pid, "Demo")
+        pi=etree.SubElement(demo, "Pi", ms="E",
+                            email=person['email'])
+
+    def phone_exact(self, root, person): 
+
+        uses = root.find('Uses')
+        uses.set("pi","y")
+        pid = root.find('Pid')
+        demo = etree.SubElement(pid, "Demo")
+        pi=etree.SubElement(demo, "Pi", ms="E",
+                            email=person['phone'])
+
+    def bio_fmr(self, root, person): 
+
+        uses = root.find('Uses')
+        uses.set("bio","y")
+        uses.set("bt","FMR")
+        pid = root.find('Pid')
+        bios = etree.SubElement(pid, "Bios")
+        bio = etree.SubElement(bios, "Bio")
+        bio.text = person['bio']
+    
+    def register_processing_functions(self): 
+        
+        self._processing_functions = { 
+            'name_exact': ["Exact name", self.name_exact],
+            'name_partial': ["Partial name", self.name_partial],
+            'address_exact': ["Exact address", self.address_exact],
+            'email_exact': ["Exact Email", self.email_exact],
+            'phone_exact': ["Exact phone", self.phone_exact],
+            'bio_only': ["Bio FMR", self.bio_fmr],
+            }
+    
+    def load_data(self): 
+        """
+        Load json data
+        """
+        fp=open(self._json_file)
+        self._data = json.load(fp)
+        fp.close()
+
+    def generate_xml(self): 
+        
+        if (self._data == None): 
+            self.load_data() 
+
+        # Generate the xml 
+        ts = datetime.now()
+        root = etree.Element('Auth', 
+                             xmlns=self._cfg.common.request_xmlns,
+                             ver=self._cfg.common.ver,
+                             tid=self._cfg.common.tid,
+                             ac=self._cfg.common.ac, 
+                             sa=self._cfg.common.sa,
+                             txn = "",
+                             uid = "",
+                             lk=self._cfg.common.license_key,
+                             )
+        uses = etree.SubElement(root, "Uses", 
+                                otp="n", 
+                                pin="n",
+                                bio="n",
+                                pfa="n",
+                                pi="n",
+                                pa="n")
+        pid = etree.SubElement(root, 'Pid', 
+                             xmlns=self.data_xmlns, 
+                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
+                             ver="1.0")
+            
+        for person in self._data:            
+            #print person 
+            for func_name,func_details in self._processing_functions.items():
+                func = func_details[1] 
+                
+                # Fix some details of the root
+                new_root = copy.deepcopy(root)
+                new_root.set('uid', person['uid'])
+                new_root.set('txn', "batch:"+random.randint(2**20, 2**30-1).__str__())
+                
+                # Now insert the demo/bio element 
+                func(new_root, person) 
+                
+                # output the tree 
+                print "------"
+                print "UID,Test Name"
+                print "%s,%s" %(person['uid'], func_details[0])
+                print etree.tostring(new_root, pretty_print=True)
+            
 
 if __name__ == '__main__':
        
@@ -93,127 +235,7 @@ batch: {
     
     cfg = Config(sys.argv[1])
 
-    checker = AuthValidate(cfg=cfg, 
-                           request_xsd=cfg.common.request_xsd,
-                           testing=True) 
-    
-    if cfg.request.command == "generate": 
-
-        # => Generate the XML file 
-        req = AuthRequest(cfg=cfg, 
-                          uid=cfg.request.uid, ac=cfg.common.ac)
-        req.set_txn()
-        req.set_skey() 
-        req.set_pidxml_demographics(data=cfg.request.name)
-        #print req._pidxml_demographics 
-        req.set_data()
-        req.set_hmac() 
-        xml = req.tostring()  # dump it 
-        
-        print "Unsigned XML:"
-        print xml
-    
-        # Now validate the xml generated 
-        res = checker.validate(xml, 
-                               is_file=False, signed=False)
-        if (res == False): 
-            print "Invalid XML generated" 
-            
-        if (cfg.common.mode == "testing"):
-            res = checker.extract(xml=xml,
-                                  is_file=False,
-                                  key=cfg.common.private_key)
-        
-        # => Store the xml and generated a signed version
-        if (cfg.request.xml == None): 
-            tmpfp = tempfile.NamedTemporaryFile(delete=False) 
-            tmpfp_unsigned = tmpfp.name
-        else:
-            tmpfp_unsigned = cfg.request.xml
-            tmpfp = file(tmpfp_unsigned, 'w')
-        tmpfp.write(xml) 
-        tmpfp.flush() 
-        tmpfp.close() 
-        
-        #=> Generate the signed version
-        if (cfg.request.signedxml == None): 
-            tmpfp_signed = cfg.request.signedxml 
-        else:
-            tmpfp_signed = tmpfp_unsigned + ".sig" 
-         
-        # => Sign the XML generated
-        sig = AuthRequestSignature() 
-        sig.init_xmlsec() 
-        res = sig.sign_file(tmpfp_unsigned, 
-                            tmpfp_signed, 
-                            cfg.common.pkcs_path, 
-                            cfg.common.pkcs_password)
-        sig.shutdown_xmlsec() 
-        if (res == 1): 
-            print "Signed successfully!"
-        else: 
-            print "Signing unsuccessful for some reason \"%s\"" %res
-            raise Exception("Unsuccessful signature") 
-
-        signed_content = file(tmpfp_signed).read() 
-        print "Signed XML (%s):" % tmpfp_signed
-        print signed_content 
-        
-        # Validate the signed file 
-        res = checker.validate(tmpfp_signed, is_file=True, signed=True)
-        print "Validated XML generated with result = ", res
-        
-        # Testing will use the local cert instead of UIDAI's public
-        # cert for encryption. Therefore will fail the tests at the
-        # authentication server.
-        
-        if (cfg.common.mode != "testing"):
-            conn = AuthConnection(cfg, ac=cfg.common.ac)
-            try: 
-                xml = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
-            except: 
-                traceback.print_exc(file=sys.stdout)
-                print "Found an exception. Unable to complete authentication"
-                
-            print "Response from Auth Server" 
-            print xml 
-            res = AuthResponse(cfg=cfg, 
-                               uid=cfg.request.uid)
-
-
-            res.load_string(xml) 
-            print "UID Hash = ", res.get_uid_hash() 
-            print "Request uid hash = ", req.get_uid_hash() 
-            
-            print "Demo hash = ", res.get_demo_hash() 
-            print "Request Demo hash = ", req.get_demo_hash() 
-
-            res.lookup_error()
-            print "Flags that are set: ", res.lookup_usage_bits()
-        else:
-            print "Skpping contacting the server in the 'testing' mode"
-            print "Please change cfg >> common >> mode to enable server posting" 
-
-        # Now cleanup 
-        if (cfg.request.xmlcleanup is True): 
-            os.unlink(tmpfp_unsigned) 
-            os.unlink(tmpfp_signed)
-
-    elif (cfg.request.command == "validate"): 
-
-        # Validate the signed file 
-        tmpfp_signed = cfg.request.signedxml
-        res = checker.validate(tmpfp_signed, 
-                               is_file=True, 
-                               signed=True)
-        print "Validated XML generated with result = ", res
-
-    elif (cfg.request.command == "extract"): 
-        # Now extract the contents 
-        res = checker.extract(xml=cfg.request.xml,
-                              is_file=True,
-                              key=cfg.common.private_key)
-        print "Extracted XML with result = ", res
-    else: 
-        raise Exception("Unknown command") 
-    
+    batch = AuthBatchRequest(cfg=cfg)
+    batch.load_data() 
+    batch.register_processing_functions() 
+    batch.generate_xml()
