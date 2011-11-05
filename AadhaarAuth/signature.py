@@ -175,7 +175,7 @@ class AuthRequestSignature():
             
             # Add reference
             refNode = signNode.addReference(xmlsec.transformSha1Id(),
-                                            None, None, None)
+                                            None, "", None)
             if refNode is None:
                 print "Error: failed to add reference to signature template"
                 return self.cleanup(doc)
