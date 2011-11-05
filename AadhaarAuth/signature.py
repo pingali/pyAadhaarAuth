@@ -151,7 +151,8 @@ class AuthRequestSignature():
             print "Error: unable to parse file \"%s\"" % xml_file
             return self.cleanup(doc)
         
-        
+        print "Signing file %s using %s " % (xml_file, pkcs_file) 
+
         if self._use_template: 
             # If the template is already in the text ready to be filled 
             signNode = xmlsec.findNode(doc.getRootElement(),
@@ -164,15 +165,16 @@ class AuthRequestSignature():
         else:
             # If the signature structure has to be constructed and added.
             
-            # Create signature template for RSA-SHA1 enveloped signature
-            signNode = xmlsec.TmplSignature(doc, xmlsec.transformExclC14NId(),
+            # Create signature template for RSA-SHA256 enveloped signature
+            signNode = xmlsec.TmplSignature(doc, 
+                                            xmlsec.transformInclC14NId(), 
                                             xmlsec.transformRsaSha1Id(), None)
             
             # Add <dsig:Signature/> node to the doc
             doc.getRootElement().addChild(signNode)
             
             # Add reference
-            refNode = signNode.addReference(xmlsec.transformSha1Id(),
+            refNode = signNode.addReference(xmlsec.transformSha256Id(),
                                             None, None, None)
             if refNode is None:
                 print "Error: failed to add reference to signature template"
