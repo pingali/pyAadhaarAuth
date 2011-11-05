@@ -270,6 +270,12 @@ class AuthValidate():
 
         # => Transform
         reference = signedinfo.Reference
+        ref_uri = reference.get("URI") 
+        if (ref_uri == None): 
+            print "Please add URI to the Reference element"
+            print "Without this the server rejects the authentication request"
+            raise Exception("Invalid signature")
+
         transformalg = reference.Transforms.Transform.get("Algorithm")
         transformalg_default="http://www.w3.org/2000/09/xmldsig#enveloped-signature" 
         if (transformalg != transformalg_default):
