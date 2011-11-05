@@ -143,8 +143,11 @@ class AuthResponse():
             }
         
         err = self._response['_err']
-        res = errors[err]
-        print "Error lookup for %s: %s " % (err, res)
+        if (err != ""): 
+            res = errors[err]
+            print "Error lookup for %s: %s " % (err, res)
+        else:
+            res = "No error"
         return res
         
     def lookup_usage_bits(self, what=None):
@@ -300,7 +303,7 @@ class AuthResponse():
         #print type(obj)        
         #print obj.get('info')
 
-        self._response = { 
+        self._response = {
             '_info':  obj.get('info'), 
             '_err': obj.get('err'), 
             '_code': obj.get('code'),
@@ -308,9 +311,9 @@ class AuthResponse():
             '_ts': obj.get('ts'),
             '_txn': obj.get('txn')
             }
-        self._response['_ver'] = self._response['_info'][0:2],
-        self._response['_uid_hash'] = self._response['_info'][2:66],
-        self._response['_pidxml_demographics_hash'] = self._response['_info'][66:130],
+        self._response['_ver'] = self._response['_info'][0:2]
+        self._response['_uid_hash'] = self._response['_info'][2:66]
+        self._response['_demo_hash'] = self._response['_info'][66:130]
 
         # => Turn the hex info into a flag 
         def hextobin(s):
@@ -322,7 +325,14 @@ class AuthResponse():
         usage_data =self._response['_info'][130:142]
         self._response['_usage_data'] = hextobin(usage_data)
         return 
-        
+
+    def get_uid_hash(self):
+        return self._response['_uid_hash'] 
+
+    def get_demo_hash(self):
+        return self._response['_demo_hash'] 
+
+
 if __name__ == '__main__':
     assert(sys.argv)
     if len(sys.argv) < 2:
