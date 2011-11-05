@@ -53,10 +53,10 @@
 
 
 #
-# authrequest_signature 
+# signature 
 #
 # usage: 
-#       python authrequest_signature.py <xmlfile> 
+#       python signature.py <xmlfile> 
 # 
 #       The xml file can contain the signature template or not. 
 #       The code can handle both situations. Right now does
@@ -183,18 +183,31 @@ class AuthRequestSignature():
                 print "Error: failed to add enveloped transform to reference"
                 return self.cleanup(doc)
         
-	    xmlsec.X509DATA_DEFAULT = xmlsec.X509DATA_CERTIFICATE_NODE | xmlsec.X509DATA_SUBJECTNAME_NODE
-
             # Add <dsig:KeyInfo/> and <dsig:X509Data/>
             keyInfoNode = signNode.ensureKeyInfo(None)
             if keyInfoNode is None:
                 print "Error: failed to add key info"
                 return self.cleanup(doc)
             
-            if keyInfoNode.addX509Data() is None:
+            x509DataNode = keyInfoNode.addX509Data() 
+            if x509DataNode is None:
                 print "Error: failed to add X509Data node"
                 return self.cleanup(doc)
-            
+
+            # Sample code from here.
+            # http://ndg-security.ceda.ac.uk/browser/TI12-security/trunk/python/NDG/XMLSecDoc.py?rev=920
+            if xmlsec.addChild(x509DataNode,
+                               xmlsec.NodeX509Certificate) is None:
+                print "Error: failed to X509certificate to x509DataNode" 
+                return self.cleanup(doc)
+	
+            if xmlsec.addChild(x509DataNode,
+                               xmlsec.NodeX509SubjectName) is None:
+                print "Error: failed to X509SubjectName to x509DataNode" 
+                return self.cleanup(doc)
+
+        # endif (if use_template..) 
+    
         # Create signature context, we don't need keys manager in this
         # example
         dsig_ctx = xmlsec.DSigCtx()
