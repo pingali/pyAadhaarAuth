@@ -252,7 +252,8 @@ class AuthValidate():
         
         # => Canonicalization
         canonalg = signedinfo.CanonicalizationMethod.get("Algorithm")
-        canonalg_default = "http://www.w3.org/2001/10/xml-exc-c14n#"
+        #canonalg_default = "http://www.w3.org/2001/10/xml-exc-c14n#"
+        canonalg_default = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
         if (canonalg != canonalg_default):
             print "CanonicalizationMethod algorithm is non-existent or invalid"
             print "The Algorithm should be ", canonalg_default
@@ -278,7 +279,8 @@ class AuthValidate():
         
         # => DigestMethod
         digestmethodalg = reference.DigestMethod.get("Algorithm")
-        digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
+        #digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
+        digestmethodalg_default="http://www.w3.org/2001/04/xmlenc#sha256"
         if (digestmethodalg != digestmethodalg_default):
             print "DigestMethod has non-existent of invalid algorithm"
             print "The Algorithm should be ", digestmethodalg_default
@@ -402,7 +404,7 @@ class AuthValidate():
         #=> Decrypt the data
         decrypted_pid = crypt.aes_decrypt(skey, encrypted_pid)
         print "Extracted data" 
-        print decrypted_pid 
+        print "\"%s\"" % decrypted_pid 
         
         #=> Decrypt the hmac 
         encoded_hmac = obj.Hmac.text 
