@@ -174,7 +174,7 @@ class AuthRequestSignature():
             doc.getRootElement().addChild(signNode)
             
             # Add reference
-            refNode = signNode.addReference(xmlsec.transformSha256Id(),
+            refNode = signNode.addReference(xmlsec.transformSha1Id(),
                                             None, None, None)
             if refNode is None:
                 print "Error: failed to add reference to signature template"
@@ -196,6 +196,11 @@ class AuthRequestSignature():
                 print "Error: failed to add X509Data node"
                 return self.cleanup(doc)
 
+            if xmlsec.addChild(x509DataNode,
+                               xmlsec.NodeX509SubjectName) is None:
+                print "Error: failed to X509SubjectName to x509DataNode" 
+                return self.cleanup(doc)
+
             # Sample code from here.
             # http://ndg-security.ceda.ac.uk/browser/TI12-security/trunk/python/NDG/XMLSecDoc.py?rev=920
             if xmlsec.addChild(x509DataNode,
@@ -203,10 +208,6 @@ class AuthRequestSignature():
                 print "Error: failed to X509certificate to x509DataNode" 
                 return self.cleanup(doc)
 	
-            if xmlsec.addChild(x509DataNode,
-                               xmlsec.NodeX509SubjectName) is None:
-                print "Error: failed to X509SubjectName to x509DataNode" 
-                return self.cleanup(doc)
 
         # endif (if use_template..) 
     

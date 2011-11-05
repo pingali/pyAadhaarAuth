@@ -192,7 +192,7 @@ class AuthRequest():
         Update the transaction id 
         """
         if (txn == ""):
-            self._txn = self._ac + ":" + random.randint(2**28, 2**32-1).__str__() 
+            self._txn = "pyAuth:" + self._ac + ":" + random.randint(2**28, 2**32-1).__str__() 
 
 
     def set_skey(self):
