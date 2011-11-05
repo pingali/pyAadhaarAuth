@@ -54,6 +54,7 @@ from M2Crypto import Rand
 from crypt import AuthCrypt 
 from signature import AuthRequestSignature
 from validate import AuthValidate
+from connection import AuthConnection 
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -85,7 +86,7 @@ class AuthRequest():
     request_xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
     
     def __init__(self, cfg=None, biometrics=False, uid="", 
-                 tid="public", lk="", txn=""):
+                 tid="public", lk="", txn="", ac=""):
         """
         Constructor of AuthRequest (see source for more details). 
         
@@ -112,13 +113,18 @@ class AuthRequest():
 
         self._pidxml_biometrics = None
         self._pidxml_demographics = None 
+        self._pidxml_demographics_hash = None        
         self._session_key = None
         self._tid = tid
         self._lk = lk
         if (self._lk == ""): 
             self._lk = cfg.common.license_key
             
-        self._ac = "public"
+        if (ac == None or ac == ""): 
+            self._ac = "public"
+        else:
+            self._ac = ac
+
         self._ver = "1.5" 
         self._sa = "public" 
         self._uid = uid
@@ -154,6 +160,9 @@ class AuthRequest():
             '_state': "",
             '_pc': ""
             }
+        
+    def get_uid_hash(self): 
+        return hashlib.sha256(self._uid).hexdigest() 
 
     def validate(self): 
         """
@@ -330,8 +339,13 @@ class AuthRequest():
         
         # update the internal state 
         self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
+        self._pidxml_demographics_hash = hashlib.sha256(self._pidxml_demographics).hexdigest()
+
         #print "PID demographics XML = ", self._pidxml_demographics 
         return True 
+    
+    def pidxml_demographics_hash(self):
+        return self._pidxml_demographics_hash 
 
     def tostring(self):
         """
@@ -435,7 +449,8 @@ request: {
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
-        req = AuthRequest(cfg=cfg, uid=cfg.request.uid)
+        req = AuthRequest(cfg=cfg, 
+                          uid=cfg.request.uid, ac=cfg.common.ac)
         req.set_skey() 
         req.set_pidxml_demographics(data=cfg.request.name)
         #print req._pidxml_demographics 
@@ -451,10 +466,11 @@ request: {
                                is_file=False, signed=False)
         if (res == False): 
             print "Invalid XML generated" 
-
-        res = checker.extract(xml=xml,
-                              is_file=False,
-                              key=cfg.common.private_key)
+            
+        if (cfg.common.mode == "testing"):
+            res = checker.extract(xml=xml,
+                                  is_file=False,
+                                  key=cfg.common.private_key)
         
         # => Store the xml and generated a signed version
         if (cfg.request.xml == None): 
@@ -490,6 +506,16 @@ request: {
         # Validate the signed file 
         res = checker.validate(tmpfp_signed, is_file=True, signed=True)
         print "Validated XML generated with result = ", res
+        
+        conn = AuthConnection(cfg, ac=cfg.common.ac)
+        try: 
+            res = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
+        except: 
+            traceback.print_exc(file=sys.stdout)
+            print "Found an exception. Unable to complete authentication"
+
+        print "Response from Auth Server" 
+        print res
 
         # Now cleanup 
         if (cfg.request.xmlcleanup is True): 
