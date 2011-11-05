@@ -82,9 +82,6 @@ class AuthRequest():
     python-based. This interface supports only v1.5 and public AuAs 
     """
 
-    # Constants 
-    data_xmlns = "http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
-    request_xmlns="http://www.uidai.gov.in/authentication/uid-auth-request/1.0"
     
     def __init__(self, cfg=None, biometrics=False, uid="", 
                  tid="public", lk="", txn="", ac=""):
@@ -305,7 +302,7 @@ class AuthRequest():
             ts = Datetime.now() 
 
         root = etree.Element('Pid', 
-                             xmlns=self.data_xmlns,
+                             xmlns=self._cfg.common.data_xmlns,
                              ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
                              ver="1.0")
         bios = etree.SubElement(root, "Bios")
@@ -335,7 +332,7 @@ class AuthRequest():
 
         # construct the demographics xml 
         root = etree.Element('Pid', 
-                             xmlns=self.data_xmlns, 
+                             xmlns=self._cfg.common.data_xmlns, 
                              ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
                              ver="1.0")
         demo = etree.SubElement(root, "Demo")
@@ -365,7 +362,7 @@ class AuthRequest():
         self.validate()
 
         root = etree.Element('Auth', 
-                             xmlns=self.request_xmlns,
+                             xmlns=self._cfg.common.request_xmlns,
                              ver=self._ver,
                              tid=self._tid, 
                              ac=self._ac, 
