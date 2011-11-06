@@ -538,6 +538,16 @@ request: {
         print "Signed XML (%s):" % tmpfp_signed
         print signed_content 
         
+        if cfg.request.analyze: 
+            pid_content_sizes = checker.analyze(xml=req._pidxml_demographics,
+                                                is_file=False) 
+            signed_content_sizes = checker.analyze(xml=signed_content,
+                                                   is_file=False) 
+            print "Payload (Pid) Element:" 
+            print pid_content_sizes 
+            print "Fully Signed XML:" 
+            print signed_content_sizes
+
         # Validate the signed file 
         res = checker.validate(tmpfp_signed, is_file=True, signed=True)
         print "Validated XML generated with result = ", res

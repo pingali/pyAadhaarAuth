@@ -39,6 +39,7 @@ from lxml import etree, objectify
 from config import Config
 import traceback 
 import base64 
+import re 
 
 from crypt import AuthCrypt 
 from checksum import VerhoeffChecksum
@@ -379,6 +380,37 @@ class AuthValidate():
             obj = objectify.fromstring(xml_text)
             return self.check_dom(obj,signed)
         
+    def analyze(self, xml, is_file=False): 
+        if is_file:
+            xml_text = file(xml).read()
+        else:
+            xml_text = xml 
+            
+        obj = objectify.fromstring(xml_text)
+        
+        # This is very inefficient. It is walking through the entire
+        # tree, and for each tag serializing text and computing the
+        # length. Looking for tags in the xml_text itself turned a 
+        # bit complicated because of the <A /> 
+        size_hash = {} 
+        walkAll = obj.getiterator()
+        for elt in walkAll:
+            s = etree.tostring(elt, pretty_print=False)
+            tag = re.sub("{.*}","",elt.tag)
+            #print  "%s, %d " % (tag, len(s))
+            size_hash[tag] = len(s) 
+        
+        # Now process the sizes 
+        import operator 
+        sorted_sizes = sorted(size_hash.iteritems(), key=operator.itemgetter(1))
+        max_key = max(size_hash, key=size_hash.get)
+        max_value = size_hash[max_key]
+
+        msg = "%25s, %5s, %%%s\n" %('Element', 'Bytes', 'age') 
+        for i in sorted_sizes:
+            msg = msg + "%25s, %5d, %%%d\n" %(i[0], i[1], int((i[1] *100)/max_value))
+        return msg 
+
     # Check the contents of the payload 
     def extract(self, xml, is_file, key):
         """
