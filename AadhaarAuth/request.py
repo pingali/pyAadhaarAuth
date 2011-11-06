@@ -200,13 +200,17 @@ class AuthRequest():
         a = AuthCrypt(cfg=self._cfg, 
                       pub_key=self._x509_cert,
                       priv_key=None) 
+        
+        #=> Set the session key 
+        self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
+        print "session_key (encoded) = ", base64.b64encode(self._session_key)
+        encrypted_session_key = a.x509_encrypt(self._session_key)
+        self._skey['_text'] = base64.b64encode(encrypted_session_key)
 
         when = a.x509_get_cert_expiry() #Jun 28 04:40:44 2012 GMT
         expiry = datetime.strptime(when, "%b %d %H:%M:%S %Y %Z")
-        self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
-        print "session_key (encoded) = ", base64.b64encode(self._session_key)
         self._skey['_ci'] = expiry.strftime("%Y%m%d")
-        self._skey['_text'] = a.x509_encrypt(self._session_key)
+
 
     def get_skey(self):
         """
@@ -250,8 +254,8 @@ class AuthRequest():
             data = self._pidxml_demographics                
         
         # This should be digest and not hexdigest 
-        hash_digest = hashlib.sha256(data).hexdigest()
-        print "Sha256 of data (encoded) = ", hash_digest
+        hash_digest = hashlib.sha256(data).digest()
+        print "Sha256 of data (encoded) = ", base64.b64encode(hash_digest)
 
         x = AuthCrypt(cfg=self._cfg) 
         encrypted_hash = x.aes_encrypt(key=self._session_key, 

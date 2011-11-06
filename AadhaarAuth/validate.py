@@ -285,8 +285,8 @@ class AuthValidate():
         
         # => DigestMethod
         digestmethodalg = reference.DigestMethod.get("Algorithm")
-        #digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
-        digestmethodalg_default="http://www.w3.org/2001/04/xmlenc#sha256"
+        digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
+        #digestmethodalg_default="http://www.w3.org/2001/04/xmlenc#sha256"
         if (digestmethodalg != digestmethodalg_default):
             print "DigestMethod has non-existent of invalid algorithm"
             print "The Algorithm should be ", digestmethodalg_default
@@ -398,10 +398,10 @@ class AuthValidate():
                           priv_key=key)
         
         # Extract the session key 
-        encrypted_skey = obj.Skey.text 
+        encoded_encrypted_skey = obj.Skey.text 
+        encrypted_skey = base64.b64decode(encoded_encrypted_skey) 
         skey = crypt.x509_decrypt(encrypted_skey)
-        print "Extracted skey (encoded) = ",  \
-            base64.b64encode(skey)
+        print "Extracted skey (encoded) = ",  base64.b64encode(skey)
 
         # Extract the data
         data = obj.Data.text 
@@ -410,7 +410,7 @@ class AuthValidate():
         #=> Decrypt the data
         decrypted_pid = crypt.aes_decrypt(skey, encrypted_pid)
         print "Extracted data" 
-        print "\"%s\"" % decrypted_pid 
+        print "\"%s\"" % base64.b64encode(decrypted_pid)
         
         #=> Decrypt the hmac 
         encoded_hmac = obj.Hmac.text 

@@ -60,10 +60,7 @@ class AuthCrypt():
         x509 = X509.load_cert(self._public_key)
         rsa = x509.get_pubkey().get_rsa()
         enc_data=rsa.public_encrypt(data, RSA.pkcs1_padding)
-        #res = enc_data.encode('base64')  
-        res = base64.b64encode(enc_data)
-        print "Encrypted data: \"%s\"" % (res)
-        return res 
+        return enc_data
     
     # Decryption of data requires private key. Assumes the data is 
     # base64 encoded. 
@@ -76,11 +73,10 @@ class AuthCrypt():
             raise Exception("No data to encrypt") 
 
         print "x509 Decrypting using cert", self._private_key
-        print "Decrypting data: \"%s\"" % (data)
+        print "Decrypting data: \"%s\"" % base64.b64encode(data)
 
-        dec_data = base64.b64decode(data)
         rsa = RSA.load_key(self._private_key) 
-        res = rsa.private_decrypt(dec_data, RSA.pkcs1_padding)
+        res = rsa.private_decrypt(data, RSA.pkcs1_padding)
         #print "\"%s\"" % (res)
         return res 
     
