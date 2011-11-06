@@ -136,7 +136,6 @@ class AuthCrypt():
             v = cipher.update(data)                 
             v = v + cipher.final()                 
             del cipher                 
-            v = base64.b64encode(v)                 
             return v             
         
         #print "AES encryption successful\n"             
@@ -157,7 +156,6 @@ class AuthCrypt():
             
         # Return the decryption function             
         def decrypt(data):                 
-            data = base64.b64decode(data)                 
             cipher = self.aes_build_cipher(key, iv, self.DEC)                 
             v = cipher.update(data)                 
             v = v + cipher.final()                 

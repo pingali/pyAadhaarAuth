@@ -50,6 +50,7 @@ from config import Config
 import traceback 
 from datetime import datetime
 from M2Crypto import Rand 
+import re
 
 from crypt import AuthCrypt 
 from signature import AuthRequestSignature
@@ -253,6 +254,7 @@ class AuthRequest():
         else:
             data = self._pidxml_demographics                
         
+        print "data len = ", len(data) 
         # This should be digest and not hexdigest 
         hash_digest = hashlib.sha256(data).digest()
         print "Sha256 of data (encoded) = ", base64.b64encode(hash_digest)
@@ -315,7 +317,7 @@ class AuthRequest():
         doc = etree.ElementTree(root) 
         
         # Update internal state 
-        self._pidxml_biometrics = etree.tostring(doc,pretty_print=True)
+        self._pidxml_biometrics = etree.tostring(doc,pretty_print=False)
         
         return True 
 
@@ -344,14 +346,31 @@ class AuthRequest():
         doc = etree.ElementTree(root) 
         
         # update the internal state 
-        self._pidxml_demographics = etree.tostring(doc,pretty_print=True)
+        self._pidxml_demographics = etree.tostring(doc,pretty_print=False)
         
-        # text of only the demo object 
-        demo_doc = etree.ElementTree(demo)
-        demo_string = etree.tostring(demo_doc, pretty_print=False)
-        self._demo_hash = hashlib.sha256(demo_string).hexdigest()
+        print "Pid XML = ", self._pidxml_demographics
+        
+        # => Follow the auth client. Construct the entire xml and then
+        # extract the demographic substring
+        p = re.compile("<Demo.*/Demo>", re.MULTILINE) 
+        demo_match_obj=p.search(self._pidxml_demographics)
+        if (demo_match_obj == None):
+            demo_string = ""
+        else:
+            demo_string = demo_match_obj.group(0)
+        if (len(demo_string) < 64):
+            # The java seems to be right justifying and left padding
+            # with 0s. However when I do that, the hashes are not matching
+            # with the response that the server sends. 
+            
+            #demo_xml = demo_string.rjust(64, "0")
+            demo_xml = demo_string
+        else:
+            demo_xml = demo_string
+        print "Demographics string = ", demo_xml 
 
-        print "PID demographics XML = ", demo_string
+        # This will enable checking the response string
+        self._demo_hash = hashlib.sha256(demo_xml).hexdigest()
         print "PID demographics hash = ", self._demo_hash
         return True 
     
@@ -401,7 +420,7 @@ class AuthRequest():
         hmac.text = self._hmac
 
         doc = etree.ElementTree(root) 
-        return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=True)))
+        return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=False)))
         
 if __name__ == '__main__':
        

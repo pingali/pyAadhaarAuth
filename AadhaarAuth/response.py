@@ -141,13 +141,14 @@ class AuthResponse():
             '980': "Unsupported option",
             '999': "Unknown error",
             }
-        
-        err = self._response['_err']
-        if (err != ""): 
+
+        try:
+            err = self._response['_err']
             res = errors[err]
             print "Error lookup for %s: %s " % (err, res)
-        else:
+        except: 
             res = "No error"
+
         return res
         
     def lookup_usage_bits(self, what=None):
@@ -368,7 +369,8 @@ response: {
 
         #response.xsd_check(test_xml, cfg.common.response_xsd) 
         response.load_string(test_xml) 
-        response.lookup_error()
+        if (response.get_error()): 
+            response.lookup_error()
         print "Flags that are set: ", response.lookup_usage_bits()
         
     else:
