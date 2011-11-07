@@ -87,8 +87,9 @@ class AuthValidate():
             obj = objectify.fromstring(xml_text, parser)
             log.debug("The XML generated is XSD compliant")
         except: 
-            log.error("Unable to parse incoming message")
-            log.error(traceback.print_exc(file=sys.stdout))
+            formatted_lines = traceback.format_exc().splitlines()
+            log.error(formatted_lines[-1])
+            log.error("The generated XML cannot be parsed.")
             return None 
         return obj
 
@@ -377,19 +378,17 @@ class AuthValidate():
                 obj = self.xsd_check_file(xml)
             else:
                 obj = self.xsd_check_memory(xml)
-                
-            if obj == None:
-                return False 
-        
-            return self.check_dom(obj,signed)
-
         else: 
             if is_file:
                 xml_text = file(xml).read()
             else:
                 xml_text = xml 
             obj = objectify.fromstring(xml_text)
-            return self.check_dom(obj,signed)
+
+        if obj == None:
+            raise Exception("The data provided is invalid") 
+
+        return self.check_dom(obj,signed)
         
     def analyze(self, xml, is_file=False): 
         if is_file:
