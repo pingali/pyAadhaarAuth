@@ -44,6 +44,7 @@ import tempfile
 #import libxml2
 from lxml import etree, objectify 
 
+import logging 
 import dumper 
 import hashlib, hmac, base64, random 
 from config import Config 
@@ -53,10 +54,12 @@ from M2Crypto import Rand
 import re
 
 from crypt import AuthCrypt 
-from signature import AuthRequestSignature
+from signature import AuthSignature
 from validate import AuthValidate
 from connection import AuthConnection 
 from response import AuthResponse
+
+log=logging.getLogger("AuthRequest")
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -167,6 +170,11 @@ class AuthRequest():
             '_request_signed_xml': None,
             '_response_signed_xml': None
             }
+
+        self._checker = AuthValidate(cfg=self._cfg, 
+                                     request_xsd=self._cfg.common.request_xsd,
+                                     testing=True) 
+
     def get_uid_hash(self): 
         return hashlib.sha256(self._uid).hexdigest() 
 
@@ -208,7 +216,7 @@ class AuthRequest():
         
         #=> Set the session key 
         self._session_key = Rand.rand_bytes(self._cfg.common.rsa_key_len) 
-        print "session_key (encoded) = ", base64.b64encode(self._session_key)
+        log.debug("session_key (encoded) = %s" % base64.b64encode(self._session_key))
         encrypted_session_key = a.x509_encrypt(self._session_key)
         self._skey['_text'] = base64.b64encode(encrypted_session_key)
 
@@ -239,12 +247,12 @@ class AuthRequest():
         if (data == None or data == ""): 
             raise Exception("Pid data cannot be empty") 
             
-        #print "Setting data = %s" % data 
+        #log.debug("Setting data = %s" % data)
 
         x = AuthCrypt(cfg=self._cfg) 
         encrypted_pid = x.aes_encrypt(key=self._session_key, msg=data)
         self._data = base64.b64encode(encrypted_pid)
-        print "Data = ", self._data
+        log.debug("Data = %s " % self._data)
 
     def get_data(self):
         return self._data 
@@ -258,16 +266,18 @@ class AuthRequest():
         else:
             data = self._pidxml_demographics                
         
-        print "data len = ", len(data) 
+        log.debug("data len = %d " % len(data))
         # This should be digest and not hexdigest 
+
         hash_digest = hashlib.sha256(data).digest()
-        print "Sha256 of data (encoded) = ", base64.b64encode(hash_digest)
+        log.debug("Sha256 of data (encoded) = %s" %\
+                      base64.b64encode(hash_digest))
 
         x = AuthCrypt(cfg=self._cfg) 
         encrypted_hash = x.aes_encrypt(key=self._session_key, 
                                        msg=hash_digest)
         self._hmac = base64.b64encode(encrypted_hash) 
-        print "Hmac = ", self._hmac 
+        log.debug("Hmac = %s " % self._hmac)
         return self._hmac 
 
     def get_hmac(self):
@@ -352,7 +362,7 @@ class AuthRequest():
         # update the internal state 
         self._pidxml_demographics = etree.tostring(doc,pretty_print=False)
         
-        print "Pid XML = ", self._pidxml_demographics
+        log.debug("Pid XML = %s " % self._pidxml_demographics)
         
         # => Follow the auth client. Construct the entire xml and then
         # extract the demographic substring
@@ -371,11 +381,11 @@ class AuthRequest():
             demo_xml = demo_string
         else:
             demo_xml = demo_string
-        print "Demographics string = ", demo_xml 
+        log.debug("Demographics string = %s " % demo_xml)
 
         # This will enable checking the response string
         self._demo_hash = hashlib.sha256(demo_xml).hexdigest()
-        print "PID demographics hash = ", self._demo_hash
+        log.debug("PID demographics hash = %s " % self._demo_hash)
         return True 
     
     def get_demo_hash(self):
@@ -427,29 +437,36 @@ class AuthRequest():
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=False)))
     
     def analyze_xmls(self): 
-            pid_content_sizes = checker.analyze(xml=self._pidxml_demographics,
-                                                is_file=False) 
-            signed_content_sizes = checker.analyze(xml=signed_content,
-                                                   is_file=False) 
-            print "Payload (Pid) Element:" 
-            print pid_content_sizes 
-            print "Fully Signed XML:" 
-            print signed_content_sizes
+        """
+        Analyze the XML being sent to the server
+        """ 
+
+        pid_content_sizes = \
+            self._checker.analyze(xml=self._pidxml_demographics,
+                            is_file=False) 
+        signed_content_sizes = \
+            self._checker.analyze(xml=self._result['_request_signed_xml'],
+                            is_file=False) 
+        log.debug("Payload (Pid) Element:")
+        log.debug(pid_content_sizes)
+        log.debug("Fully Signed XML:")
+        log.debug(signed_content_sizes)
+
     def sign_request_xml(self,xml=None, update_state=True): 
         """
-        Sign the payload XML provided (or extracted from self._request)
+        Sign the payload XML provided (or extracted from self._result)
         """
         
         cfg = self._cfg 
         
         if xml == None: 
-            xml = self._request['_request_unsigned_xml'] 
+            xml = self._result['_request_unsigned_xml'] 
             
         if (xml == None): 
-            print "XML to be signed = ", xml 
+            log.debug("XML to be signed = %s " % xml)
             raise Exception("Could not find XML to sign")
         
-        print "Signing ",xml[1:20],"...",xml[len(xml)-20:len(xml)]
+        log.debug("Signing %s ... %s " %(xml[1:20],xml[len(xml)-20:len(xml)]))
 
         # => Store the xml and generated a signed version
         if (cfg.request.xml == None): 
@@ -469,7 +486,7 @@ class AuthRequest():
             tmpfp_signed = tmpfp_unsigned + ".sig" 
          
         # => Sign the XML generated
-        sig = AuthRequestSignature() 
+        sig = AuthSignature() 
         sig.init_xmlsec() 
         res = sig.sign_file(tmpfp_unsigned, 
                             tmpfp_signed, 
@@ -477,13 +494,13 @@ class AuthRequest():
                             cfg.common.pkcs_password)
         sig.shutdown_xmlsec() 
         if (res == 1): 
-            print "Signed successfully!"
+            log.debug("Signed successfully!")
         else: 
-            print "Signing unsuccessful for some reason \"%s\"" %res
+            log.debug("Signing unsuccessful for some reason \"%s\""  % res)
             raise Exception("Unsuccessful signature") 
 
         signed_content = file(tmpfp_signed).read() 
-        print "Signed XML (%s):" % tmpfp_signed
+        log.debug("Signed XML (%s):\n%s" % (tmpfp_signed, signed_content))
         return signed_content 
 
     def execute(self): 
@@ -507,64 +524,67 @@ class AuthRequest():
         # => Extract and store the result 
         self._result['_request_unsigned_xml'] = self.tostring()  # dump it 
         
-        print "Unsigned XML:"
-        print self._result['request_unsigned_xml']
+        log.debug("Unsigned XML:")
+        log.debug(self._result['_request_unsigned_xml'])
     
         # =>  Now validate the xml generated 
-        res = checker.validate(self._result['_request_unsigned_xml'], 
+        res = self._checker.validate(self._result['_request_unsigned_xml'], 
                                is_file=False, signed=False)
         if (res == False): 
-            print "Invalid XML generated" 
+            log.debug("Invalid XML generated")
         
         #=> In testing mode extract the XML to see if we can get back
         # the origin XML 
         if (cfg.common.mode == "testing"):
-            res = checker.extract(xml=xml,
+            res = self._checker.extract(xml=xml,
                                   is_file=False,
                                   key=cfg.common.private_key)
         
         #=> Sign the request
         signed_xml = self.sign_request_xml()         
-        self._result['request_signed_xml'] = signed_content
+        self._result['_request_signed_xml'] = signed_xml
         
-        #=> Print stats about the generated XMLs 
+        #=> Log.Debug(stats about the generated XMLs 
         if cfg.request.analyze: 
             self.analyze_xmls() 
 
         # Validate the signed file 
-        res = checker.validate(tmpfp_signed, is_file=True, signed=True)
-        print "Validated XML generated with result = ", res
+        valid = self._checker.validate(self._result['_request_signed_xml'], 
+                               is_file=False, signed=True)
+        if valid: 
+            log.debug("Validated XML generated with result = %s " % res)
         
         # Testing will use the local cert instead of UIDAI's public
         # cert for encryption. Therefore will fail the tests at the
         # authentication server.
         
         if (cfg.common.mode != "testing"):
+            log.debug("Connecting to the server...") 
             conn = AuthConnection(cfg, ac=cfg.common.ac)
             try: 
-                xml = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
+                xml = conn.authenticate(uid=cfg.request.uid, 
+                                        data=self._result['_request_signed_xml']) 
             except: 
                 traceback.print_exc(file=sys.stdout)
-                print "Found an exception. Unable to complete authentication"
+                raise Exception("Unable to complete authentication")
                 
-            print "Response from Auth Server" 
-            print xml 
+            log.debug("Response from Auth Server")
+            log.debug(xml)
             res = AuthResponse(cfg=cfg, 
                                uid=cfg.request.uid)
 
-
             res.load_string(xml) 
-            print "UID Hash = ", res.get_uid_hash() 
-            print "Request uid hash = ", req.get_uid_hash() 
+            log.debug("Match result = %s " % res.get_ret())
+            log.debug("Error = %s " % res.lookup_err())
+            log.debug("Flags that are set: %s " % res.lookup_usage_bits())
+            log.debug("UID Hash = %s " % res.get_uid_hash())
+            log.debug("Request uid hash = %s " % req.get_uid_hash())            
+            log.debug("Demo hash = %s " % res.get_demo_hash())
+            log.debug("Request Demo hash = %s " % req.get_demo_hash())
             
-            print "Demo hash = ", res.get_demo_hash() 
-            print "Request Demo hash = ", req.get_demo_hash() 
-
-            res.lookup_error()
-            print "Flags that are set: ", res.lookup_usage_bits()
         else:
-            print "Skpping contacting the server in the 'testing' mode"
-            print "Please change cfg >> common >> mode to enable server posting" 
+            log.debug("Skipping contacting the server in the 'testing' mode")
+            log.debug("Please change cfg >> common >> mode to enable server posting")
 
         # Now cleanup 
         if (cfg.request.xmlcleanup is True): 
@@ -599,7 +619,6 @@ common: {
     auth_url: 'http://auth.uidai.gov.in/1.5/'    
     request_xsd: 'xsd/uid-auth-request.xsd',
     response_xsd: 'xsd/uid-auth-response.xsd'   
-
 }
 
 request: { 
@@ -621,32 +640,45 @@ request: {
         sys.exit(1) 
     
     cfg = Config(sys.argv[1])
-
-    checker = AuthValidate(cfg=cfg, 
-                           request_xsd=cfg.common.request_xsd,
-                           testing=True) 
     
+    #=> Setup logging 
+    logging.basicConfig(
+	filename='execution.log',
+	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
+
+    log.setLevel(logging.DEBUG)
+    log.info("Starting my AuthClient")
+
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
         req = AuthRequest(cfg=cfg, 
-                          uid=cfg.request.uid, ac=cfg.common.ac)
+                          uid=cfg.request.uid, 
+                          ac=cfg.common.ac)
+        req.execute() 
 
     elif (cfg.request.command == "validate"): 
+
+        checker = AuthValidate(cfg=cfg, 
+                               request_xsd=cfg.common.request_xsd,
+                               testing=True) 
 
         # Validate the signed file 
         tmpfp_signed = cfg.request.signedxml
         res = checker.validate(tmpfp_signed, 
                                is_file=True, 
                                signed=True)
-        print "Validated XML generated with result = ", res
+        log.debug("Validated XML generated with result = %s " % res)
 
     elif (cfg.request.command == "extract"): 
+        checker = AuthValidate(cfg=cfg, 
+                               request_xsd=cfg.common.request_xsd,
+                               testing=True) 
         # Now extract the contents 
         res = checker.extract(xml=cfg.request.xml,
                               is_file=True,
                               key=cfg.common.private_key)
-        print "Extracted XML with result = ", res
+        log.debug("Extracted XML with result = %s " % res)
     else: 
         raise Exception("Unknown command") 
     

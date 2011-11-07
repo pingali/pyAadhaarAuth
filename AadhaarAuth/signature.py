@@ -69,6 +69,7 @@ import libxml2
 import xmlsec
 from config import Config 
 from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
+import logging 
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS (for derived parts only)" 
@@ -79,8 +80,9 @@ __maintainer__ = "Venkata Pingali"
 __email__ = "pingali@gmail.com"
 __status__ = "Pre-release"
 
+log=logging.getLogger('AuthSignature')
 
-class AuthRequestSignature(): 
+class AuthSignature(): 
     
     def __init__(self, use_template=False): 
         self.dsig_ctx = None
@@ -96,22 +98,22 @@ class AuthRequestSignature():
         
         # Init xmlsec library
         if xmlsec.init() < 0:
-            print "Error: xmlsec initialization failed."
+            log.error(" xmlsec initialization failed.")
             # XXX This should do something else...
             return sys.exit(-1)
         
         # Check loaded library version
         if xmlsec.checkVersion() != 1:
-            print "Error: loaded xmlsec library version is not compatible.\n"
+            log.error(" loaded xmlsec library version is not compatible.\n")
             sys.exit(-1)
 
         # Init crypto library
         if xmlsec.cryptoAppInit(None) < 0:
-            print "Error: crypto initialization failed."
+            log.error(" crypto initialization failed.")
             
         # Init xmlsec-crypto library
         if xmlsec.cryptoInit() < 0:
-            print "Error: xmlsec-crypto initialization failed."
+            log.error(" xmlsec-crypto initialization failed.")
 
         self._init_xmlsec = True 
 
@@ -148,10 +150,10 @@ class AuthRequestSignature():
         
         doc = libxml2.parseFile(xml_file)
         if doc is None or doc.getRootElement() is None:
-            print "Error: unable to parse file \"%s\"" % xml_file
+            log.error(" unable to parse file \"%s\"" % xml_file)
             return self.cleanup(doc)
         
-        print "Signing file %s using %s " % (xml_file, pkcs_file) 
+        log.debug("Signing file %s using %s " % (xml_file, pkcs_file))
 
         if self._use_template: 
             # If the template is already in the text ready to be filled 
@@ -159,7 +161,7 @@ class AuthRequestSignature():
                                        xmlsec.NodeSignature, 
                                        xmlsec.DSigNs);
             if signNode is None:
-                print "Error: failed to find signature template"
+                log.error(" failed to find signature template")
                 return self.cleanup(doc)
                 
         else:
@@ -177,37 +179,36 @@ class AuthRequestSignature():
             refNode = signNode.addReference(xmlsec.transformSha1Id(),
                                             None, "", None)
             if refNode is None:
-                print "Error: failed to add reference to signature template"
+                log.error("Failed to add reference to signature template")
                 return self.cleanup(doc)
             
             # Add enveloped transform
             if refNode.addTransform(xmlsec.transformEnvelopedId()) is None:
-                print "Error: failed to add enveloped transform to reference"
+                log.error("Failed to add enveloped transform to reference")
                 return self.cleanup(doc)
         
             # Add <dsig:KeyInfo/> and <dsig:X509Data/>
             keyInfoNode = signNode.ensureKeyInfo(None)
             if keyInfoNode is None:
-                print "Error: failed to add key info"
+                log.error("Failed to add key info")
                 return self.cleanup(doc)
             
             x509DataNode = keyInfoNode.addX509Data() 
             if x509DataNode is None:
-                print "Error: failed to add X509Data node"
+                log.error("Failed to add X509Data node")
                 return self.cleanup(doc)
 
             if xmlsec.addChild(x509DataNode,
                                xmlsec.NodeX509SubjectName) is None:
-                print "Error: failed to X509SubjectName to x509DataNode" 
+                log.error("Failed to X509SubjectName to x509DataNode")
                 return self.cleanup(doc)
 
             # Sample code from here.
             # http://ndg-security.ceda.ac.uk/browser/TI12-security/trunk/python/NDG/XMLSecDoc.py?rev=920
             if xmlsec.addChild(x509DataNode,
                                xmlsec.NodeX509Certificate) is None:
-                print "Error: failed to X509certificate to x509DataNode" 
+                log.error("Failed to X509certificate to x509DataNode")
                 return self.cleanup(doc)
-	
 
         # endif (if use_template..) 
     
@@ -215,7 +216,7 @@ class AuthRequestSignature():
         # example
         dsig_ctx = xmlsec.DSigCtx()
         if dsig_ctx is None:
-            print "Error: failed to create signature context"
+            log.error("Failed to create signature context")
             return self.cleanup(doc)
         
         # Store the context..
@@ -229,7 +230,7 @@ class AuthRequestSignature():
         #                              None, None, None)
         key = xmlsec.cryptoAppPkcs12Load(pkcs_file, password, None, None)
         if key is None:
-            print "Error: failed to load private pem key from \"%s\"" % pkcs_file
+            log.error("Failed to load private pem key from \"%s\"" % pkcs_file)
             return self.cleanup(doc, dsig_ctx)
 
         dsig_ctx.signKey = key
@@ -238,17 +239,17 @@ class AuthRequestSignature():
         # if not check_filename(cert_file):
         #    return self.cleanup(doc, dsig_ctx)
         # if xmlsec.cryptoAppKeyCertLoad(key, cert_file, xmlsec.KeyDataFormatPem) < 0:
-        #    print "Error: failed to load pem certificate \"%s\"" % cert_file
+        #    log.error(" failed to load pem certificate \"%s\"" % cert_file
         #    return self.cleanup(doc, dsig_ctx)
         
         # Set key name to the file name, this is just an example!
         if key.setName(pkcs_file) < 0:
-            print "Error: failed to set key name for key from \"%s\"" % pkcs_file
+            log.error("Failed to set key name for key from \"%s\"" % pkcs_file)
             return self.cleanup(doc, dsig_ctx)
         
         # Sign the template
         if dsig_ctx.sign(signNode) < 0:
-            print "Error: signature failed"
+            log.error("Signature failed")
             return self.cleanup(doc, dsig_ctx)
         
         # Print signed document to stdout
@@ -260,7 +261,7 @@ class AuthRequestSignature():
         libxml2mod.xmlDocFormatDump(fp, doc._o, 0)
         fp.close()
         
-        print "Please check output file ", signed_xml_file
+        log.debug("Please check output file " + signed_xml_file)
         
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
@@ -278,7 +279,7 @@ class AuthRequestSignature():
 
         doc = libxml2.parseFile(xml_file)
         if doc is None or doc.getRootElement() is None:
-            print "Error: unable to parse file \"%s\"" % tmpl_file
+            log.error(" unable to parse file \"%s\"" % tmpl_file)
             return self.cleanup(doc)
 
         # Find start node
@@ -288,14 +289,14 @@ class AuthRequestSignature():
         # Create signature context, we don't need keys manager in this example
         dsig_ctx = xmlsec.DSigCtx()
         if dsig_ctx is None:
-            print "Error: failed to create signature context"
+            log.error("Failed to create signature context")
             return self.cleanup(doc)
 
         # Load private key, assuming that there is not password
         key = xmlsec.cryptoAppKeyLoad(key_file, xmlsec.KeyDataFormatPem,
                                       None, None, None)
         if key is None:
-            print "Error: failed to load private pem key from \"%s\"" % key_file
+            log.error("Failed to load private pem key from \"%s\"" % key_file)
             return self.cleanup(doc, dsig_ctx)
 
         dsig_ctx.signKey = key
@@ -305,19 +306,19 @@ class AuthRequestSignature():
             return self.cleanup(doc, dsig_ctx)
 
         if key.setName(key_file) < 0:
-            print "Error: failed to set key name for key from \"%s\"" % key_file
+            log.error("Failed to set key name for key from \"%s\"" % key_file)
             return self.cleanup(doc, dsig_ctx)
 
         # Verify signature
         if dsig_ctx.verify(node) < 0:
-            print "Error: signature verify"
+            log.error("Signature verify failed")
             return self.cleanup(doc, dsig_ctx)
 
         # Print verification result to stdout
         if dsig_ctx.status == xmlsec.DSigStatusSucceeded:
-            print "Signature is OK"
+            log.debug("Signature is OK")
         else:
-            print "Signature is INVALID"
+            log.error("Signature is INVALID")
 
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
@@ -334,7 +335,7 @@ class AuthRequestSignature():
         if os.access(filename, os.R_OK):
             return 1
         else:
-            print "Error: XML file \"%s\" not found OR no read access" % filename
+            log.error("XML file \"%s\" not found OR no read access" % filename)
             return 0
 
 if __name__ == "__main__":
@@ -374,7 +375,7 @@ sign: {
 
         # Sign the XML file 
         # XXX Should probably move the init_xmlsec into sign_file itself
-        sign = AuthRequestSignature() 
+        sign = AuthSignature() 
         sign.init_xmlsec() 
         res = sign.sign_file(cfg.sign.xml,
                              cfg.sign.signedxml,
@@ -387,7 +388,7 @@ sign: {
 
         # Load this or another file for verification using the 
         # private key of public.12 
-        verify = AuthRequestSignature()
+        verify = AuthSignature()
         verify.init_xmlsec() 
         res = verify.verify_file(cfg.sign.signedxml, 
                                  cfg.common.private_key)

@@ -40,9 +40,12 @@ from config import Config
 import traceback 
 import base64 
 import re 
+import logging
 
 from crypt import AuthCrypt 
 from checksum import VerhoeffChecksum
+
+log=logging.getLogger('AuthValidate') 
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -82,10 +85,10 @@ class AuthValidate():
         parser = objectify.makeparser(schema = schema)
         try: 
             obj = objectify.fromstring(xml_text, parser)
-            print "The XML generated is XSD compliant" 
+            log.debug("The XML generated is XSD compliant")
         except: 
-            print "[Error] Unable to parse incoming message" 
-            traceback.print_exc(file=sys.stdout) 
+            log.error("Unable to parse incoming message")
+            log.error(traceback.print_exc(file=sys.stdout))
             return None 
         return obj
 
@@ -121,8 +124,8 @@ class AuthValidate():
         
         uid = obj.get('uid')
         if (uid == None or len(uid) != 12):
-            print "UID attribute is either missing or has incorrect length",\
-                "Please check the UID attribute" 
+            log.warn("UID attribute is either missing or has incorrect " + \
+		     "length. Please check the UID attribute")
             result = False
             
         # UID numbering scheme rules
@@ -133,50 +136,50 @@ class AuthValidate():
         # uid[12]: Verhoeff's checksum 
         c = VerhoeffChecksum() 
         if not c.validateVerhoeff(uid):
-            print "Invalid UID. It  has failed integrity check" 
+            log.error("Invalid UID. It  has failed integrity check")
             result = False
 
         # Indirect way of checking namespace 
         tag = obj.tag 
         tag_default="{http://www.uidai.gov.in/authentication/uid-auth-request/1.0}Auth"
         if (tag == None or tag != tag_default):
-            print "xmlns is missing or is incorrect"
-            print "xmlns = ", tag
+            log.error("xmlns is missing or is incorrect")
+            log.debug("xmlns = %s " % tag)
             result = False 
         
         tid = obj.get('tid')
         if (tid == None):
-            print "tid is missing" 
+            log.error("tid is missing")
             result = False 
             if (self._testing): 
                 if (tid != "public"): 
-                    print "tid should be set to 'public' during testing" 
+                    log.error("tid should be set to 'public' during testing")
                     result = False 
 
         sa = obj.get('sa')
         ac = obj.get('ac')
         if (ac == None or sa == None):
-            print "sa or ac is missing" 
+            log.error("sa or ac is missing")
             result = False 
         if (self._testing): 
             if (ac != "public" or sa != "public"):
-                print "tid and sa should be set to public during testing" 
+                log.error("tid and sa should be set to public during testing")
                 result = False
 
         ver = obj.get('ver')
         if (ver != "1.5"):
-            print "Attribute 'ver' should be set to 1.5"
+            log.error("Attribute 'ver' should be set to 1.5")
             result = False 
 
         #lk="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" 
         lk = obj.get('lk')
         lk_default="MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=" 
         if (lk == None):
-            print "Attribute lk is missing"
+            log.error("Attribute lk is missing")
             result = False 
         if (self._testing):
             if (lk != lk_default):
-                print "lk should be set to 'MK...xQ=' during testing"
+                log.error("lk should be set to 'MK...xQ=' during testing")
                 result = False
 
         #################################################
@@ -188,8 +191,8 @@ class AuthValidate():
         # Check for uidai's cert expiry date
         expiry = obj["Skey"].get('ci')
         if ((self._testing == True) and (expiry != "20150922")):
-            print "Expiry date is wrong! Check the UIDAI ", \
-                "certificate being used" 
+            log.error("Expiry date is wrong! Check the UIDAI "+ \
+                "certificate being used")
             result = False
             
             enc_session_key = obj["Skey"].text
@@ -197,9 +200,9 @@ class AuthValidate():
             session_key_len_default = 460 # How/Why?
             if (enc_session_key == None or 
                 session_key_len != session_key_len_default):
-                print "Encrypted/encoded session key length is wrong.", \
-                    "Please check the session key"             
-                print "Default value for session key length = %d" % (session_key_len_default)
+                log.error("Encrypted/encoded session key length is wrong." + \
+                    "Please check the session key")
+                log.error("Default value for session key length = %d" % (session_key_len_default))
                 result = False 
                 
         #################################################
@@ -211,27 +214,37 @@ class AuthValidate():
             attrib_val = obj["Uses"].get(attrib)
             if ((attrib_val != None) and 
                 (attrib_val != "y") and (attrib_val != "n")):
-                print "Invalid attribute %s of Uses element." % (attrib)
+                log.error("Invalid attribute %s of Uses element." % (attrib))
                 result = False
-
+                
+        # Not sure that this is right 
         pi = obj["Uses"].get('pi')
         bio = obj["Uses"].get('bio')
         if ((pi == None and bio == None) or 
             (pi == "y" and bio == "y")):
-            print "pi and bio attributes are mutually exclusive"
+            log.error("pi and bio attributes are mutually exclusive")
             result = False 
 
         #################################################
         # => Data and Hmac
         #################################################
-
-        obj["Data"]  # raise an exception if this is not present
-        obj["Hmac"]  # raise an exception if this is not present
         
+        try: 
+            obj["Data"]  # raise an exception if this is not present
+        except: 
+            log.error("Data element is missing") 
+            raise Exception("Element Data is missing from XML") 
+        
+        try:
+            obj["Hmac"]  # raise an exception if this is not present
+        except: 
+            log.error("Hmac element is missing") 
+            raise Exception("Element Hmac is missing from XML") 
+
         if result == False:
-            print "Body of Auth XML is compliant but invalid" 
+            log.debug("Body of Auth XML is compliant but invalid")
         else:
-            print "Body of XML is compliant and probably valid" 
+            log.debug("Body of XML is compliant and probably valid")
 
         if not signed:
             return result
@@ -240,10 +253,10 @@ class AuthValidate():
         try:
             signature = obj["{http://www.w3.org/2000/09/xmldsig#}Signature"]
         except:
-            print "Signature element is either missing or has invalid ",\
-            "namespace string"
-            print "Namespace string should be ",\
-                "'http://www.w3.org/2000/09/xmldsig#'"
+            log.error("Signature element is either missing or has invalid "+\
+            "namespace string")
+            log.debug("Namespace string should be " +\
+                "'http://www.w3.org/2000/09/xmldsig#'")
             return False
 
         #################################################
@@ -256,16 +269,16 @@ class AuthValidate():
         #canonalg_default = "http://www.w3.org/2001/10/xml-exc-c14n#"
         canonalg_default = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
         if (canonalg != canonalg_default):
-            print "CanonicalizationMethod algorithm is non-existent or invalid"
-            print "The Algorithm should be ", canonalg_default
+            log.error("CanonicalizationMethod algorithm is non-existent or invalid")
+            log.debug("The Algorithm should be ", canonalg_default)
             result = False
          
         # => SignatureMethod
         sigmethodalg = signedinfo.SignatureMethod.get("Algorithm")
         sigmethodalg_default="http://www.w3.org/2000/09/xmldsig#rsa-sha1"
         if (sigmethodalg != sigmethodalg_default):
-            print "SignatureMethod algorithm is non-existent of invalid"
-            print "The Algorithm should be ", sigmethodalg_default
+            log.error("SignatureMethod algorithm is non-existent of invalid")
+            log.debug("The Algorithm should be ", sigmethodalg_default)
             result = False            
   
 
@@ -273,36 +286,36 @@ class AuthValidate():
         reference = signedinfo.Reference
         ref_uri = reference.get("URI") 
         if (ref_uri == None): 
-            print "Please add URI to the Reference element"
-            print "Without this the server rejects the authentication request"
+            log.error("Please add URI to the Reference element")
+            log.error("Without this the server rejects the authentication request")
             raise Exception("Invalid signature")
 
         transformalg = reference.Transforms.Transform.get("Algorithm")
         transformalg_default="http://www.w3.org/2000/09/xmldsig#enveloped-signature" 
         if (transformalg != transformalg_default):
-            print "Transform has non-existent of invalid algorithm"
-            print "The Algorithm should be ", transformalg_default
+            log.error("Transform has non-existent of invalid algorithm")
+            log.debug("The Algorithm should be %s " % transformalg_default)
             result = False
         
         # => DigestMethod
         digestmethodalg = reference.DigestMethod.get("Algorithm")
         digestmethodalg_default="http://www.w3.org/2000/09/xmldsig#sha1"
-        #digestmethodalg_default="http://www.w3.org/2001/04/xmlenc#sha256"
+        #digestmethodalg_default="http://www.w3.org/2001/04/xmlenc#sha256")
         if (digestmethodalg != digestmethodalg_default):
-            print "DigestMethod has non-existent of invalid algorithm"
-            print "The Algorithm should be ", digestmethodalg_default
+            log.error("DigestMethod has non-existent of invalid algorithm")
+            log.debug("The Algorithm should be %s " % digestmethodalg_default)
             result = False
         
         # => DigestValue
         digestvalue = reference.DigestValue.text
         if (digestvalue == None):
-            print "Digest value should be non-null"
+            log.error("Digest value should be non-null")
             result = False
 
         # => SignatureValue
         sigvalue = signature.SignatureValue.text
         if (sigvalue == None):
-            print "Signature value should be non-null"
+            log.error("Signature value should be non-null")
             result = False
 
 
@@ -313,43 +326,41 @@ class AuthValidate():
             keyinfo = signature.KeyInfo
         except:
             keyinfo=None
-            print "KeyInfo element is missing"
-            result = False
+            log.error("KeyInfo element is missing")
+            raise Exception("Element KeyInfo is missing")
 
         if keyinfo != None:
             x509cert = keyinfo.X509Data.X509Certificate
             if x509cert.text == None:
-                print "X509Certificate element is missing" 
-                result = False
+                log.error("X509Certificate element is missing")
+                raise Exception("Element X509Certificate is missing")
 
-            if True: # XXX fix this...
-                x509name = keyinfo.X509Data.X509SubjectName
-                if x509name.text == None:
-                    print "X509SubjectName element is missing" 
-                    result = False 
+            x509name = keyinfo.X509Data.X509SubjectName
+            if x509name.text == None:
+                log.error("X509SubjectName element is missing")
+                result = False 
             
                 # => If testing mode, check the name in the certificate
                 if (self._testing): 
                     # First turn this <X509SubjectName>CN=Public
                     # AUA,OU=Public,O=Public
                     # AUA,L=Bangalore,ST=KA,C=IN</X509SubjectName>
-                    # into CN=Public AUA,OU=Public,O=Public
-                    # AUA,L=Bangalore,ST=KA,C=IN
+                    # into a single line of text 
 
                     l = x509name.text.splitlines()
                     l = [x.lstrip() for x in l]
                     t = ''.join(l)
                     t_default = "CN=Public AUA,OU=Public,O=Public AUA,L=Bangalore,ST=KA,C=IN"
                     if (t != t_default):
-                        print "X509SubjectName element body is inconsistent",\
-                            "with that expected in testing mode. Please check",\
-                            "the local certificate being used"
-                        print "Expected: ", t_default
+                        log.error("X509SubjectName element body is inconsistent" + \
+                            "with that expected in testing mode. Please check" +\
+                            "the local certificate being used")
+                        log.debug("Expected: %s ", t_default)
         
         if result == False:
-            print "XML is compliant but invalid" 
+            log.debug("XML is compliant but invalid")
         else:
-            print "XML is compliant and probably valid" 
+            log.debug("XML is compliant and probably valid")
         return result
 
     #def xmlsec_check(self, xmlfile, certfile):
@@ -406,7 +417,7 @@ class AuthValidate():
         max_key = max(size_hash, key=size_hash.get)
         max_value = size_hash[max_key]
 
-        msg = "%25s, %5s, %%%s\n" %('Element', 'Bytes', 'age') 
+        msg = "\n%25s, %5s, %%%s\n" %('Element', 'Bytes', 'age') 
         for i in sorted_sizes:
             msg = msg + "%25s, %5d, %%%d\n" %(i[0], i[1], int((i[1] *100)/max_value))
         return msg 
@@ -433,7 +444,7 @@ class AuthValidate():
         encoded_encrypted_skey = obj.Skey.text 
         encrypted_skey = base64.b64decode(encoded_encrypted_skey) 
         skey = crypt.x509_decrypt(encrypted_skey)
-        print "Extracted skey (encoded) = ",  base64.b64encode(skey)
+        log.debug("Extracted skey (encoded) = %s " %  base64.b64encode(skey))
 
         # Extract the data
         data = obj.Data.text 
@@ -441,28 +452,27 @@ class AuthValidate():
         
         #=> Decrypt the data
         decrypted_pid = crypt.aes_decrypt(skey, encrypted_pid)
-        print "Extracted data" 
-        print "\"%s\"" % base64.b64encode(decrypted_pid)
+        log.debug("Extracted data: \"%s\"" % base64.b64encode(decrypted_pid))
         
         #=> Decrypt the hmac 
         encoded_hmac = obj.Hmac.text 
         decoded_hmac = base64.b64decode(encoded_hmac) 
         payload_pid_hash = crypt.aes_decrypt(skey, decoded_hmac) 
-        print "Processing hmac ", encoded_hmac 
-        print "Sha256 hash contained in XML (b64 encoded) = ", \
-            base64.b64encode(payload_pid_hash)
+        log.debug("Processing hmac %s ", encoded_hmac)
+        log.debug("Sha256 hash contained in XML (b64 encoded) = %s " % \
+            base64.b64encode(payload_pid_hash))
 
         #=> Compute the hmac now for the pid element
         computed_pid_hash = hashlib.sha256(decrypted_pid).digest() 
-        print "Sha256 hash of extract Pid XML (b64 encoded)= ", \
-            base64.b64encode(computed_pid_hash)
+        log.debug("Sha256 hash of extract Pid XML (b64 encoded)= %s " %\
+            base64.b64encode(computed_pid_hash))
 
         #=> Check for consistency 
         if (payload_pid_hash != computed_pid_hash): 
             raise Exception("Pid Element's hash in the " + \
                             "payload and computed value do not match")
         else:
-            print "Success! The hashes matched" 
+            log.debug("Success! The hashes matched")
         
         return True 
 

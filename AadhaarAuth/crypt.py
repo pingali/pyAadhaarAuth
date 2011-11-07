@@ -25,6 +25,9 @@ import base64
 import random 
 from config import Config 
 
+import logging
+log=logging.getLogger("AuthCrypt") 
+
 class AuthCrypt():
     """
     Encryption/decryption functions required by the authentication
@@ -55,7 +58,7 @@ class AuthCrypt():
         if (data == None or data == ""):
             raise Exception("No data to encrypt") 
         
-        print "x509 Encrypting using cert", self._public_key
+        log.debug("x509 Encrypting using cert %s" % self._public_key)
         
         x509 = X509.load_cert(self._public_key)
         rsa = x509.get_pubkey().get_rsa()
@@ -72,12 +75,12 @@ class AuthCrypt():
         if (data == None or data == ""):
             raise Exception("No data to encrypt") 
 
-        print "x509 Decrypting using cert", self._private_key
-        print "Decrypting data: \"%s\"" % base64.b64encode(data)
+        log.debug("x509 Decrypting using cert %s " % self._private_key)
+        log.debug("Decrypting data: \"%s\"" % base64.b64encode(data))
 
         rsa = RSA.load_key(self._private_key) 
         res = rsa.private_decrypt(data, RSA.pkcs1_padding)
-        #print "\"%s\"" % (res)
+        #log.debug("\"%s\"" % (res))
         return res 
     
     def x509_test(self, show=True): 
@@ -88,21 +91,22 @@ class AuthCrypt():
         """
         data = "39jsjsfdhdshfd" # some test data
         if show:
-            print "Encryption payload: ", data
+            log.debug("Encryption payload: %s " % data)
         enc_data = self.x509_encrypt(data)
         if show:
-            print "Encrypted base64 encoded data:" 
-            print enc_data 
+            log.debug("Encrypted base64 encoded data:")
+            log.debug(enc_data)
         dec_data = self.x509_decrypt(enc_data)
         if show:
-            print "Decrypted data" 
-            print dec_data
+            log.debug("Decrypted data")
+            log.debug(dec_data)
         
         if (data != dec_data): 
+                    
             raise Exception("Encryption is not functioning correctly")
         else:
             if show:
-                print "Encrytion payload and decrypted data matched" 
+                log.debug("Encrytion payload and decrypted data matched")
         return True 
 
     ENC=1         
@@ -138,7 +142,7 @@ class AuthCrypt():
             del cipher                 
             return v             
         
-        #print "AES encryption successful\n"             
+        #log.debug("AES encryption successful\n")
         return encrypt(msg)         
         
     def aes_decrypt(self, key, msg, iv=None):             
@@ -161,7 +165,7 @@ class AuthCrypt():
             v = v + cipher.final()                 
             del cipher                 
             return v             
-        #print "AES decryption successful\n"             
+        #log.debug("AES decryption successful\n")
         return decrypt(msg) 
 
     def aes_test(self, key, msg):
@@ -181,16 +185,16 @@ class AuthCrypt():
 
         enc_msg=auth.aes_encrypt(key=key,msg=msg)
 
-        print "AES Encryption testing"
-        print "Original text ", msg
-        print "Encrypted encoded text ", enc_msg
+        log.debug("AES Encryption testing")
+        log.debug("Original text %s " % msg)
+        log.debug("Encrypted encoded text %s " % enc_msg)
 
         dec_msg=auth.aes_decrypt(key=key,msg=enc_msg) 
-        print "decrypted text ", dec_msg
+        log.debug("decrypted text %s " % dec_msg)
         if (msg == dec_msg):
-            print "AES encryption successful"
+            log.debug("AES encryption successful")
         else:
-            print "AES encryption FAILED!" 
+            log.error("AES encryption FAILED!")
 
 if __name__ == '__main__':
     assert(sys.argv)
@@ -198,7 +202,7 @@ if __name__ == '__main__':
         print """
 Error: command line should specify a config file.
 
-Usage: crypt.py <config-file>
+Usage: crypt.py <config-file> 
 
 $ cat example.cfg
 common: { 
@@ -220,7 +224,7 @@ crypt: {
                          pub_key=cfg.common.public_cert,
                          priv_key=cfg.common.private_key) # production
 
-        print "certificate expiry = ", auth.x509_get_cert_expiry()
+        log.debug("certificate expiry = %s " % auth.x509_get_cert_expiry())
         auth.x509_test() 
 
         msg = cfg.crypt.msg 

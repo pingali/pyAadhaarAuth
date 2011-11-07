@@ -34,7 +34,7 @@ from datetime import datetime
 from M2Crypto import Rand 
 
 from crypt import AuthCrypt 
-from signature import AuthRequestSignature
+from signature import AuthSignature
 from validate import AuthValidate
 from connection import AuthConnection 
 from response import AuthResponse

@@ -33,6 +33,9 @@ import base64
 from datetime import * 
 import hashlib 
 import binascii 
+import logging 
+
+log = logging.getLogger("AuthResponse") 
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -57,7 +60,9 @@ class AuthResponse():
     python-based. This interface supports only v1.5 and public AuAs 
     """
 
-
+    
+    # XXX Remove all these parameters. Only include the _response 
+    # object They are not being used anyway. 
     def __init__(self, cfg=None, uid=None, ret="n", txn="", 
                  err=-1, info="", ts=datetime.utcnow(), 
                  code=-1):
@@ -73,7 +78,7 @@ class AuthResponse():
         self._err = err 
         self._uid = uid 
 
-    def lookup_error(self): 
+    def lookup_err(self): 
         
         # 
         errors = { 
@@ -145,7 +150,7 @@ class AuthResponse():
         try:
             err = self._response['_err']
             res = errors[err]
-            print "Error lookup for %s: %s " % (err, res)
+            log.debug("Error lookup for %s: %s " % (err, res))
         except: 
             res = "No error"
 
@@ -214,8 +219,8 @@ class AuthResponse():
             try: 
                 position = usage_positions[what]
                 flag = self._response['_usage_data'][position-1]
-                print "Looked up flag %s - bit pos %d with result %s " \
-                    % (what, position, flag)
+                log.debug("Looked up flag %s - bit pos %d with result %s " \
+                    % (what, position, flag))
             except: 
                 raise Exception("Unknown flag to lookup in usage data") 
 
@@ -227,8 +232,8 @@ class AuthResponse():
             for what in all_usages:
                 position = usage_positions[what]
                 flag = self._response['_usage_data'][position-1]
-                #print "Looked up flag %s - bit pos %d with result %s " \
-                #    % (what, position, flag)
+                #log.debug("Looked up flag %s - bit pos %d with result %s " \
+                #    % (what, position, flag))
                 if (flag == "1"):
                     res = res + [what]
             return res 
@@ -247,15 +252,17 @@ class AuthResponse():
 
     def set_err(self, value): 
         self._err = value
+    
     def get_err(self):
         return self._err 
-
+    
     def set_ts(self, value): 
         # check for the type 
         self._ts = value
+    
     def get_ts(self):
         self._ts 
-
+    
     def xsd_check(self, xml_text,xsd):
         
         if xml_text == None: 
@@ -266,10 +273,10 @@ class AuthResponse():
         parser = objectify.makeparser(schema = schema)
         try: 
             obj = objectify.fromstring(xml_text, parser)
-            print "The XML generated is XSD compliant" 
+            log.debug("The XML generated is XSD compliant")
         except: 
-            print "[Error] Unable to parse incoming message" 
-            traceback.print_exc(file=sys.stdout) 
+            log.error("Unable to parse incoming message")
+            log.error(traceback.print_exc(file=sys.stdout))
             return None
         return obj
 
@@ -277,6 +284,11 @@ class AuthResponse():
         "" 
         
     def tostring(self):
+
+        # The XML should be loaded into the _response object 
+        # Process all the variables there alone
+        raise Exception("Dont use this") 
+
 
         self.validate()
 
@@ -333,6 +345,8 @@ class AuthResponse():
     def get_demo_hash(self):
         return self._response['_demo_hash'] 
 
+    def get_ret(self):
+        return self._response['_ret'] 
 
 if __name__ == '__main__':
     assert(sys.argv)
@@ -351,29 +365,34 @@ response: {
     xml: "fixtures/authresponse.xml'
 }
 """    
+        sys.exit(1) 
+
     cfg = Config(sys.argv[1]) 
     if (cfg.response.command == "generate"):
         response = AuthResponse(cfg, err=100, ts=datetime.utcnow())
         response.validate() 
         xml = response.tostring() 
-        print s 
+        log.debug("XML generated = ")
         response.xsd_check(xml, cfg.common.response_xsd)
     elif (cfg.response.command == "validate"): 
         response = AuthResponse(cfg=cfg)
         test_xml = file(cfg.response.xml).read() 
-        print "Validating this incoming XML" 
-        print test_xml
+        log.debug("Validating this incoming XML")
+        log.debug(test_xml)
 
-        #sig = AuthRequestSignature() 
+        #sig = AuthSignature() 
         #sig.verify_file(cfg.response.xml, cfg.common.uid_cert_path)
 
         #response.xsd_check(test_xml, cfg.common.response_xsd) 
         response.load_string(test_xml) 
-        if (response.get_error()): 
-            response.lookup_error()
-        print "Flags that are set: ", response.lookup_usage_bits()
+        if (response.get_err()): 
+            response.lookup_err()
+        else:
+            log.debug("Successful response")
+
+        log.debug("Flags that are set: %s " % response.lookup_usage_bits())
         
     else:
-        print "Unknown command %s " % cfg.response.command
+        log.debug("Unknown command %s " % cfg.response.command)
         sys.exit(1) 
         
