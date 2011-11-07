@@ -24,6 +24,8 @@ import os, sys
 sys.path.append("lib") 
 import copy 
 
+import logging
+
 from lxml import etree, objectify 
 import tempfile 
 import dumper 
@@ -32,16 +34,13 @@ from config import Config
 import traceback 
 from datetime import datetime
 from M2Crypto import Rand 
-
-from crypt import AuthCrypt 
-from signature import AuthSignature
-from validate import AuthValidate
-from connection import AuthConnection 
-from response import AuthResponse
-from request import AuthRequest
-
 import json
 from pprint import pprint
+
+from request import AuthRequest
+
+
+log = logging.getLogger("AuthBatchRequest")
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -204,6 +203,18 @@ class AuthBatchRequest():
                 print "UID,Test Name"
                 print "%s,%s" %(person['uid'], func_details[0])
                 print etree.tostring(new_root, pretty_print=True)
+                
+    def authenticate_basic(self): 
+        
+        log.debug("Authenticating") 
+
+        for person in self._data: 
+            cfg= self._cfg 
+            cfg.request.uid = person['uid'] 
+            cfg.request.name = person['name'] 
+            
+            req = AuthRequest(cfg)
+            req.execute() 
             
 
 if __name__ == '__main__':
@@ -244,9 +255,19 @@ batch: {
 """
         sys.exit(1) 
     
+    # Load the config
     cfg = Config(sys.argv[1])
+    
+    #=> Setup logging 
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.basicConfig(
+	filename='execution.log',
+	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s') 
+
+    log.info("Starting my Batch AuthClient")
 
     batch = AuthBatchRequest(cfg=cfg)
     batch.load_data() 
-    batch.register_processing_functions() 
-    batch.generate_xml()
+    batch.authenticate_basic() 
+    #batch.register_processing_functions() 
+    #batch.generate_xml()

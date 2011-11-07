@@ -87,8 +87,8 @@ class AuthRequest():
     """
 
     
-    def __init__(self, cfg=None, biometrics=False, uid="", 
-                 tid="public", lk="", txn="", ac=""):
+    def __init__(self, cfg=None, biometrics=False, 
+                 uid="", tid="", lk="", txn="", ac="", sa=""):
         """
         Constructor of AuthRequest (see source for more details). 
         
@@ -103,6 +103,7 @@ class AuthRequest():
         lk: License key (if not specified, then config file entry is used) (default: "") 
 
         """
+        
         self._cfg = cfg 
         if (cfg.common.mode == 'testing'): 
             self._x509_cert = cfg.common.public_cert
@@ -113,27 +114,46 @@ class AuthRequest():
         if (type(biometrics) != bool):
             raise Exception("Type of biometrics flag should be boolean. Given %s %s " % (type(biometrics), type(True)))
 
+        if (tid == None or tid == ""): 
+            self._tid = cfg.common.tid
+        else: 
+            self._tid = tid
+
+        if (lk == None or lk == ""): 
+            self._lk = cfg.common.license_key
+        else: 
+            self._lk = lk 
+            
+        if (ac == None or ac == ""): 
+            self._ac = self._cfg.common.ac 
+        else:
+            self._ac = ac
+
+        self._ver = self._cfg.common.ver 
+
+        if (sa == None or sa == ""): 
+            self._sa = self._cfg.common.sa 
+        else: 
+            self._sa = sa 
+
+        if (uid == None or uid == ""): 
+            self._uid = self._cfg.request.uid
+        else: 
+            self._uid = uid 
+
+        self._txn = txn 
+        
+        # => internal state 
         self._pidxml_biometrics = None
         self._pidxml_demographics = None 
         self._demo_hash = None        
         self._session_key = None
-        self._tid = tid
-        self._lk = lk
-        if (self._lk == ""): 
-            self._lk = cfg.common.license_key
-            
-        if (ac == None or ac == ""): 
-            self._ac = "public"
-        else:
-            self._ac = ac
 
-        self._ver = "1.5" 
-        self._sa = "public" 
-        self._uid = uid
-        self._txn = txn 
+
         self._skey = { 
             '_ci': None, 
-            '_text': None}
+            '_text': None
+            }
         
         #token e.g., mobile number, NFC 
         self._token = { 
@@ -501,6 +521,12 @@ class AuthRequest():
 
         signed_content = file(tmpfp_signed).read() 
         log.debug("Signed XML (%s):\n%s" % (tmpfp_signed, signed_content))
+
+        # Now cleanup 
+        if (self._cfg.request.xmlcleanup is True): 
+            os.unlink(tmpfp_unsigned) 
+            os.unlink(tmpfp_signed)
+        
         return signed_content 
 
     def execute(self): 
@@ -570,6 +596,7 @@ class AuthRequest():
                 
             log.debug("Response from Auth Server")
             log.debug(xml)
+
             res = AuthResponse(cfg=cfg, 
                                uid=cfg.request.uid)
 
@@ -578,19 +605,19 @@ class AuthRequest():
             log.debug("Error = %s " % res.lookup_err())
             log.debug("Flags that are set: %s " % res.lookup_usage_bits())
             log.debug("UID Hash = %s " % res.get_uid_hash())
-            log.debug("Request uid hash = %s " % req.get_uid_hash())            
+            log.debug("Request uid hash = %s " % self.get_uid_hash())            
             log.debug("Demo hash = %s " % res.get_demo_hash())
-            log.debug("Request Demo hash = %s " % req.get_demo_hash())
+            log.debug("Request Demo hash = %s " % self.get_demo_hash())
+            
+            print "(%s,%s) -> %s" % (self._cfg.request.uid, 
+                                     self._cfg.request.name,
+                                     res.get_ret())
+                                         
             
         else:
             log.debug("Skipping contacting the server in the 'testing' mode")
             log.debug("Please change cfg >> common >> mode to enable server posting")
 
-        # Now cleanup 
-        if (cfg.request.xmlcleanup is True): 
-            os.unlink(tmpfp_unsigned) 
-            os.unlink(tmpfp_signed)
-        
         
 if __name__ == '__main__':
        
@@ -646,7 +673,7 @@ request: {
 	filename='execution.log',
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
 
-    log.setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
     log.info("Starting my AuthClient")
 
     if cfg.request.command == "generate": 
