@@ -162,7 +162,11 @@ class AuthRequest():
             '_state': "",
             '_pc': ""
             }
-        
+        self._result = {
+            '_request_unsigned_xml': None, 
+            '_request_signed_xml': None,
+            '_response_signed_xml': None
+            }
     def get_uid_hash(self): 
         return hashlib.sha256(self._uid).hexdigest() 
 
@@ -421,6 +425,152 @@ class AuthRequest():
 
         doc = etree.ElementTree(root) 
         return ("<?xml version=\"1.0\"?>\n%s" %(etree.tostring(doc, pretty_print=False)))
+    
+    def analyze_xmls(self): 
+            pid_content_sizes = checker.analyze(xml=self._pidxml_demographics,
+                                                is_file=False) 
+            signed_content_sizes = checker.analyze(xml=signed_content,
+                                                   is_file=False) 
+            print "Payload (Pid) Element:" 
+            print pid_content_sizes 
+            print "Fully Signed XML:" 
+            print signed_content_sizes
+    def sign_request_xml(self,xml=None, update_state=True): 
+        """
+        Sign the payload XML provided (or extracted from self._request)
+        """
+        
+        cfg = self._cfg 
+        
+        if xml == None: 
+            xml = self._request['_request_unsigned_xml'] 
+            
+        if (xml == None): 
+            print "XML to be signed = ", xml 
+            raise Exception("Could not find XML to sign")
+        
+        print "Signing ",xml[1:20],"...",xml[len(xml)-20:len(xml)]
+
+        # => Store the xml and generated a signed version
+        if (cfg.request.xml == None): 
+            tmpfp = tempfile.NamedTemporaryFile(delete=False) 
+            tmpfp_unsigned = tmpfp.name
+        else:
+            tmpfp_unsigned = cfg.request.xml
+            tmpfp = file(tmpfp_unsigned, 'w')
+        tmpfp.write(xml) 
+        tmpfp.flush() 
+        tmpfp.close() 
+        
+        #=> Generate the signed version
+        if (cfg.request.signedxml == None): 
+            tmpfp_signed = cfg.request.signedxml 
+        else:
+            tmpfp_signed = tmpfp_unsigned + ".sig" 
+         
+        # => Sign the XML generated
+        sig = AuthRequestSignature() 
+        sig.init_xmlsec() 
+        res = sig.sign_file(tmpfp_unsigned, 
+                            tmpfp_signed, 
+                            cfg.common.pkcs_path, 
+                            cfg.common.pkcs_password)
+        sig.shutdown_xmlsec() 
+        if (res == 1): 
+            print "Signed successfully!"
+        else: 
+            print "Signing unsuccessful for some reason \"%s\"" %res
+            raise Exception("Unsuccessful signature") 
+
+        signed_content = file(tmpfp_signed).read() 
+        print "Signed XML (%s):" % tmpfp_signed
+        return signed_content 
+
+    def execute(self): 
+        """
+        Execute the query specified in the configuration file. 
+        """
+        
+        cfg = self._cfg 
+
+        # Initialization
+        self.set_txn()
+
+        # XXX Here there should be a check for biometrics 
+        self.set_pidxml_demographics(data=cfg.request.name)
+        
+        # => Elements of the final XML 
+        self.set_skey() 
+        self.set_data()
+        self.set_hmac() 
+        
+        # => Extract and store the result 
+        self._result['_request_unsigned_xml'] = self.tostring()  # dump it 
+        
+        print "Unsigned XML:"
+        print self._result['request_unsigned_xml']
+    
+        # =>  Now validate the xml generated 
+        res = checker.validate(self._result['_request_unsigned_xml'], 
+                               is_file=False, signed=False)
+        if (res == False): 
+            print "Invalid XML generated" 
+        
+        #=> In testing mode extract the XML to see if we can get back
+        # the origin XML 
+        if (cfg.common.mode == "testing"):
+            res = checker.extract(xml=xml,
+                                  is_file=False,
+                                  key=cfg.common.private_key)
+        
+        #=> Sign the request
+        signed_xml = self.sign_request_xml()         
+        self._result['request_signed_xml'] = signed_content
+        
+        #=> Print stats about the generated XMLs 
+        if cfg.request.analyze: 
+            self.analyze_xmls() 
+
+        # Validate the signed file 
+        res = checker.validate(tmpfp_signed, is_file=True, signed=True)
+        print "Validated XML generated with result = ", res
+        
+        # Testing will use the local cert instead of UIDAI's public
+        # cert for encryption. Therefore will fail the tests at the
+        # authentication server.
+        
+        if (cfg.common.mode != "testing"):
+            conn = AuthConnection(cfg, ac=cfg.common.ac)
+            try: 
+                xml = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
+            except: 
+                traceback.print_exc(file=sys.stdout)
+                print "Found an exception. Unable to complete authentication"
+                
+            print "Response from Auth Server" 
+            print xml 
+            res = AuthResponse(cfg=cfg, 
+                               uid=cfg.request.uid)
+
+
+            res.load_string(xml) 
+            print "UID Hash = ", res.get_uid_hash() 
+            print "Request uid hash = ", req.get_uid_hash() 
+            
+            print "Demo hash = ", res.get_demo_hash() 
+            print "Request Demo hash = ", req.get_demo_hash() 
+
+            res.lookup_error()
+            print "Flags that are set: ", res.lookup_usage_bits()
+        else:
+            print "Skpping contacting the server in the 'testing' mode"
+            print "Please change cfg >> common >> mode to enable server posting" 
+
+        # Now cleanup 
+        if (cfg.request.xmlcleanup is True): 
+            os.unlink(tmpfp_unsigned) 
+            os.unlink(tmpfp_signed)
+        
         
 if __name__ == '__main__':
        
@@ -481,112 +631,6 @@ request: {
         # => Generate the XML file 
         req = AuthRequest(cfg=cfg, 
                           uid=cfg.request.uid, ac=cfg.common.ac)
-        req.set_txn()
-        req.set_skey() 
-        req.set_pidxml_demographics(data=cfg.request.name)
-        #print req._pidxml_demographics 
-        req.set_data()
-        req.set_hmac() 
-        xml = req.tostring()  # dump it 
-        
-        print "Unsigned XML:"
-        print xml
-    
-        # Now validate the xml generated 
-        res = checker.validate(xml, 
-                               is_file=False, signed=False)
-        if (res == False): 
-            print "Invalid XML generated" 
-            
-        if (cfg.common.mode == "testing"):
-            res = checker.extract(xml=xml,
-                                  is_file=False,
-                                  key=cfg.common.private_key)
-        
-        # => Store the xml and generated a signed version
-        if (cfg.request.xml == None): 
-            tmpfp = tempfile.NamedTemporaryFile(delete=False) 
-            tmpfp_unsigned = tmpfp.name
-        else:
-            tmpfp_unsigned = cfg.request.xml
-            tmpfp = file(tmpfp_unsigned, 'w')
-        tmpfp.write(xml) 
-        tmpfp.flush() 
-        tmpfp.close() 
-        
-        #=> Generate the signed version
-        if (cfg.request.signedxml == None): 
-            tmpfp_signed = cfg.request.signedxml 
-        else:
-            tmpfp_signed = tmpfp_unsigned + ".sig" 
-         
-        # => Sign the XML generated
-        sig = AuthRequestSignature() 
-        sig.init_xmlsec() 
-        res = sig.sign_file(tmpfp_unsigned, 
-                            tmpfp_signed, 
-                            cfg.common.pkcs_path, 
-                            cfg.common.pkcs_password)
-        sig.shutdown_xmlsec() 
-        if (res == 1): 
-            print "Signed successfully!"
-        else: 
-            print "Signing unsuccessful for some reason \"%s\"" %res
-            raise Exception("Unsuccessful signature") 
-
-        signed_content = file(tmpfp_signed).read() 
-        print "Signed XML (%s):" % tmpfp_signed
-        print signed_content 
-        
-        if cfg.request.analyze: 
-            pid_content_sizes = checker.analyze(xml=req._pidxml_demographics,
-                                                is_file=False) 
-            signed_content_sizes = checker.analyze(xml=signed_content,
-                                                   is_file=False) 
-            print "Payload (Pid) Element:" 
-            print pid_content_sizes 
-            print "Fully Signed XML:" 
-            print signed_content_sizes
-
-        # Validate the signed file 
-        res = checker.validate(tmpfp_signed, is_file=True, signed=True)
-        print "Validated XML generated with result = ", res
-        
-        # Testing will use the local cert instead of UIDAI's public
-        # cert for encryption. Therefore will fail the tests at the
-        # authentication server.
-        
-        if (cfg.common.mode != "testing"):
-            conn = AuthConnection(cfg, ac=cfg.common.ac)
-            try: 
-                xml = conn.authenticate(uid=cfg.request.uid, data=signed_content) 
-            except: 
-                traceback.print_exc(file=sys.stdout)
-                print "Found an exception. Unable to complete authentication"
-                
-            print "Response from Auth Server" 
-            print xml 
-            res = AuthResponse(cfg=cfg, 
-                               uid=cfg.request.uid)
-
-
-            res.load_string(xml) 
-            print "UID Hash = ", res.get_uid_hash() 
-            print "Request uid hash = ", req.get_uid_hash() 
-            
-            print "Demo hash = ", res.get_demo_hash() 
-            print "Request Demo hash = ", req.get_demo_hash() 
-
-            res.lookup_error()
-            print "Flags that are set: ", res.lookup_usage_bits()
-        else:
-            print "Skpping contacting the server in the 'testing' mode"
-            print "Please change cfg >> common >> mode to enable server posting" 
-
-        # Now cleanup 
-        if (cfg.request.xmlcleanup is True): 
-            os.unlink(tmpfp_unsigned) 
-            os.unlink(tmpfp_signed)
 
     elif (cfg.request.command == "validate"): 
 
