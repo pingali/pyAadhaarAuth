@@ -10,42 +10,50 @@ using the Aadhaar Authentication Service (also known as UID).
 FEATURES
 ========
 
-Mostly a wishlist right now. By Python will help achieve a 
-lot of these painlessly. 
-
 1. Simple api 
+2. Automatic UID numbering scheme, XSD validation, encryption,
+   and other checks
+3. Batch and timing information processing 
+4. Extensive debugging information 
+5. Easy configuration file 
 
-2. Automatic UID numbering scheme checks, XSD validation and other
-checks
-3. Cross platform availability 
-4. Down the line integration with web applications 
-5. High enough quality to be a reference platform
+EXAMPLE
+=======
 
-USAGE 
-=====
-
-Please obtain the relevant certificates from UIDAI 
+Please obtain and read the relevant certificates from UIDAI 
 (https://developer.uidai.gov.in)
 
-Expected usage pattern is follows (TBD)
-
-$ cat aadhaarclient.py 
 #!/usr/bin/env python
+"""
+Simplest possible python client
+"""
+import logging
+import sys 
+from config import Config 
 
-from AadhaarAuth import AuthRequest, AuthResponse
-from config import Config
- 
-cfg = Config("auth.cfg")
-areq = AuthRequest(cfg) 
-ares = AuthResponse(cfg) 
+from request import AuthRequest
 
-while more_authentications: 
-    areq.set_uid("12323232") 
-    areq.set_demographics("Name", "Utkal Chaudhury")
-    result = auth.execute() 
-    ares.load(result)
-    auth.clear()
-     
+if __name__ == '__main__':
+    assert(sys.argv)
+    if len(sys.argv) < 3:
+        print "Usage: simple-client.py <config-file> <uid> <name>"
+	print "Please use default config file in fixtures/auth.cfg" 
+        sys.exit(1)  
+
+    logging.basicConfig()
+    
+    # Load sample configuration 
+    cfg = Config(sys.argv[1])
+    
+    # Update the request information 
+    cfg.request.uid = sys.argv[2]
+    cfg.request.name = sys.argv[3]
+
+    # Create the request object and execute 
+    req = AuthRequest(cfg)
+    req.execute()
+
+
 INSTALLATION 
 ============
 
