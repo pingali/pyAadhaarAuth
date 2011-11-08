@@ -33,14 +33,15 @@ Download the [sample client][dl]
 
 [dl]: https://github.com/pingali/pyAadhaarAuth/blob/master/AadhaarAuth/simple-client.py
 
->  
->      #!/usr/bin/env python   
->      """   
->      Simplest possible python client    
->      """    
->      import logging  
->      import sys  
->      from config import Config  
+>         
+>         
+>      #!/usr/bin/env python     
+>      """     
+>      Simplest possible python client      
+>      """      
+>      import logging    
+>      import sys    
+>      from config import Config    
 >      
 >      from request import AuthRequest
 >      
@@ -71,33 +72,33 @@ Installation
 
 Install dependencies    
 
->    $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1    
->    $ sudo apt-get install libxmlsec1-dev    
->    $ sudo pip install lxml pyxmlsec libxml2 M2Crypto    
+>        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1    
+>        $ sudo apt-get install libxmlsec1-dev    
+>        $ sudo pip install lxml pyxmlsec libxml2 M2Crypto    
 
 Prepare working directory 
 
->    $ mkdir auth-client   
->    $ WORK='pwd'/auth-client   
+>        $ mkdir auth-client   
+>        $ WORK='pwd'/auth-client   
 
 Install from repository. We will distribute it using Pypi once the
 code stabilizes.
 
->    $ cd /tmp   
->    $ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/pingali/pyAadhaarAuth/zipball/master   
->    $ unzip pyAadhaarAuth.zip    
->    $ cd pyAadhaarAuth/pingali-pyAaadhaarAuth-a18142   
->    $ sudo python setup.py install    
+>        $ cd /tmp   
+>        $ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/pingali/pyAadhaarAuth/zipball/master   
+>        $ unzip pyAadhaarAuth.zip    
+>        $ cd pyAadhaarAuth/pingali-pyAaadhaarAuth-a18142   
+>        $ sudo python setup.py install    
 
 Once installed populate the working directory   
 
->    $ mkdir $WORK/fixtures    
->    $ cp AadhaarAuth/fixtures/auth.cfg $WORK/fixtures     
->    $ cp AadhaarAuth/fixtures/public\* $WORK/fixtures    
->    $ cp AadhaarAuth/fixtures/uidai_auth_stage\* $WORK/fixtures    
->    $ cp AadhaarAuth/simple-client.py $WORK   
->    $ cd $WORK    
->    $ python simple-client.py fixtures/auth.cfg    
+>        $ mkdir $WORK/fixtures    
+>        $ cp AadhaarAuth/fixtures/auth.cfg $WORK/fixtures     
+>        $ cp AadhaarAuth/fixtures/public\* $WORK/fixtures    
+>        $ cp AadhaarAuth/fixtures/uidai_auth_stage\* $WORK/fixtures    
+>        $ cp AadhaarAuth/simple-client.py $WORK   
+>        $ cd $WORK    
+>        $ python simple-client.py fixtures/auth.cfg    
 
 Work-in-progress    
 ----------------
