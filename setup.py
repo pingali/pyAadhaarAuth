@@ -10,7 +10,7 @@ setup(name='pyAadhaarAuth',
       url='http://www.github.com/pingali/pyAadhaarAuth',
       packages=['AadhaarAuth'],
       license='LICENSE.txt',
-      long_description=open('README.txt').read(),
+      long_description=open('README.md').read(),
       requires=['lxml', 'config', 'M2Crypto', 'requests']
      )
 
