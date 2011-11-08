@@ -391,11 +391,13 @@ class AuthValidate():
         return self.check_dom(obj,signed)
         
     def analyze(self, xml, is_file=False): 
+
         if is_file:
             xml_text = file(xml).read()
         else:
             xml_text = xml 
             
+        log.debug("XML text to analyze:\n%s" % xml_text)
         obj = objectify.fromstring(xml_text)
         
         # This is very inefficient. It is walking through the entire

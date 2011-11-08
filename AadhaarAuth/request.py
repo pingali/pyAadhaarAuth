@@ -144,6 +144,7 @@ class AuthRequest():
         self._txn = txn 
         
         # => internal state 
+        self._pidxml = None
         self._pidxml_biometrics = None
         self._pidxml_demographics = None 
         self._demo_hash = None        
@@ -254,26 +255,34 @@ class AuthRequest():
             'text': self._skey['_text'],
             }
 
-    def set_data(self):
+    def set_data(self, ts=None):
         """
         Set the content of the data element using the pidxml
         generated and stored as part of this class
         """
-        if self._biometrics:
-            data = self._pidxml_biometrics
-        else:
-            data = self._pidxml_demographics                
+        
+        if ts == None:
+            ts = datetime.now() 
 
-        if (data == None or data == ""): 
-            raise Exception("Pid data cannot be empty") 
-            
-        #log.debug("Setting data = %s" % data)
+        pid = etree.Element('Pid', 
+                             xmlns=self._cfg.common.data_xmlns,
+                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
+                             ver="1.0")
+
+
+        self.set_pidxml_demographics(pid)
+        if self._biometrics: 
+            self.set_pidxml_biometrics(pid)
+
+        doc = etree.ElementTree(pid) 
+        self._pidxml = etree.tostring(doc,pretty_print=False)
+        log.debug("PidXML to be encrypted = %s" % self._pidxml)
 
         x = AuthCrypt(cfg=self._cfg) 
-        encrypted_pid = x.aes_encrypt(key=self._session_key, msg=data)
+        encrypted_pid = x.aes_encrypt(key=self._session_key, msg=self._pidxml)
         self._data = base64.b64encode(encrypted_pid)
         log.debug("Data = %s " % self._data)
-
+        
     def get_data(self):
         return self._data 
 
@@ -281,14 +290,12 @@ class AuthRequest():
         """
         Computes the hmac. Not working yet.
         """
-        if self._biometrics:
-            data = self._pidxml_biometrics
-        else:
-            data = self._pidxml_demographics                
         
-        log.debug("data len = %d " % len(data))
-        # This should be digest and not hexdigest 
+        data = self._pidxml 
 
+        log.debug("data len = %d " % len(data))
+
+        # This should be digest and not hexdigest 
         hash_digest = hashlib.sha256(data).digest()
         log.debug("Sha256 of data (encoded) = %s" %\
                       base64.b64encode(hash_digest))
@@ -319,71 +326,80 @@ class AuthRequest():
     #  <Pv otp="" pin=""/>
     #</Pid>
 
-    def set_pidxml_biometrics(self, datatype="FMR", 
-                              data=None, ts=None):
+    def set_pidxml_biometrics(self, pid, ts=None):
         
         """
         Generate the biometrics XML payload. Supports only FMR for now
         """ 
-
-        if (datatype != "FMR"): 
-            raise Exception("Non FMR biometrics not supported") 
-        
+        try: 
+            bio_attributes = self._cfg.request.biometrics
+        except: 
+            bio_attributes = [] 
+            
+        data = self._cfg.request.bio 
         if (data == None): 
             raise Exception("Data for biometrics inclusion is missing") 
-
-        self._uses['_bio'] = "y"
-        self._uses['_bt'] = "FMR"
         
-        # the biometrics may be collected somewhere else and the
-        # timestamp may be set there. If it not set, set it to 
-        # local time 
-        if ts == None:
-            ts = Datetime.now() 
+        supported_attributes = ["FMR"] 
+        overlap = [i for i in supported_attributes if i in bio_attributes]
+        if len(overlap) > 0: 
+            bios = etree.SubElement(pid, "Bios")
+            if "FMR" in bio_attributes: 
+                self._uses['_bio'] = "y"
+                self._uses['_bt'] = "FMR"
+                bio=etree.SubElement(bios, "Bio", type="FMR")
+                bio.text = self._cfg.request.bio 
 
-        root = etree.Element('Pid', 
-                             xmlns=self._cfg.common.data_xmlns,
-                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
-                             ver="1.0")
-        bios = etree.SubElement(root, "Bios")
-        bio=etree.SubElement(bios, "Bio", type="FMR")
-        bio.text = data 
-        doc = etree.ElementTree(root) 
-        
-        # Update internal state 
-        self._pidxml_biometrics = etree.tostring(doc,pretty_print=False)
+            doc = etree.ElementTree(bios) 
+            self._pidxml_biometrics = etree.tostring(doc,pretty_print=False)
         
         return True 
 
 
-    def set_pidxml_demographics(self, datatype="Name", 
-                                data=None, ts=None):
+    def set_pidxml_demographics(self, pid, ts=None):
         """ 
         Generate the demographics XML payload.
         """
+        try : 
+            demo_attributes = self._cfg.request.demographics
+        except: 
+            demo_attributes = [] 
 
-        if (datatype != "Name" or data == None):
-            raise Exception("Does not support demographic checks other than Name") 
-        
-        self._uses['_pi'] = "y" 
-        
-        if ts == None:
-            ts = datetime.now() 
+        #if (datatype != "Name" or data == None):
+        #    raise Exception("Does not support demographic checks "+
+        #                    "other than Name") 
+        # Check for elements other than Name and reject them...
+            
+        # XXX This is always necessary to compute the demo hash in the
+        # response. We dont do this for bios. Not sure what will
+        # happen if an empty demo is sent or if the demo element does
+        # not exist.
+            
+        demo = None 
+        # Now add the 
+        supported_attributes = ["Name"] 
+        overlap = [i for i in supported_attributes if i in demo_attributes]
+        if len(overlap) > 0: 
+            demo = etree.SubElement(pid, "Demo")
+            if "Name" in demo_attributes:
+                self._uses['_pi'] = "y" 
+                pi=etree.SubElement(demo, "Pi", ms="E", 
+                                    name=self._cfg.request.name)
+            # if "Address" in demo_attributes:
+            #    do something ....
 
-        # construct the demographics xml 
-        root = etree.Element('Pid', 
-                             xmlns=self._cfg.common.data_xmlns, 
-                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
-                             ver="1.0")
-        demo = etree.SubElement(root, "Demo")
-        pi=etree.SubElement(demo, "Pi", ms="E", name=data)
-        doc = etree.ElementTree(root) 
+            # Extract the demographics component of the XML
+            doc = etree.ElementTree(demo) 
         
-        # update the internal state 
-        self._pidxml_demographics = etree.tostring(doc,pretty_print=False)
-        
-        log.debug("Pid XML = %s " % self._pidxml_demographics)
-        
+            # update the internal state 
+            self._pidxml_demographics = etree.tostring(doc,pretty_print=False)
+            log.debug("Pid XML = %s " % self._pidxml_demographics)
+        else: 
+            log.debug("Pid XML = ''. No demo element defined")
+            self._pidxml_demographics = "" 
+            self._demo_hash = "".rjust(64, "0")
+            return
+
         # => Follow the auth client. Construct the entire xml and then
         # extract the demographic substring
         p = re.compile("<Demo.*/Demo>", re.MULTILINE) 
@@ -406,6 +422,7 @@ class AuthRequest():
         # This will enable checking the response string
         self._demo_hash = hashlib.sha256(demo_xml).hexdigest()
         log.debug("PID demographics hash = %s " % self._demo_hash)
+
         return True 
     
     def get_demo_hash(self):
@@ -446,7 +463,8 @@ class AuthRequest():
                                 bio=self._uses['_bio'],
                                 pfa=self._uses['_pfa'],
                                 pi=self._uses['_pi'],
-                                pa=self._uses['_pa'])
+                                pa=self._uses['_pa'],
+                                bt=self._uses['_bt'])
         
         data = etree.SubElement(root, "Data")
         data.text = self._data
@@ -460,9 +478,9 @@ class AuthRequest():
         """
         Analyze the XML being sent to the server
         """ 
-
+        
         pid_content_sizes = \
-            self._checker.analyze(xml=self._pidxml_demographics,
+            self._checker.analyze(xml=self._pidxml,
                             is_file=False) 
         signed_content_sizes = \
             self._checker.analyze(xml=self._result['_request_signed_xml'],
@@ -539,9 +557,6 @@ class AuthRequest():
         # Initialization
         self.set_txn()
 
-        # XXX Here there should be a check for biometrics 
-        self.set_pidxml_demographics(data=cfg.request.name)
-        
         # => Elements of the final XML 
         self.set_skey() 
         self.set_data()
@@ -562,7 +577,7 @@ class AuthRequest():
         #=> In testing mode extract the XML to see if we can get back
         # the origin XML 
         if (cfg.common.mode == "testing"):
-            res = self._checker.extract(xml=xml,
+            res = self._checker.extract(xml=self._result['_request_unsigned_xml'],
                                   is_file=False,
                                   key=cfg.common.private_key)
         
@@ -680,8 +695,8 @@ request: {
 
         # => Generate the XML file 
         req = AuthRequest(cfg=cfg, 
-                          uid=cfg.request.uid, 
-                          ac=cfg.common.ac)
+                          uid=cfg.request.uid,
+                          biometrics=True)
         req.execute() 
 
     elif (cfg.request.command == "validate"): 
