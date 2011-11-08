@@ -19,6 +19,7 @@ Latest Release
 Features
 --------
 
+  * Support for both biometrics and demographics
   * Simple API 
   * Automatic validation checks - UID numbering scheme, XSD compliance,
     encryption, and other checks    
@@ -103,13 +104,16 @@ Once installed populate the working directory
 Work-in-progress    
 ----------------
 
+  Immediate: 
+  1. Complete address, location and other demographic attributes     
+  2. Test with https connection (whenever it is available) 
+  3. Performance evaluation/statistics    
+
+  Medium term: 
   1. Use the objectified xml to populate internal state    
   2. Look through the spec for validation rules beyond what the    
      XSD is providing (e.g., sanity checks)    
-  3. Look into integration with biometrics   
-  4. Test with https connection    
-  5. Performance evaluation/statistics    
-
+  3. Explore browser and mobile phone support 
 
 Thanks 
 ------   
