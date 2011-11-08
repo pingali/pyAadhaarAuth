@@ -1,5 +1,5 @@
 Python Client and Library for Aadhaar Authentication Service
-============================================================
+------------------------------------------------------------
 
 This python package supports biometrics and demographics
 authentication using the Aadhaar Authentication Service (also known as
@@ -12,82 +12,97 @@ This implementation is basically compliant with
 
 LATEST RELEASE
 --------------
-Alpha Release (0.1) Nov 15, 2011 
+
+Alpha Release (0.1) Nov 15, 2011 - Planned 
+Platform support: Linux (Ubuntu) and Python 
 
 FEATURES
 --------
 
-1. Simple API 
-2. Automatic validation checks - UID numbering scheme, XSD compliance,
+* Simple API 
+* Automatic validation checks - UID numbering scheme, XSD compliance,
    encryption, and other checks    
-3. Batch processing 
-4. Extensive debugging information 
-5. Easy configuration file
+* Batch processing 
+* Extensive debugging information 
+* Easy configuration file
 
 EXAMPLE
 -------
 
-> #!/usr/bin/env python
-> """
-> Simplest possible python client
-> """
-> import logging
-> import sys 
-> from config import Config 
-> 
-> from request import AuthRequest
-> 
-> if __name__ == '__main__':
->     assert(sys.argv)
->     if len(sys.argv) < 3:
->         print "Usage: simple-client.py <config-file> <uid> <name>"
-> 	print "Please use default config file in fixtures/auth.cfg" 
->         sys.exit(1)  
-> 
->     logging.basicConfig()
->     
->     # Load sample configuration 
->     cfg = Config(sys.argv[1])
->     
->     # Update the request information 
->     cfg.request.uid = sys.argv[2]
->     cfg.request.name = sys.argv[3]
-> 
->     # Create the request object and execute 
->     req = AuthRequest(cfg)
->     req.execute()
-> 
+Download the [sample client][sample]
+[sample]:
+
+<code> 
+ #!/usr/bin/env python
+ """
+ Simplest possible python client
+ """
+ import logging
+ import sys 
+ from config import Config 
+ 
+ from request import AuthRequest
+ 
+ if __ name __ == '__ main __':
+     assert(sys.argv)
+     if len(sys.argv) < 3:
+         print "Usage: simple-client.py <config-file> <uid> <name>"
+ 	print "Please use default config file in fixtures/auth.cfg" 
+         sys.exit(1)  
+ 
+     logging.basicConfig()
+     
+     # Load sample configuration 
+     cfg = Config(sys.argv[1])
+     
+     # Update the request information 
+     cfg.request.uid = sys.argv[2]
+     cfg.request.name = sys.argv[3]
+ 
+     # Create the request object and execute 
+     req = AuthRequest(cfg)
+     req.execute()
+</code> 
 
 INSTALLATION 
 ============
 
-## Ubuntu ##
-> $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 libxmlsec1-dev 
-> $ sudo pip install lxml pyxmlsec libxml2 M2Crypto 
+Install dependencies 
+<code>
+ $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 
+ $ sudo apt-get install libxmlsec1-dev 
+ $ sudo pip install lxml pyxmlsec libxml2 M2Crypto 
+</code> 
 
-> mkdir auth-client
-> WORK=`pwd`/auth-client
+Prepare working directory 
+<code>
+ mkdir auth-client
+ WORK=`pwd`/auth-client
+</code> 
 
-# For now installation is from the repository until this code stabilizes
+Install from repository. We will distribute it using Pypi once the
+code stabilizes.
+<code>
+$ cd /tmp
+$ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/pingali/pyAadhaarAuth/zipball/master
+$ unzip pyAadhaarAuth.zip 
+$ cd pyAadhaarAuth/pingali-pyAaadhaarAuth-a18142
+$ sudo python setup.py install 
+</code> 
 
-> cd /tmp
-> $ wget --no-check-certificate -O pyAadhaarAuth.zip [https://github.com/pingali/pyAadhaarAuth/zipball/master][dl] 
-[dl]: https://github.com/pingali/pyAadhaarAuth/zipball/master
-> $ unzip pyAadhaarAuth.zip 
-> $ cd pyAadhaarAuth/pingali-pyAaadhaarAuth-a18142
-> sudo python setup.py install 
-
-# copy startup files 
-> mkdir $WORK/fixtures 
-> cp AadhaarAuth/fixtures/auth.cfg $WORK/fixtures 
-> cp AadhaarAuth/fixtures/public* $WORK/fixtures 
-> cp AadhaarAuth/fixtures/uidai_auth_stage.* $WORK/fixtures 
-> cp AadhaarAuth/simple-client.py $WORK
-> cd $WORK 
-> python simple-client.py fixtures/auth.cfg 
+Once installed populate the working directory
+<code>
+$ mkdir $WORK/fixtures 
+$ cp AadhaarAuth/fixtures/auth.cfg $WORK/fixtures 
+$ cp AadhaarAuth/fixtures/public* $WORK/fixtures 
+$ cp AadhaarAuth/fixtures/uidai_auth_stage.* $WORK/fixtures 
+$ cp AadhaarAuth/simple-client.py $WORK
+$ cd $WORK 
+$ python simple-client.py fixtures/auth.cfg 
+</code> 
 
 STATUS
-======
+------
 
 1. Skeleton code (not production-ready) 
 2. Simplest possible XSD-compliant XML is generated for request and response 
@@ -102,7 +117,7 @@ STATUS
 10. AES encryption and decryption support added 
 
 TODO
-====
+----
 
 0. Integration and cleanup. 
 1. Look through the GeoAmida implementation to see the differences
@@ -124,9 +139,10 @@ certificate information - done
 
 
 THANKS
-======
+------
 
 UIDAI - for authentication spec and a bold initiative
+TCS - Support 
 Mindtree - for the sample java client 
 GeoDesic - for c-code 
-
+Viral Shah - Feedback and testing 
