@@ -21,7 +21,8 @@
 #THE SOFTWARE.
 
 import sys
-sys.path.append("lib") 
+sys.path.append(os.path.dirname(__file__)) 
+sys.path.append(os.path.dirname(__file__) + "/lib") 
 
 from lxml import etree, objectify 
 

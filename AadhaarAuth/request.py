@@ -37,7 +37,8 @@
 #
 
 import os, sys
-sys.path.append("lib") 
+sys.path.append(os.path.dirname(__file__)) 
+sys.path.append(os.path.dirname(__file__) + "/lib") 
 
 import tempfile 
 

@@ -26,6 +26,15 @@ from optparse import OptionParser, SUPPRESS_HELP
 import logging 
 log=logging.getLogger('AuthConfig')
 
+__author__ = "Venkata Pingali"
+__copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
+__credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
+__license__ = "MIT"
+__version__ = "0.1"
+__maintainer__ = "Venkata Pingali"
+__email__ = "pingali@gmail.com"
+__status__ = "Pre-release"
+
 class AuthConfig(): 
     """
     Parse the command line
@@ -38,6 +47,11 @@ class AuthConfig():
         """
         self._name = name
         self._summary = summary 
+
+    def show_example_config(self, option, opt_str, value, parser):
+        current_directory = os.path.dirname(__file__)
+        cfg = file(current_directory + '/fixtures/auth.cfg').read() 
+        print cfg
         
     def update_config(self): 
         """
@@ -56,6 +70,10 @@ class AuthConfig():
                           help="Specify the input configuration file. " + 
                           "(default: auth.cfg)",
                           metavar="FILE")
+        parser.add_option("--show-example-config",
+                          action="callback", callback=self.show_example_config, 
+                          help="Sample configuration file")
+
         defaults = {
             'request': 'request_name',
             'response': 'response_validate',

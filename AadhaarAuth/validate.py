@@ -32,8 +32,9 @@ Validation routines for Auth XML files generated and received.
 """
 import sys
 sys.path.append('lib') 
-import dumper 
+sys.path.append('.') 
 
+import dumper 
 import hashlib
 from lxml import etree, objectify 
 from config import Config
