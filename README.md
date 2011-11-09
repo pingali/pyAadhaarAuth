@@ -91,15 +91,17 @@ code stabilizes.
 >        $ cd pyAadhaarAuth/pingali-pyAaadhaarAuth-a18142   
 >        $ sudo python setup.py install    
 
-Once installed populate the working directory   
+Once installed populate the working directory with a simple client and
+additional configuration files. Then perform the first authentication
+request. 
 
->        $ mkdir $WORK/fixtures    
->        $ cp AadhaarAuth/fixtures/auth.cfg $WORK/fixtures     
->        $ cp AadhaarAuth/fixtures/public\* $WORK/fixtures    
->        $ cp AadhaarAuth/fixtures/uidai_auth_stage\* $WORK/fixtures    
->        $ cp AadhaarAuth/simple-client.py $WORK   
->        $ cd $WORK    
->        $ python simple-client.py fixtures/auth.cfg    
+>        $ aadhaar-generate-client.py . 
+>        $ python aadhaar-sample-client.py fixtures/auth.cfg    
+
+Documentation
+-------------
+
+Please see docs/apidocs/index.html
 
 Work-in-progress    
 ----------------
