@@ -349,10 +349,12 @@ class AuthRequest():
 
         bios = etree.SubElement(pid, "Bios")
         if "FMR" in overlap: 
+            log.debug("FMR data = " + self._cfg.request['FMR']['bio'])
             try: 
-                data = self._cfg.request.FMR.bio 
+                data = self._cfg.request['FMR']['bio']
             except:
                 data = None
+
             if (data == None): 
                 raise Exception("Data for biometrics inclusion is missing") 
  
@@ -393,22 +395,27 @@ class AuthRequest():
         specified_attributes = elem_data.keys()
         valid_attributes = all_attributes[elem_name]
         attribute_overlap = [i for i in specified_attributes if i in valid_attributes]     
+        log.debug("set_demo_attributes: specified = " + specified_attributes.__str__())
+        log.debug("set_demo_attributes: overlap = " + attribute_overlap.__str__())
         # force addition of 'ms' attribute 
         if "ms" not in attribute_overlap: 
             attribute_overlap.append("ms")
-        if (len(attribute_overlap) > 1):
-            # Some acceptable attributes have been specified
-            elem=etree.SubElement(demo, elem_name)
-            for attrib in attribute_overlap:
-                try: 
-                    attrib_val = eval('cfg.request.%s.%s' % (elem_name, attrib))
-                except: 
-                    log.error("Configuration file requires request.%s.%s to be specified" % (elem_name, attrib))
-                    raise Exception("Invalid configuration")
-                elem.set(attrib, attrib_val)
-            return True 
-        else: 
-            return False 
+ 
+        if (len(attribute_overlap) == 1):
+            log.error("No valid attributes selected for demographic authentication")
+            raise Exception("Invalid configuration") 
+
+        # Some acceptable attributes have been specified
+        elem=etree.SubElement(demo, elem_name)
+        for attrib in attribute_overlap:
+            try: 
+                attrib_val = eval('self._cfg.request[\'%s\'][\'%s\']' % (elem_name, attrib))
+            except: 
+                log.error("Configuration file requires request.%s.%s to be specified" % (elem_name, attrib))
+                raise Exception("Invalid configuration")
+            elem.set(attrib, attrib_val)
+        return True 
+
 
     def set_pidxml_demographics(self, pid, ts=None):
         """ 

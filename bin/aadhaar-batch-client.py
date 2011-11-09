@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #Copyright (C) 2011 by Venkata Pingali (pingali@gmail.com) & TCS 
 #
@@ -20,12 +20,15 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-import os, sys
-sys.path.append("lib") 
+import os, os.path, sys
+
+# For dumper library 
+import AadhaarAuth
+auth_path = os.path.dirname(os.path.realpath(AadhaarAuth.__file__))
+sys.path.append(auth_path + "/lib") 
+
 import copy 
-
 import logging
-
 from lxml import etree, objectify 
 import tempfile 
 import dumper 
@@ -214,11 +217,15 @@ class AuthBatchRequest():
             cfg= self._cfg 
             cfg.request.uid = person['uid'] 
             cfg.request.demographics = ["Pi"]
+            cfg.request.biometrics = ["FMR"]
             cfg.request['Pi'] = {
                 'ms': "E",
-                'name': sys.argv[3]
+                'name': person['name']
                 }
-            
+            cfg.request["FMR"] = { 
+                'bio': person['bio']
+                }
+
             req = AuthRequest(cfg)
             req.execute() 
             

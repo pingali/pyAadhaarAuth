@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #Copyright (C) 2011 by Venkata Pingali (pingali@gmail.com) & TCS 
 #
@@ -44,6 +44,7 @@ if __name__ == '__main__':
         print "Usage: simple-client.py <config-file> <uid> <name>"
         sys.exit(1) 
 
+    logging.getLogger().setLevel(logging.WARN) 
     logging.basicConfig()
     
     # Load sample configuration 
@@ -55,8 +56,11 @@ if __name__ == '__main__':
     cfg.request['Pi'] = {
         'ms': "E",
         'name': sys.argv[3]
-        }
-    
+     }
+
+    # use this for biometrics query 
+    #cfg.request.uid = sys.argv[2]
+    #cfg.request = cfg.request_bio  
 
     # Create the request object and execute 
     req = AuthRequest(cfg)

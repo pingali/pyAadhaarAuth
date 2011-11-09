@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #Copyright (C) 2011 by Venkata Pingali (pingali@gmail.com) & TCS 
 #
@@ -25,7 +25,8 @@ Prepare working space for writing client code
 """
 import logging
 import os, os.path, sys 
-from shutil import copytree
+#from shutil import copy, copytree
+from distutils import dir_util, file_util
 import AadhaarAuth 
 
 __author__ = "Venkata Pingali"
@@ -51,32 +52,33 @@ def which(program):
 
 if __name__ == '__main__':
     assert(sys.argv)
-    if len(sys.argv) < 1:
+    if len(sys.argv) < 2:
         print "Usage: aadhaar-generate-client.py <working-directory>"
         print "Populates a working directory "
         sys.exit(1) 
 
     logging.basicConfig()
     
-    working_directory=sys.argv[2] 
-    if (not os.path.isdir(options.config_file)):
+    working_directory=sys.argv[1] 
+    if (not os.path.isdir(working_directory)):
         raise Exception("Invalid path. Should be a directory")
     
     print "Preparing working space for Aadhaar client development..." 
     
     # Copy the sample client
     sample_client_path = which('aadhaar-sample-client.py')
-    shutil.copy(sample_client_path, working_directory) 
+    file_util.copy_file(sample_client_path, working_directory, update=1) 
     
     # copy the directory 
     auth_module_path = os.path.dirname(AadhaarAuth.__file__)
-    shutil.copytree(auth_module_path + "/fixtures", working_directory)
+    dir_util.copy_tree(auth_module_path + "/fixtures", working_directory + "/fixtures", update=1)
     
     print """
-Following have been copied:" 
+Following have been copied:
 
     aadhaar-sample-client.py : simple aadhaar client
-    fixtures: directory with sameple configuration files and 
+
+    fixtures: directory with sample configuration files and 
         required certificate files
 
 Please update the fixtures/auth.cfg - the configuration file which 

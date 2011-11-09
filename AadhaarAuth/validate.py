@@ -30,9 +30,9 @@
 """
 Validation routines for Auth XML files generated and received. 
 """
-import sys
-sys.path.append('lib') 
-sys.path.append('.') 
+import os, os.path, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/lib")
 
 import dumper 
 import hashlib
@@ -65,14 +65,23 @@ class AuthValidate():
                  request_xsd=None, testing=True): 
         self._cfg = cfg 
         self._testing = testing
-        self._request_xsd = request_xsd 
+        self._request_xsd = self.find_xsd(request_xsd)
         return 
     
+    def find_xsd(self, xsd): 
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        if (os.path.isfile(xsd)):
+            return xsd 
+        elif (os.path.isfile(this_dir + "/" + xsd)):
+            return this_dir + "/" + xsd 
+        else: 
+            raise Exception("Unknown xsd file") 
+        
     def set_xsd(self, xsd):
         """
         Set the XSD file that will used for validation of the XML 
         """
-        self._request_xsd = xsd
+        self._request_xsd = self.find_xsd(xsd)
         return 
 
     def xsd_check_memory(self, xml_text):
@@ -218,14 +227,15 @@ class AuthValidate():
                 (attrib_val != "y") and (attrib_val != "n")):
                 log.error("Invalid attribute %s of Uses element." % (attrib))
                 result = False
-                
-        # Not sure that this is right 
+        
+        # XXX Find which combinations are invalid 
         pi = obj["Uses"].get('pi')
         bio = obj["Uses"].get('bio')
-        if ((pi == None and bio == None) or 
-            (pi == "y" and bio == "y")):
-            log.error("pi and bio attributes are mutually exclusive")
-            result = False 
+        # e.g., bt should be set only if bio is also set 
+        #if ((pi == None and bio == None) or 
+        #    (pi == "y" and bio == "y")):
+        #    log.error("pi and bio attributes are mutually exclusive")
+        #    result = False 
 
         #################################################
         # => Data and Hmac
