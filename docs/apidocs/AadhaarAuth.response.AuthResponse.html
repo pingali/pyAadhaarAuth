@@ -1,0 +1,394 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <title>AadhaarAuth.response.AuthResponse : API documentation</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <link href="apidocs.css" type="text/css" rel="stylesheet" />
+    
+    
+  </head>
+  <body>
+    <h1 class="class">A.r.AuthResponse : class documentation</h1>
+    <p>
+      <span id="part">Part of <a href="AadhaarAuth.html">AadhaarAuth</a>.<a href="AadhaarAuth.response.html">response</a></span>
+      
+      <a href="classIndex.html#AadhaarAuth.response.AuthResponse">View In Hierarchy</a>
+    </p>
+    <div>
+      
+    </div>
+    <div>Base class to parse, validate, and generate auth requests going to the 
+server. Mostly it will be used in the generate mode. The aim is to simplify
+writing applications around the auth request. We could potentially use this
+with AppEngine and Django that are python-based. This interface supports 
+only v1.5 and public AuAs<table class="fieldTable"></table></div>
+
+    
+    
+    <div id="splitTables">
+      <table class="children sortable" id="id16">
+  
+  
+<tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#__init__">__init__</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#lookup_err">lookup_err</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#lookup_usage_bits">lookup_usage_bits</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#validate">validate</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#set_err">set_err</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#get_err">get_err</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#set_ts">set_ts</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#get_ts">get_ts</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#xsd_check">xsd_check</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#generate_xmldsig_template">generate_xmldsig_template</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#tostring">tostring</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#load_string">load_string</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#get_uid_hash">get_uid_hash</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#get_demo_hash">get_demo_hash</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.response.AuthResponse.html#get_ret">get_ret</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+  
+</table>
+      
+      
+    </div>
+    
+    
+    
+
+    <div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    __init__(self, cfg=None, uid=None, ret='n', txn='', err=-1, info='', ts=datetime.utcnow(), code=-1):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.lookup_err">
+    
+  </a>
+  <a name="lookup_err">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    lookup_err(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.lookup_usage_bits">
+    
+  </a>
+  <a name="lookup_usage_bits">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    lookup_usage_bits(self, what=None):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.validate">
+    
+  </a>
+  <a name="validate">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    validate(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.set_err">
+    
+  </a>
+  <a name="set_err">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_err(self, value):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.get_err">
+    
+  </a>
+  <a name="get_err">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_err(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.set_ts">
+    
+  </a>
+  <a name="set_ts">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_ts(self, value):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.get_ts">
+    
+  </a>
+  <a name="get_ts">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_ts(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.xsd_check">
+    
+  </a>
+  <a name="xsd_check">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    xsd_check(self, xml_text, xsd):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.generate_xmldsig_template">
+    
+  </a>
+  <a name="generate_xmldsig_template">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    generate_xmldsig_template(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.tostring">
+    
+  </a>
+  <a name="tostring">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    tostring(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.load_string">
+    
+  </a>
+  <a name="load_string">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    load_string(self, xml):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.get_uid_hash">
+    
+  </a>
+  <a name="get_uid_hash">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_uid_hash(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.get_demo_hash">
+    
+  </a>
+  <a name="get_demo_hash">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_demo_hash(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.response.AuthResponse.get_ret">
+    
+  </a>
+  <a name="get_ret">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_ret(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div>
+    <address>
+      <a href="index.html">API Documentation</a> for AadhaarAuth, generated by <a href="http://codespeak.net/~mwh/pydoctor/">pydoctor</a> at 2011-11-09 13:05:39.
+    </address>
+  </body>
+</html>

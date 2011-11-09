@@ -1,0 +1,450 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <title>AadhaarAuth.request.AuthRequest : API documentation</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <link href="apidocs.css" type="text/css" rel="stylesheet" />
+    
+    
+  </head>
+  <body>
+    <h1 class="class">A.r.AuthRequest : class documentation</h1>
+    <p>
+      <span id="part">Part of <a href="AadhaarAuth.html">AadhaarAuth</a>.<a href="AadhaarAuth.request.html">request</a></span>
+      
+      <a href="classIndex.html#AadhaarAuth.request.AuthRequest">View In Hierarchy</a>
+    </p>
+    <div>
+      
+    </div>
+    <div>Base class to parse, validate, and generate auth requests going to the 
+server. Mostly it will be used in the generate mode. The aim is to simplify
+writing applications around the auth request. We could potentially use this
+with AppEngine and Django that are python-based. This interface supports 
+only v1.5 and public AuAs<table class="fieldTable"></table></div>
+
+    
+    
+    <div id="splitTables">
+      <table class="children sortable" id="id14">
+  
+  
+<tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#__init__">__init__</a></td>
+    <td><span>Constructor of AuthRequest (see source for more details).</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#get_uid_hash">get_uid_hash</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#validate">validate</a></td>
+    <td><span>Check for whether the data is complete enough to be able to</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_txn">set_txn</a></td>
+    <td><span>Update the transaction id</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_skey">set_skey</a></td>
+    <td><span>Generate the session and set the Skey parameters.</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#get_skey">get_skey</a></td>
+    <td><span>Return the Skey</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_data">set_data</a></td>
+    <td><span>Set the content of the data element using the pidxml</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#get_data">get_data</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_hmac">set_hmac</a></td>
+    <td><span>Computes the hmac. Not working yet.</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#get_hmac">get_hmac</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_pidxml_biometrics">set_pidxml_biometrics</a></td>
+    <td><span>Generate the biometrics XML payload. Supports only FMR for now</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_pidxml_demographics">set_pidxml_demographics</a></td>
+    <td><span>Generate the demographics XML payload.</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#get_demo_hash">get_demo_hash</a></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#tostring">tostring</a></td>
+    <td><span>Generate the XML text that must be sent across to the uid</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#analyze_xmls">analyze_xmls</a></td>
+    <td><span>Analyze the XML being sent to the server</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#sign_request_xml">sign_request_xml</a></td>
+    <td><span>Sign the payload XML provided (or extracted from self._result)</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#execute">execute</a></td>
+    <td><span>Execute the query specified in the configuration file.</span></td>
+  </tr>
+  
+</table>
+      
+      
+    </div>
+    
+    
+    
+
+    <div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    __init__(self, cfg=None, biometrics=False, uid='', tid='', lk='', txn='', ac='', sa=''):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Constructor of AuthRequest (see source for more details).</p>
+<p>Set the configuration, flag to indicate whether this is biometrics or 
+demographics, and additional addtributes</p>
+<p>cfg: Config object (see fixtures/auth.cfg example) (default: None) 
+biometrics: Whether this request is for biometrics or not (default: False) 
+uid: uid of the requestor (default=&quot;&quot;) tid: terminal id (default:
+&quot;public&quot;) txn: transaction id (default: &quot;&quot;) lk: License
+key (if not specified, then config file entry is used) (default: 
+&quot;&quot;)<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.get_uid_hash">
+    
+  </a>
+  <a name="get_uid_hash">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_uid_hash(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.validate">
+    
+  </a>
+  <a name="validate">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    validate(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Check for whether the data is complete enough to be able to generate an 
+authentication request.<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_txn">
+    
+  </a>
+  <a name="set_txn">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_txn(self, txn=''):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Update the transaction id<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_skey">
+    
+  </a>
+  <a name="set_skey">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_skey(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Generate the session and set the Skey parameters.<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.get_skey">
+    
+  </a>
+  <a name="get_skey">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_skey(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Return the Skey<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_data">
+    
+  </a>
+  <a name="set_data">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_data(self, ts=None):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Set the content of the data element using the pidxml generated and 
+stored as part of this class<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.get_data">
+    
+  </a>
+  <a name="get_data">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_data(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_hmac">
+    
+  </a>
+  <a name="set_hmac">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_hmac(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Computes the hmac. Not working yet.<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.get_hmac">
+    
+  </a>
+  <a name="get_hmac">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_hmac(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_pidxml_biometrics">
+    
+  </a>
+  <a name="set_pidxml_biometrics">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_pidxml_biometrics(self, pid, ts=None):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Generate the biometrics XML payload. Supports only FMR for now<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_pidxml_demographics">
+    
+  </a>
+  <a name="set_pidxml_demographics">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_pidxml_demographics(self, pid, ts=None):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Generate the demographics XML payload.<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.get_demo_hash">
+    
+  </a>
+  <a name="get_demo_hash">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    get_demo_hash(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div class="undocumented">Undocumented</div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.tostring">
+    
+  </a>
+  <a name="tostring">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    tostring(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Generate the XML text that must be sent across to the uid client.<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.analyze_xmls">
+    
+  </a>
+  <a name="analyze_xmls">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    analyze_xmls(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Analyze the XML being sent to the server<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.sign_request_xml">
+    
+  </a>
+  <a name="sign_request_xml">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    sign_request_xml(self, xml=None, update_state=True):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Sign the payload XML provided (or extracted from self._result)<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.execute">
+    
+  </a>
+  <a name="execute">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    execute(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Execute the query specified in the configuration file.<table class="fieldTable"></table></div>
+  </div>
+</div>
+    <address>
+      <a href="index.html">API Documentation</a> for AadhaarAuth, generated by <a href="http://codespeak.net/~mwh/pydoctor/">pydoctor</a> at 2011-11-09 13:05:39.
+    </address>
+  </body>
+</html>
