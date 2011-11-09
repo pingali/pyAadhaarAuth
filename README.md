@@ -97,6 +97,7 @@ code stabilizes.
 Once installed populate the working directory with a simple client and
 additional configuration files. Then perform the first authentication
 request. 
+
 >         
 >        $ aadhaar-generate-client.py .      
 
@@ -126,7 +127,7 @@ package in /usr/local/bin (on Linux).
 Debugging
 ---------
 
-Extensive logging is done by the library. You can enable it by choosing appropriate python logging parameters. For example the logging commands in the sample client file can be replaced by: 
+Extensive logging is supported by the library to help with easy application development. You can enable it by choosing appropriate python logging parameters. For example the logging commands in the sample client file can be replaced by: 
 
 >        
 >       logging.getLogger().setLevel(logging.DEBUG) 
@@ -134,6 +135,8 @@ Extensive logging is done by the library. You can enable it by choosing appropri
 > 	                    filename='execution.log', 
 >                           format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
 >    
+
+Look at execution.log in the local directory once the command is executed. 
 
 Documentation
 -------------
