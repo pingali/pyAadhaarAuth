@@ -155,17 +155,18 @@ Work-in-progress
 ----------------
 
   Immediate: 
-  1. Integrate the commandline processing with help 
-  2. Test with https connection (whenever it is available) 
-  3. Performance evaluation/statistics    
+
+    1. Integrate the commandline processing with help 
+    2. Test with https connection (whenever it is available) 
+    3. Performance evaluation/statistics    
 
   Medium term:  
-  1. Language support 
-  2. ASA/AUA split operation model 
-  3. Use the objectified xml to populate internal state    
-  4. Look through the spec for validation rules beyond what the    
-     XSD is providing (e.g., sanity checks)    
-  5. Explore browser and mobile phone support 
+
+    1. Language support 
+    2. ASA/AUA split operation model 
+    3. Use the objectified xml to populate internal state    
+    4. Look through the spec for validation rules beyond what the XSD is providing (e.g., sanity checks)    
+    5. Explore browser and mobile phone support 
 
 Thanks 
 ------   
