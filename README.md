@@ -21,11 +21,11 @@ Features
 
   * Support for both biometrics and demographics
   * Simple API 
+  * Sample clients for single or batch requests 
   * Automatic validation checks - UID numbering scheme, XSD compliance,
     encryption, and other checks    
-  * Batch processing 
   * Extensive debugging information 
-  * Easy configuration file
+  * Easy configuration 
 
 Example
 -------
@@ -147,7 +147,7 @@ Work-in-progress
 ----------------
 
   Immediate: 
-  1. Complete address, location and other demographic attributes     
+  1. Integrate the commandline processing with help 
   2. Test with https connection (whenever it is available) 
   3. Performance evaluation/statistics    
 
