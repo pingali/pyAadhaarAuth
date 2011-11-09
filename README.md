@@ -3,12 +3,18 @@ Python Client and Library for Aadhaar Authentication Service
 
 This python package supports biometrics and demographics
 authentication using the Aadhaar Authentication Service (also known as
-UID).
+UID). The library takes care of the details of packaging data and
+communicating with the Aadhaar authentication server leaving the
+developer to focus on the application, say Aadhaar-enabled payments. 
 
-This implementation is basically compliant with
-[Aadhaar authentication API Ver 1.5 (Rev 1)][spec] but WIP. 
+This implementation is basically compliant with [Aadhaar
+authentication API Ver 1.5 (Rev 1)][spec] but is WIP.
 
 [spec]: http://uidai.gov.in/images/FrontPageUpdates/aadhaar_authentication_api_1_5_rev1_1.pdf
+
+The aim of this library is to be a reference implementation of the
+Authentication API and at the same time enable rapid development of
+Aadhaar-based applications. 
 
 Latest Release
 --------------
@@ -30,9 +36,7 @@ Features
 Example
 -------
 
-Download the [sample client][dl] 
-
-[dl]: https://github.com/pingali/pyAadhaarAuth/blob/master/AadhaarAuth/simple-client.py
+Sample client 
 
 >         
 >         
@@ -60,7 +64,11 @@ Download the [sample client][dl]
 >             
 >          # Update the request information    
 >          cfg.request.uid = sys.argv[2]   
->          cfg.request.name = sys.argv[3]   
+>          cfg.request.demographics = ["Pi"]
+>          cfg.request['Pi'] = {
+>                   'ms': "E",
+>                   'name': sys.argv[3]
+>           }
 >      
 >          # Create the request object and execute   
 >          req = AuthRequest(cfg)   
@@ -167,3 +175,4 @@ Thanks
   * Mindtree   - For the sample java client    
   * GeoDesic   - for c-code    
   * Viral Shah - Feedback and testing    
+  * Python community - For a great development platform 
