@@ -97,6 +97,7 @@ code stabilizes.
 Once installed populate the working directory with a simple client and
 additional configuration files. Then perform the first authentication
 request. 
+
 >         
 >        $ aadhaar-generate-client.py .      
 
