@@ -20,12 +20,13 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-import sys
-sys.path.append(os.path.dirname(__file__)) 
-sys.path.append(os.path.dirname(__file__) + "/lib") 
+import os, os.path, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/lib")
 
 from lxml import etree, objectify 
 
+import logging 
 import dumper 
 import hashlib 
 from config import Config 
@@ -34,7 +35,6 @@ import base64
 from datetime import * 
 import hashlib 
 import binascii 
-import logging 
 
 log = logging.getLogger("AuthResponse") 
 
@@ -369,6 +369,9 @@ response: {
         sys.exit(1) 
 
     cfg = Config(sys.argv[1]) 
+    logging.getLogger().setLevel(eval("logging.%s" % cfg.common.loglevel))
+    logging.basicConfig(filename=cfg.common.logfile) 
+
     if (cfg.response.command == "generate"):
         response = AuthResponse(cfg, err=100, ts=datetime.utcnow())
         response.validate() 
