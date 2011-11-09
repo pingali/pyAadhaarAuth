@@ -1,2 +1,4 @@
 include *.txt
-recursive-include docs *.txt
+recursive-include docs/apidocs *.css *.html
+include AadhaarAuth/fixtures *.xml *.json *.pem *.cer *.cfg *.p12 *.txt
+include AadhaarAuth/xsd *.xsd
