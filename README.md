@@ -111,11 +111,13 @@ Work-in-progress
   2. Test with https connection (whenever it is available) 
   3. Performance evaluation/statistics    
 
-  Medium term: 
-  1. Use the objectified xml to populate internal state    
-  2. Look through the spec for validation rules beyond what the    
+  Medium term:  
+  1. Language support 
+  2. ASA/AUA split operation model 
+  3. Use the objectified xml to populate internal state    
+  4. Look through the spec for validation rules beyond what the    
      XSD is providing (e.g., sanity checks)    
-  3. Explore browser and mobile phone support 
+  5. Explore browser and mobile phone support 
 
 Thanks 
 ------   

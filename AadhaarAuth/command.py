@@ -66,7 +66,7 @@ class AuthConfig():
         #=> Set the help text and other command line options. 
         parser.add_option("-c", "--config",
                           action="store", type="string", dest="config_file",
-                          default="auth.cfg", 
+                          default="fixtures/auth.cfg", 
                           help="Specify the input configuration file. " + 
                           "(default: auth.cfg)",
                           metavar="FILE")
@@ -75,7 +75,7 @@ class AuthConfig():
                           help="Sample configuration file")
 
         defaults = {
-            'request': 'request_name',
+            'request': 'request_demo',
             'response': 'response_validate',
             'crypt': 'crypt_test',
             'sign': 'sign_default',
@@ -119,6 +119,8 @@ available choices in config file. (default: %s)""" % (k, v, v)
             raise Exception("Invalid setting for parameter \'%s\'. Please check the configuration file." % self._name)
 
         # => Update the configuration for the particular service 
+        log.warn("Overriding existing request with %s " % \
+                     (eval("options.%s" % self._name)))
         cmd = "cfg.%s=cfg[options.%s]" %  (self._name, self._name) 
         exec(cmd) 
         
@@ -163,7 +165,8 @@ if __name__ == "__main__":
     name = "request" 
     summary = "Issues authentication requests to the server" 
     
-    logging.getLogger().setLevel(logging.DEBUG) 
+    logging.getLogger().setLevel(logging.WARN) 
     logging.basicConfig(filename="execution.log") 
     c = AuthConfig(name, summary)
     cfg = c.update_config()
+

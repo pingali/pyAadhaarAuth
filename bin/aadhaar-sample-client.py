@@ -51,7 +51,12 @@ if __name__ == '__main__':
     
     # Update the request information 
     cfg.request.uid = sys.argv[2]
-    cfg.request.name = sys.argv[3]
+    cfg.request.demographics = ["Pi"]
+    cfg.request['Pi'] = {
+        'ms': "E",
+        'name': sys.argv[3]
+        }
+    
 
     # Create the request object and execute 
     req = AuthRequest(cfg)

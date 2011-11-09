@@ -86,7 +86,7 @@ class AuthRequest():
     could potentially use this with AppEngine and Django that are
     python-based. This interface supports only v1.5 and public AuAs 
     """
-
+    
     
     def __init__(self, cfg=None, biometrics=False, 
                  uid="", tid="", lk="", txn="", ac="", sa=""):
@@ -356,6 +356,50 @@ class AuthRequest():
         
         return True 
 
+    def set_demo_attributes(self, demo, elem_name):
+        """ 
+        Extract the configuration data for various demographic
+        elements and fill the demographic XML object 
+        """ 
+        
+        # What all is acceptable to the server? 
+        all_attributes = { 
+            "pi":['ms', 'mv', 'name', 'lname', 'lmv', 'gender', 'dob', 
+                  'dobt', 'age', 'phone', 'email'],
+            "pa":['ms','co','house','street','lm','loc', 'vtc',
+                  'subdist','dist','state','pc','po'],
+            "pfa":['ms','mv','av','lav','lmv']
+            }
+
+        #=> Extract the element data from config 
+        try: 
+            # try looking for say cfg.request.Pi 
+            elem_data = eval("self._cfg.request.%s" % elem_name)
+        except:
+            elem_data = None 
+
+        if (elem_data == None): 
+            return False 
+        
+        specified_attributes = elem_data.keys()
+        valid_attributes = all_attributes[elem_name]
+        attribute_overlap = [i for i in specified_attributes if i in valid_attributes]     
+        # force addition of 'ms' attribute 
+        if "ms" not in attribute_overlap: 
+            attribute_overlap.append("ms")
+        if (len(attribute_overlap) > 1):
+            # Some acceptable attributes have been specified
+            elem=etree.SubElement(demo, elem_name)
+            for attrib in attribute_overlap:
+                try: 
+                    attrib_val = eval('cfg.request.%s.%s' % (elem_name, attrib))
+                except: 
+                    log.error("Configuration file requires request.%s.%s to be specified" % (elem_name, attrib))
+                    raise Exception("Invalid configuration")
+                elem.set(attrib, attrib_val)
+            return True 
+        else: 
+            return False 
 
     def set_pidxml_demographics(self, pid, ts=None):
         """ 
@@ -366,29 +410,33 @@ class AuthRequest():
         except: 
             demo_attributes = [] 
 
-        #if (datatype != "Name" or data == None):
-        #    raise Exception("Does not support demographic checks "+
-        #                    "other than Name") 
-        # Check for elements other than Name and reject them...
-            
         # XXX This is always necessary to compute the demo hash in the
         # response. We dont do this for bios. Not sure what will
         # happen if an empty demo is sent or if the demo element does
         # not exist.
-            
+
+        # Not included by default unless explicitly configured by 
+        # user
         demo = None 
-        # Now add the 
-        supported_attributes = ["Name"] 
+
+        # 
+        supported_attributes = ["Pi", "Pa", "Pfa"] 
         overlap = [i for i in supported_attributes if i in demo_attributes]
         if len(overlap) > 0: 
             demo = etree.SubElement(pid, "Demo")
-            if "Name" in demo_attributes:
-                self._uses['_pi'] = "y" 
-                pi=etree.SubElement(demo, "Pi", ms="E", 
-                                    name=self._cfg.request.name)
-            # if "Address" in demo_attributes:
-            #    do something ....
-
+            
+            # set_demo_attributes has sideeffect of updating the 
+            # demo object 
+            if "Pi" in demo_attributes:
+                if (self.set_demo_attributes(demo, "Pi")):
+                    self._uses['_pi'] = "y" 
+            if "Pa" in demo_attributes:
+                if (self.set_demo_attributes(demo, "Pa")):
+                    self._uses['_pa'] = "y" 
+            if "Pfa" in demo_attributes:
+                if (self.set_demo_attributes(demo, "Pfa")):
+                    self._uses['_pfa'] = "y" 
+                    
             # Extract the demographics component of the XML
             doc = etree.ElementTree(demo) 
         
@@ -686,10 +734,10 @@ request: {
     
     #=> Setup logging 
     logging.basicConfig(
-	filename='execution.log',
+	filename=cfg.common.logfile, 
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
 
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(cfg.common.loglevel)
     log.info("Starting my AuthClient")
 
     if cfg.request.command == "generate": 
@@ -725,3 +773,4 @@ request: {
     else: 
         raise Exception("Unknown command") 
     
+

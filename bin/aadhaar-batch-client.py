@@ -213,7 +213,11 @@ class AuthBatchRequest():
         for person in self._data: 
             cfg= self._cfg 
             cfg.request.uid = person['uid'] 
-            cfg.request.name = person['name'] 
+            cfg.request.demographics = ["Pi"]
+            cfg.request['Pi'] = {
+                'ms': "E",
+                'name': sys.argv[3]
+                }
             
             req = AuthRequest(cfg)
             req.execute() 
