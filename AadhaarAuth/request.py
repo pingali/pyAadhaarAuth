@@ -36,17 +36,16 @@
 #</Auth> 
 #
 
-import os, sys
-sys.path.append(os.path.dirname(__file__)) 
-sys.path.append(os.path.dirname(__file__) + "/lib") 
+# Fix the path 
+import os, os.path, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/lib")
 
 import tempfile 
-
 #import libxml2
 from lxml import etree, objectify 
-
 import logging 
-import dumper 
+from lib import dumper 
 import hashlib, hmac, base64, random 
 from config import Config 
 import traceback 
@@ -170,6 +169,7 @@ class AuthRequest():
             '_pfa': "n",
             '_pi': "n",
             '_pa': "n",
+            '_bt': "FMR",
             }
         self._hmac = ""
         self._data = ""
@@ -271,9 +271,11 @@ class AuthRequest():
                              ver="1.0")
 
 
-        self.set_pidxml_demographics(pid)
-        if self._biometrics: 
-            self.set_pidxml_biometrics(pid)
+        res_demo = self.set_pidxml_demographics(pid)
+        res_bio = self.set_pidxml_biometrics(pid)
+        if (res_demo == False and res_bio == False):
+            log.error("Either Dmographic or biometric check must be enabled in the configuration")
+            raise Exception("Invalid configuration") 
 
         doc = etree.ElementTree(pid) 
         self._pidxml = etree.tostring(doc,pretty_print=False)
@@ -328,7 +330,6 @@ class AuthRequest():
     #</Pid>
 
     def set_pidxml_biometrics(self, pid, ts=None):
-        
         """
         Generate the biometrics XML payload. Supports only FMR for now
         """ 
@@ -336,24 +337,32 @@ class AuthRequest():
             bio_attributes = self._cfg.request.biometrics
         except: 
             bio_attributes = [] 
-            
-        data = self._cfg.request.bio 
-        if (data == None): 
-            raise Exception("Data for biometrics inclusion is missing") 
-        
+
+        if len(bio_attributes) == 0: 
+            return False 
+
         supported_attributes = ["FMR"] 
         overlap = [i for i in supported_attributes if i in bio_attributes]
-        if len(overlap) > 0: 
-            bios = etree.SubElement(pid, "Bios")
-            if "FMR" in bio_attributes: 
-                self._uses['_bio'] = "y"
-                self._uses['_bt'] = "FMR"
-                bio=etree.SubElement(bios, "Bio", type="FMR")
-                bio.text = self._cfg.request.bio 
+        if len(overlap) == 0: 
+            log.error("No valid attributes selected for biometric authentication")
+            raise Exception("Invalid configuration") 
 
-            doc = etree.ElementTree(bios) 
-            self._pidxml_biometrics = etree.tostring(doc,pretty_print=False)
-        
+        bios = etree.SubElement(pid, "Bios")
+        if "FMR" in overlap: 
+            try: 
+                data = self._cfg.request.FMR.bio 
+            except:
+                data = None
+            if (data == None): 
+                raise Exception("Data for biometrics inclusion is missing") 
+ 
+            self._uses['_bio'] = "y"
+            self._uses['_bt'] = "FMR"
+            bio=etree.SubElement(bios, "Bio", type="FMR")
+            bio.text = data
+
+        doc = etree.ElementTree(bios) 
+        self._pidxml_biometrics = etree.tostring(doc,pretty_print=False)
         return True 
 
     def set_demo_attributes(self, demo, elem_name):
@@ -364,11 +373,11 @@ class AuthRequest():
         
         # What all is acceptable to the server? 
         all_attributes = { 
-            "pi":['ms', 'mv', 'name', 'lname', 'lmv', 'gender', 'dob', 
+            "Pi":['ms', 'mv', 'name', 'lname', 'lmv', 'gender', 'dob', 
                   'dobt', 'age', 'phone', 'email'],
-            "pa":['ms','co','house','street','lm','loc', 'vtc',
+            "Pa":['ms','co','house','street','lm','loc', 'vtc',
                   'subdist','dist','state','pc','po'],
-            "pfa":['ms','mv','av','lav','lmv']
+            "Pfa":['ms','mv','av','lav','lmv']
             }
 
         #=> Extract the element data from config 
@@ -409,6 +418,9 @@ class AuthRequest():
             demo_attributes = self._cfg.request.demographics
         except: 
             demo_attributes = [] 
+            
+        if len(demo_attributes) == 0: 
+            return False 
 
         # XXX This is always necessary to compute the demo hash in the
         # response. We dont do this for bios. Not sure what will
@@ -512,8 +524,10 @@ class AuthRequest():
                                 bio=self._uses['_bio'],
                                 pfa=self._uses['_pfa'],
                                 pi=self._uses['_pi'],
-                                pa=self._uses['_pa'],
-                                bt=self._uses['_bt'])
+                                pa=self._uses['_pa'])
+
+        if self._uses['_bio'] == "y":
+            uses.set('bt',self._uses['_bt'])
         
         data = etree.SubElement(root, "Data")
         data.text = self._data
@@ -674,7 +688,7 @@ class AuthRequest():
             log.debug("Request Demo hash = %s " % self.get_demo_hash())
             
             print "(%s,%s) -> %s" % (self._cfg.request.uid, 
-                                     self._cfg.request.name,
+                                     self._cfg.request,
                                      res.get_ret())
                                          
             
@@ -734,18 +748,17 @@ request: {
     
     #=> Setup logging 
     logging.basicConfig(
-	filename=cfg.common.logfile, 
+	#filename=cfg.common.logfile, 
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
 
-    logging.getLogger().setLevel(cfg.common.loglevel)
+    logging.getLogger().setLevel(eval("logging.%s" % cfg.common.loglevel))
     log.info("Starting my AuthClient")
 
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
         req = AuthRequest(cfg=cfg, 
-                          uid=cfg.request.uid,
-                          biometrics=True)
+                          uid=cfg.request.uid)
         req.execute() 
 
     elif (cfg.request.command == "validate"): 
