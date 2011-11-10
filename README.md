@@ -179,8 +179,10 @@ Work-in-progress
     1. Language and location support 
 	2. Humanize all messages
     3. ASA/AUA split operation model including ASA API development
+	4. Use a pregenerated XML as an input
     4. Look through the spec for validation rules beyond what the XSD is providing (e.g., sanity checks)    
-    5. Explore browser and mobile phone support 
+    5. Extensive profiling and XML optimizations 
+    6. Explore browser and mobile phone support 
 
 Thanks 
 ------   
