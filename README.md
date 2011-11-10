@@ -83,9 +83,9 @@ Installation
 Install dependencies 
 
 >         
->        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1    
+>        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 swig    
 >        $ sudo apt-get install libxmlsec1-dev    
->        $ sudo pip install lxml pyxmlsec libxml2 M2Crypto    
+>        $ sudo easy_install lxml pyxmlsec M2Crypto requests config  
 
 Prepare working directory 
 
@@ -108,6 +108,7 @@ additional configuration files. Then perform the first authentication
 request. 
 
 >         
+>        $ cd $WORK 
 >        $ aadhaar-generate-client.py .      
 
 This will install a sample client, certificates and configuration files. Now run the client. 
