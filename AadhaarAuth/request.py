@@ -276,7 +276,9 @@ class AuthRequest():
         if (res_demo == False and res_bio == False):
             log.error("Either Dmographic or biometric check must be enabled in the configuration")
             raise Exception("Invalid configuration") 
-
+        
+        self.set_pidxml_pins(pid) 
+        
         doc = etree.ElementTree(pid) 
         self._pidxml = etree.tostring(doc,pretty_print=False)
         log.debug("PidXML to be encrypted = %s" % self._pidxml)
@@ -328,6 +330,42 @@ class AuthRequest():
     #  </Bios>
     #  <Pv otp="" pin=""/>
     #</Pid>
+    
+    def set_pidxml_pins(self, pid): 
+        """
+        Add the Pin element to the XML 
+        """
+        try: 
+            pv = self._cfg.request.pv
+        except: 
+            pv = None
+
+        if pv == None:
+            return False 
+        
+        try:
+            otp = pv['otp']
+        except: 
+            otp = None 
+            
+        try: 
+            pin = pv['pin']
+        except: 
+            pin = None 
+        
+        if (pin == None and otp == None): 
+            log.error("""The request configuration should have complete Pv element or none. It should specify either or both of Pin and Otp""") 
+            raise Exception("Invalid configuration")
+
+        pv = etree.SubElement(pid, "Pv")
+        if (pin != None):
+            pv.set("pin", pin)
+            self._uses['_pin'] = 'y'
+        if (otp != None): 
+            pv.set("otp", otp)
+            self._uses['_otp'] = 'y' 
+
+        return True 
 
     def set_pidxml_biometrics(self, pid, ts=None):
         """
@@ -617,10 +655,16 @@ class AuthRequest():
         
         return signed_content 
     
-    def humanize(self, req): 
+    def humanize_basic(self, req): 
         """
-        Generate a readable string out of request
+        Generate a readable string out of request. Simple version. It
+        will not work for complicated queries. It is coming down the
+        line.
         """
+        
+        # XXX Pg 12 of the API gives a full XML. We have to turn the
+        # corresponding request structure in something readable. Right
+        # now this function code supports only a subset of attributes.
 
         msg = "" 
         try: 
@@ -729,7 +773,7 @@ class AuthRequest():
             log.debug("Request Demo hash = %s " % self.get_demo_hash())
 
             
-            print "%s -> %s" % (self.humanize(self._cfg.request)
+            print "%s -> %s" % (self.humanize_basic(self._cfg.request)
                                 res.get_ret())
                                          
             
