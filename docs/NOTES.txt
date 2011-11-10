@@ -327,3 +327,5 @@ http://code.activestate.com/recipes/220472/
 xmlsec example code
 http://pyxmlsec.labs.libre-entreprise.org/index.php?section=examples
 
+profiling
+http://stackoverflow.com/questions/582336/how-can-you-profile-a-python-script
