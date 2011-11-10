@@ -99,7 +99,7 @@ code stabilizes.
 
 >         
 >        $ cd /tmp   
->        $ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/pingali/pyAadhaarAuth/zipball/master   
+>        $ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/downloads/pingali/pyAadhaarAuth/pyAadhaarAuth-Nov10-alpha.zip
 >        $ unzip pyAadhaarAuth.zip    
 >        $ cd pingali-pyAaadhaarAuth-aXXXXX
 >        $ sudo python setup.py install    
