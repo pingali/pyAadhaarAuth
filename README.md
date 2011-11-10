@@ -80,15 +80,12 @@ Sample client
 Installation
 ------------
 
-Install dependencies. Note that we need [M2Crypto version 0.21.1][m2crypto]
-to address some openssl issues. 
-
-[m2crypto]: http://chandlerproject.org/Projects/MeTooCrypto#Downloads
+Install dependencies. 
 
 >         
 >        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev      
->        $ sudo apt-get install libxmlsec1 swig libxmlsec1-dev    
->        $ sudo apt-get install libssl libssl-dev      
+>        $ sudo apt-get install libxmlsec1 swig libxmlsec1-openssl    
+>        $ sudo apt-get install libssl libssl-dev python-openssl      
 >        $ sudo easy_install lxml pyxmlsec M2Crypto requests config  
 
 Prepare working directory 
@@ -104,7 +101,7 @@ code stabilizes.
 >        $ cd /tmp   
 >        $ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/pingali/pyAadhaarAuth/zipball/master   
 >        $ unzip pyAadhaarAuth.zip    
->        $ cd pyAadhaarAuth/pingali-pyAaadhaarAuth-a18142   
+>        $ cd pingali-pyAaadhaarAuth-aXXXXX
 >        $ sudo python setup.py install    
 
 Once installed populate the working directory with a simple client and
@@ -119,7 +116,8 @@ This will install a sample client, certificates and configuration files. Now run
 
 >        
 >        $ ./aadhaar-sample-client.py  fixtures/auth.cfg 999999990019 "Shivshankar Choudhury"     
->        (999999990019,{'xml': '/tmp/request.xml', 'signedxml': '/tmp/request.xml.sig', 'Pi': {'name': 'Shivshankar Choudhury', 'ms': 'E'}, 'uid': '999999990019', 'demographics': ['Pi'], 'xmlcleanup': True, 'biometrics': [], 'command': 'generate', 'analyze': True}) -> y
+>        [1.031 secs] (999999990019,Exact(name))  -> y 
+
 
 'y' shows successful authentication. Note that this client is capable
 of doing both demographic and biometric authentication but only does
@@ -133,10 +131,11 @@ package in /usr/local/bin (on Linux).
 
 >          
 >       aadhaar-batch-client.py fixtures/auth.cfg 
->       (999999990019,{'xml': '/tmp/request.xml', 'signedxml': '/tmp/request.xml.sig', 'Pi': {'name': u'Shivshankar Choudhury', 'ms': 'E'}, 'uid': u'999999990019', 'demographics': ['Pi'], 'FMR': {'bio': u'Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALShMgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDFAPqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATcoMQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA'}, 'xmlcleanup': True, 'biometrics': ['FMR'], 'command': 'generate', 'analyze': True}) -> y
->       (999999990026,{'xml': '/tmp/request.xml', 'signedxml': '/tmp/request.xml.sig', 'Pi': {'name': u'Kumar Agarwal', 'ms': 'E'}, 'uid': u'999999990026', 'demographics': ['Pi'], 'FMR': {'bio': u'Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALShMgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDFAPqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATcoMQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA'}, 'xmlcleanup': True, 'biometrics': ['FMR'], 'command': 'generate', 'analyze': True}) -> y
->       (999999990042,{'xml': '/tmp/request.xml', 'signedxml': '/tmp/request.xml.sig', 'Pi': {'name': u'Fatima Bedi', 'ms': 'E'}, 'uid': u'999999990042', 'demographics': ['Pi'], 'FMR': {'bio': u'Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALShMgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDFAPqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATcoMQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA'}, 'xmlcleanup': True, 'biometrics': ['FMR'], 'command': 'generate', 'analyze': True}) -> y
->       (999999990057,{'xml': '/tmp/request.xml', 'signedxml': '/tmp/request.xml.sig', 'Pi': {'name': u'Rohit Pandey', 'ms': 'E'}, 'uid': u'999999990057', 'demographics': ['Pi'], 'FMR': {'bio': u'Rk1SACAyMAAAAADkAAgAyQFnAMUAxQEAAAARIQBqAGsgPgCIAG0fRwC2AG2dSQBVAIUjPABuALShMgCxAL0jMAByAM6lPgCmAN2kQQBwAN8qNAB1AN8mPADJAOcgOQA8AOorNABoAOomOQC+AO2fMQDFAPqlSgCvAP8lRQB8AQuhPABwAQ4fMgB7ASqcRADAAS4iNwCkATMeMwCFATYeNwBLATYwMQBWATcoMQCkATecMQBEATwyMgBJAUciQQCkAU8cNQB9AVQWNgCEAVUVRACoAVgYOgBBAV69NgCsAWeYNwAA'}, 'xmlcleanup': True, 'biometrics': ['FMR'], 'command': 'generate', 'analyze': True}) -> y
+>       [0.974 secs] (999999990019,Exact(name)(Finger Prints))  -> y 
+>       [1.011 secs] (999999990026,Exact(name)(Finger Prints))  -> y 
+>       [1.026 secs] (999999990042,Exact(name)(Finger Prints))  -> y 
+>       [0.973 secs] (999999990057,Exact(name)(Finger Prints))  -> y 
+
 
 Debugging
 ---------
@@ -160,10 +159,15 @@ Please see docs/apidocs/index.html
 Known Issues
 ------------
 
-If M2Crypto dependencies on OpenSSL are not correct, running the client 
-can throw up errors referring to SSLv2_method. In that case, check 
-the M2Crypto installation process. Please install the latest version 
-from their [website][m2crypto] 
+     1. SSLv2_Method Error 
+     
+	If M2Crypto dependencies on OpenSSL are not correct, running
+	the client can throw up errors referring to SSLv2_method. In
+	that case, check the M2Crypto installation process. Please
+	install the latest version from their [website][m2crypto]
+
+	[m2crypto]: http://chandlerproject.org/Projects/MeTooCrypto#Downloads
+
 
 Work-in-progress    
 ----------------

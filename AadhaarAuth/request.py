@@ -698,7 +698,7 @@ class AuthRequest():
         """
         The call in numbers 
         """
-        log.debug("Auth server latency: %0.3f " % (self._stats['_auth_call_latency']))
+        log.debug("Auth server latency: %0.3f secs" % (self._stats['_auth_call_latency']))
         log.debug("Payload (Pid) Element:")
         log.debug(self._stats['_pid_content_sizes'])
         log.debug("Fully Signed XML:")
