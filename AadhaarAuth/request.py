@@ -787,7 +787,7 @@ class AuthRequest():
             
             print "[%0.3f secs] %s -> %s " % \
                 (self._stats['_auth_call_latency'],
-                 self.humanize_basic(self._cfg.request)
+                 self.humanize_basic(self._cfg.request),
                  res.get_ret())
                                          
             self.print_stats() 
