@@ -192,6 +192,7 @@ class AuthRequest():
             '_request_signed_xml': None,
             '_response_signed_xml': None
             }
+        self._stats = {} 
 
         self._checker = AuthValidate(cfg=self._cfg, 
                                      request_xsd=self._cfg.common.request_xsd,
@@ -593,10 +594,8 @@ class AuthRequest():
         signed_content_sizes = \
             self._checker.analyze(xml=self._result['_request_signed_xml'],
                             is_file=False) 
-        log.debug("Payload (Pid) Element:")
-        log.debug(pid_content_sizes)
-        log.debug("Fully Signed XML:")
-        log.debug(signed_content_sizes)
+        self._stats['_pid_content_sizes'] = pid_content_sizes
+        self._stats['_signed_content_sizes'] = signed_content_sizes
 
     def sign_request_xml(self,xml=None, update_state=True): 
         """
@@ -694,7 +693,17 @@ class AuthRequest():
             pass 
 
         return "(%s,%s) " %(req['uid'], msg)
-
+    
+    def print_stats(self): 
+        """
+        The call in numbers 
+        """
+        log.debug("Auth server latency: %0.3f " % (self._stats['_auth_call_latency']))
+        log.debug("Payload (Pid) Element:")
+        log.debug(self._stats['_pid_content_sizes'])
+        log.debug("Fully Signed XML:")
+        log.debug(self._stats['_signed_content_sizes'])
+        
     def execute(self): 
         """
         Execute the query specified in the configuration file. 
@@ -751,8 +760,11 @@ class AuthRequest():
             log.debug("Connecting to the server...") 
             conn = AuthConnection(cfg, ac=cfg.common.ac)
             try: 
-                xml = conn.authenticate(uid=cfg.request.uid, 
-                                        data=self._result['_request_signed_xml']) 
+                [auth_call_latency, xml] = \
+                    conn.authenticate(uid=cfg.request.uid, 
+                                      data=self._result['_request_signed_xml']) 
+                    
+                self._stats['_auth_call_latency'] = auth_call_latency
             except: 
                 traceback.print_exc(file=sys.stdout)
                 raise Exception("Unable to complete authentication")
@@ -773,10 +785,13 @@ class AuthRequest():
             log.debug("Request Demo hash = %s " % self.get_demo_hash())
 
             
-            print "%s -> %s" % (self.humanize_basic(self._cfg.request)
-                                res.get_ret())
+            print "[%0.3f secs] %s -> %s " % \
+                (self._stats['_auth_call_latency'],
+                 self.humanize_basic(self._cfg.request)
+                 res.get_ret())
                                          
-            
+            self.print_stats() 
+
         else:
             log.debug("Skipping contacting the server in the 'testing' mode")
             log.debug("Please change cfg >> common >> mode to enable server posting")

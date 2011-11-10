@@ -23,9 +23,11 @@
 import requests 
 from config import Config 
 
-import sys
-sys.path.append('lib') 
+import os, os.path, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/lib")
 import dumper 
+import timeit, time 
 
 class AuthConnection():
     """
@@ -54,13 +56,16 @@ class AuthConnection():
         url_base=self._cfg.common.auth_url
         url = "%s/%s/%s/%s" %(url_base, self._ac, uid[0],uid[1])
         try: 
-            r = requests.post(url, data) 
+            code="r = requests.post(url, data)"
+            t = timeit.Timer(code) 
+            call_time = t.timeit(1) 
+            
         except: 
             print r.headers 
             print r.content 
             raise Exception("Unable to authenticate") 
 
-        return r.content 
+        return [call_time, r.content] 
 
 if __name__ == '__main__':
     
