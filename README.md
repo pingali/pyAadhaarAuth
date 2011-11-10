@@ -20,7 +20,7 @@ Latest Release
 --------------
 
   * Alpha Release (0.1) Nov 15, 2011 - Planned 
-  * Platform support: Linux (Ubuntu) and Python 
+  * Supported platform: Linux (Ubuntu) 
 
 Features
 --------
@@ -31,6 +31,7 @@ Features
   * Automatic validation checks - UID numbering scheme, XSD compliance,
     encryption, and other checks    
   * Extensive debugging information 
+  * Basic performance information 
   * Easy configuration 
 
 Example
@@ -79,7 +80,7 @@ Sample client
 Installation
 ------------
 
-Install dependencies    
+Install dependencies 
 
 >         
 >        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1    
@@ -156,15 +157,15 @@ Work-in-progress
 
   Immediate: 
 
-    1. Integrate the commandline processing with help 
+    1. Integrate the commandline processing with config 
     2. Test with https connection (whenever it is available) 
     3. Performance evaluation/statistics    
 
   Medium term:  
 
-    1. Language support 
-    2. ASA/AUA split operation model 
-    3. Use the objectified xml to populate internal state    
+    1. Language and location support 
+	2. Humanize all messages
+    3. ASA/AUA split operation model including ASA API development
     4. Look through the spec for validation rules beyond what the XSD is providing (e.g., sanity checks)    
     5. Explore browser and mobile phone support 
 
