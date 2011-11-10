@@ -294,7 +294,7 @@ class AuthRequest():
 
     def set_hmac(self): 
         """
-        Computes the hmac. Not working yet.
+        Computes the hmac. It stores a base64 encoded AES encrypted hash
         """
         
         data = self._pidxml 
@@ -704,7 +704,8 @@ class AuthRequest():
         log.debug("Fully Signed XML:")
         log.debug(self._stats['_signed_content_sizes'])
         
-    def execute(self): 
+    
+    def execute(self, generate_xml=True): 
         """
         Execute the query specified in the configuration file. 
         """
@@ -714,10 +715,11 @@ class AuthRequest():
         # Initialization
         self.set_txn()
 
-        # => Elements of the final XML 
-        self.set_skey() 
-        self.set_data()
-        self.set_hmac() 
+        if generate_xml: 
+            # => Elements of the final XML 
+            self.set_skey() 
+            self.set_data()
+            self.set_hmac() 
         
         # => Extract and store the result 
         self._result['_request_unsigned_xml'] = self.tostring()  # dump it 
