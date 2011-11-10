@@ -616,6 +616,40 @@ class AuthRequest():
             os.unlink(tmpfp_signed)
         
         return signed_content 
+    
+    def humanize(self, req): 
+        """
+        Generate a readable string out of request
+        """
+
+        msg = "" 
+        try: 
+            if "Pi" in req['demographics']: 
+                pi = req['Pi']
+                if (pi['ms'] == "E"): 
+                    msg = msg + "Exact(name)" #% (pi['name'])
+                else:
+                    msg = msg + "Partial(name)" #% (pi['name'])
+        except:
+            pass 
+
+        try: 
+            if "Pa" in req['demographics']: 
+                pa = req['Pa']
+                if (pi['ms'] == "E"): 
+                    msg = msg + "Exact(address)" #% (pa['street'])
+                else:
+                    msg = msg + "Partial(addresses)" #% (pi['name'])
+        except:
+            pass 
+        
+        try: 
+            if "FMR" in req['biometrics']: 
+                msg = msg + "(Finger Prints)" 
+        except:
+            pass 
+
+        return "(%s,%s) " %(req['uid'], msg)
 
     def execute(self): 
         """
@@ -693,10 +727,10 @@ class AuthRequest():
             log.debug("Request uid hash = %s " % self.get_uid_hash())            
             log.debug("Demo hash = %s " % res.get_demo_hash())
             log.debug("Request Demo hash = %s " % self.get_demo_hash())
+
             
-            print "(%s,%s) -> %s" % (self._cfg.request.uid, 
-                                     self._cfg.request,
-                                     res.get_ret())
+            print "%s -> %s" % (self.humanize(self._cfg.request)
+                                res.get_ret())
                                          
             
         else:
