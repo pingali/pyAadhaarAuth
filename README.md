@@ -80,11 +80,15 @@ Sample client
 Installation
 ------------
 
-Install dependencies 
+Install dependencies. Note that we need [M2Crypto version 0.21.1][m2crypto]
+to address some openssl issues. 
+
+[m2crypto]: http://chandlerproject.org/Projects/MeTooCrypto#Downloads
 
 >         
->        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libxmlsec1 swig    
->        $ sudo apt-get install libxmlsec1-dev    
+>        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev      
+>        $ sudo apt-get install libxmlsec1 swig libxmlsec1-dev    
+>        $ sudo apt-get install libssl libssl-dev      
 >        $ sudo easy_install lxml pyxmlsec M2Crypto requests config  
 
 Prepare working directory 
@@ -152,6 +156,14 @@ Documentation
 -------------
 
 Please see docs/apidocs/index.html
+
+Known Issues
+------------
+
+If M2Crypto dependencies on OpenSSL are not correct, running the client 
+can throw up errors referring to SSLv2_method. In that case, check 
+the M2Crypto installation process. Please install the latest version 
+from their [website][m2crypto] 
 
 Work-in-progress    
 ----------------
