@@ -151,10 +151,60 @@ Extensive logging is supported by the library to help with easy application deve
 
 Look at execution.log in the local directory once the command is executed. 
 
+Configuration file 
+------------------
+
+The configuration file is a simple json-like file having a series of
+elements. There is one common element and several class-specific
+elements (e.g., crypt for AuthCrypt class). Since there are multiple
+possible configurations (e.g., testing, verification, staging), the
+single class-specific element is made to point to one of the possible
+configurations using Python Config cross-reference syntax
+($<element-name>). 
+
+Request is the most complex configuration given the number of input
+parameters. 
+
+The list of attributes that must be included in the authentication
+request is specified using the 'demographics' and 'biometrics'
+elements. For each of the attributes, there is a corresponding hash
+specifying the details. For example, the following specifies exact
+match for the name and a threshold match for finger print minutae.
+
+    demographics: ["Pi"]
+    biometrics: ["FMR"] 
+    Pi: { name: 'Sanjay', ms: 'E'} 
+    FMR: { bio: 'DAHS132...' } 
+
+AUA Protocol 
+------------
+
+The code implements a simple protocol between the POS client that
+captures the information and the AUA server that packages the
+information and communicates with the authentication server. 
+
+POS Client to AUA server message contains: 
+	 
+	1. UID 
+        2. Unsigned XML (all data is encrypted) 
+        3. Demographic hash 
+
+The AUA server inserts auth attributes such as ac, sa, lk and
+transaction id before sending it over to the auth server. 
+
+AUA server to POS Client response contains: 
+
+        1. Result 
+        2. Error code 
+
+The error is specific to the protocol implemented but for now 
+reuses the UIDAI error codes 
+
 Documentation
 -------------
 
 Please see docs/apidocs/index.html
+
 
 Known Issues
 ------------

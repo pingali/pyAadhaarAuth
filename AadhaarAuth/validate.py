@@ -408,7 +408,7 @@ class AuthValidate():
         else:
             xml_text = xml 
             
-        log.debug("XML text to analyze:\n%s" % xml_text)
+        #log.debug("XML text to analyze:\n%s" % xml_text)
         obj = objectify.fromstring(xml_text)
         
         # This is very inefficient. It is walking through the entire

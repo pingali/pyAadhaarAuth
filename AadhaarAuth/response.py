@@ -262,8 +262,11 @@ class AuthResponse():
         self._ts = value
     
     def get_ts(self):
-        self._ts 
+        return self._ts 
     
+    def get_txn(self): 
+        return self._txn 
+
     def xsd_check(self, xml_text,xsd):
         
         if xml_text == None: 
