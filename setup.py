@@ -25,6 +25,7 @@ setup(name='pyAadhaarAuth',
       license='LICENSE.txt',
       long_description=open('README.md').read(),
       classifiers=classifiers, 
-      requires=['lxml', 'config', 'M2Crypto', 'requests']
+      requires=['lxml', 'config', 'M2Crypto', 'requests', 'config',
+                'pyxmlsec' ]
      )
 

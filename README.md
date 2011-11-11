@@ -83,9 +83,9 @@ Installation
 Install dependencies. 
 
 >         
->        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev      
->        $ sudo apt-get install libxmlsec1 swig libxmlsec1-openssl    
->        $ sudo apt-get install libssl libssl-dev python-openssl      
+>        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev  xmlsec1       
+>        $ sudo apt-get install libxmlsec1 swig libxmlsec1-openssl libxmlsec1-dev      
+>        $ sudo apt-get install libssl-dev python-openssl      
 >        $ sudo easy_install lxml pyxmlsec M2Crypto requests config  
 
 Prepare working directory 
@@ -164,9 +164,9 @@ Known Issues
 	If M2Crypto dependencies on OpenSSL are not correct, running
 	the client can throw up errors referring to SSLv2_method. In
 	that case, check the M2Crypto installation process. Please
-	install the latest version from their [website][m2crypto]
+	install the latest version from their website.
 
-	[m2crypto]: http://chandlerproject.org/Projects/MeTooCrypto#Downloads
+	http://chandlerproject.org/Projects/MeTooCrypto#Downloads
 
 
 Work-in-progress    
