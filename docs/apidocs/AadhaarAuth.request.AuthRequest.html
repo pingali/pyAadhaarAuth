@@ -84,7 +84,7 @@ only v1.5 and public AuAs<table class="fieldTable"></table></div>
     
     <td>Method</td>
     <td><a href="AadhaarAuth.request.AuthRequest.html#set_hmac">set_hmac</a></td>
-    <td><span>Computes the hmac. Not working yet.</span></td>
+    <td><span>Computes the hmac. It stores a base64 encoded AES encrypted hash</span></td>
   </tr><tr class="method">
     
     
@@ -95,8 +95,20 @@ only v1.5 and public AuAs<table class="fieldTable"></table></div>
     
     
     <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_pidxml_pins">set_pidxml_pins</a></td>
+    <td><span>Add the Pin element to the XML</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
     <td><a href="AadhaarAuth.request.AuthRequest.html#set_pidxml_biometrics">set_pidxml_biometrics</a></td>
     <td><span>Generate the biometrics XML payload. Supports only FMR for now</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#set_demo_attributes">set_demo_attributes</a></td>
+    <td><span>Extract the configuration data for various demographic</span></td>
   </tr><tr class="method">
     
     
@@ -127,6 +139,18 @@ only v1.5 and public AuAs<table class="fieldTable"></table></div>
     <td>Method</td>
     <td><a href="AadhaarAuth.request.AuthRequest.html#sign_request_xml">sign_request_xml</a></td>
     <td><span>Sign the payload XML provided (or extracted from self._result)</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#humanize_basic">humanize_basic</a></td>
+    <td><span>Generate a readable string out of request. Simple version. It</span></td>
+  </tr><tr class="method">
+    
+    
+    <td>Method</td>
+    <td><a href="AadhaarAuth.request.AuthRequest.html#print_stats">print_stats</a></td>
+    <td><span>The call in numbers</span></td>
   </tr><tr class="method">
     
     
@@ -304,7 +328,7 @@ stored as part of this class<table class="fieldTable"></table></div>
   </div>
   <div class="functionBody">
     
-    <div>Computes the hmac. Not working yet.<table class="fieldTable"></table></div>
+    <div>Computes the hmac. It stores a base64 encoded AES encrypted hash<table class="fieldTable"></table></div>
   </div>
 </div><div class="function">
   <a name="AadhaarAuth.request.AuthRequest.get_hmac">
@@ -324,6 +348,23 @@ stored as part of this class<table class="fieldTable"></table></div>
     <div class="undocumented">Undocumented</div>
   </div>
 </div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_pidxml_pins">
+    
+  </a>
+  <a name="set_pidxml_pins">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_pidxml_pins(self, pid):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Add the Pin element to the XML<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
   <a name="AadhaarAuth.request.AuthRequest.set_pidxml_biometrics">
     
   </a>
@@ -339,6 +380,24 @@ stored as part of this class<table class="fieldTable"></table></div>
   <div class="functionBody">
     
     <div>Generate the biometrics XML payload. Supports only FMR for now<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.set_demo_attributes">
+    
+  </a>
+  <a name="set_demo_attributes">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    set_demo_attributes(self, demo, elem_name):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Extract the configuration data for various demographic elements and fill
+the demographic XML object<table class="fieldTable"></table></div>
   </div>
 </div><div class="function">
   <a name="AadhaarAuth.request.AuthRequest.set_pidxml_demographics">
@@ -426,6 +485,41 @@ stored as part of this class<table class="fieldTable"></table></div>
     <div>Sign the payload XML provided (or extracted from self._result)<table class="fieldTable"></table></div>
   </div>
 </div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.humanize_basic">
+    
+  </a>
+  <a name="humanize_basic">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    humanize_basic(self, req):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>Generate a readable string out of request. Simple version. It will not 
+work for complicated queries. It is coming down the line.<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
+  <a name="AadhaarAuth.request.AuthRequest.print_stats">
+    
+  </a>
+  <a name="print_stats">
+    
+  </a>
+  <div class="functionHeader">
+    
+    def
+    print_stats(self):
+    
+  </div>
+  <div class="functionBody">
+    
+    <div>The call in numbers<table class="fieldTable"></table></div>
+  </div>
+</div><div class="function">
   <a name="AadhaarAuth.request.AuthRequest.execute">
     
   </a>
@@ -435,7 +529,7 @@ stored as part of this class<table class="fieldTable"></table></div>
   <div class="functionHeader">
     
     def
-    execute(self):
+    execute(self, generate_xml=True):
     
   </div>
   <div class="functionBody">
@@ -444,7 +538,7 @@ stored as part of this class<table class="fieldTable"></table></div>
   </div>
 </div>
     <address>
-      <a href="index.html">API Documentation</a> for AadhaarAuth, generated by <a href="http://codespeak.net/~mwh/pydoctor/">pydoctor</a> at 2011-11-09 13:05:39.
+      <a href="index.html">API Documentation</a> for AadhaarAuth, generated by <a href="http://codespeak.net/~mwh/pydoctor/">pydoctor</a> at 2011-11-11 10:54:01.
     </address>
   </body>
 </html>
