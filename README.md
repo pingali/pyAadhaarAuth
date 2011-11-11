@@ -130,7 +130,7 @@ auth.cfg file. In this case you can run the script installed by the
 package in /usr/local/bin (on Linux).
 
 >          
->       aadhaar-batch-client.py fixtures/auth.cfg 
+>       $ aadhaar-batch-client.py fixtures/auth.cfg 
 >       [0.974 secs] (999999990019,Exact(name)(Finger Prints))  -> y 
 >       [1.011 secs] (999999990026,Exact(name)(Finger Prints))  -> y 
 >       [1.026 secs] (999999990042,Exact(name)(Finger Prints))  -> y 
