@@ -99,9 +99,9 @@ code stabilizes.
 
 >         
 >        $ cd /tmp   
->        $ wget --no-check-certificate -O pyAadhaarAuth.zip https://github.com/downloads/pingali/pyAadhaarAuth/pyAadhaarAuth-Nov10-alpha.zip
->        $ unzip pyAadhaarAuth.zip    
->        $ cd pingali-pyAaadhaarAuth-aXXXXX
+>        $ wget --no-check-certificate -O pyAadhaarAuth.tar.gz https://github.com/pingali/pyAadhaarAuth/tarball/v0.1.0
+>        $ tar zxvf pyAadhaarAuth.tar.gz  
+>        $ cd pingali-pyAaadhaarAuth-bf47789
 >        $ sudo python setup.py install    
 
 Once installed populate the working directory with a simple client and
