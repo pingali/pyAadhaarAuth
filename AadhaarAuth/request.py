@@ -171,6 +171,12 @@ class AuthRequest():
     def get_demo_hash(self):
         return self._demo_hash    
 
+    def get_signed_xml(self): 
+        return self._result['_request_signed_xml'] 
+
+    def set_signed_xml(self, xml): 
+        self._result['_request_signed_xml'] = xml         
+
     # This needs to be obtained from the POS 
     def set_demo_hash(self, h):
         self._demo_hash = h 
@@ -333,50 +339,30 @@ class AuthRequest():
         
         return signed_content 
     
-    def generate_xml(self): 
-        """
-        Generate the Pid and Auth XML. This has been moved to AuthData and 
-        we retained this here for legacy reasons. 
-        """
-        log.error("This section is normally not executed. Please check")
-
-        # => Elements of the final XML 
-        self.set_skey() 
-        self.set_data()
-        self.set_hmac() 
-        
-        # => Extract and store the result 
-        self._result['_request_client_xml'] = "Not generated"
-        self._result['_request_unsigned_xml'] = self.tostring()  # dump it 
-        
-    def execute(self, generate_xml=False): 
-        """
-        Execute the query specified in the configuration file. 
-        """
-        
-        cfg = self._cfg 
+    def generate_signed_xml(self): 
+        """ 
+        Update the attribute and generate the signed xml 
+        """ 
+        cfg = self._cfg
 
         # Initialization
         self.set_txn()
+
+        try: 
+            client_xml = self._result['_request_client_xml']
+        except: 
+            raise("Non-existing client XML to process") 
+            
+        # Update elements
+        obj = objectify.fromstring(client_xml)
+        obj.set('lk', self._cfg.common.license_key) 
+        obj.set('txn', self._txn) 
+        obj.set('uid', self._uid) 
+        obj.set('sa', self._sa) 
+        obj.set('ac', self._ac) 
         
-        if generate_xml: 
-            self.generate_xml() 
-        else: 
-            try: 
-                client_xml = self._result['_request_client_xml']
-            except: 
-                raise("Non-existing client XML to process") 
-            
-            # Update elements
-            obj = objectify.fromstring(client_xml)
-            obj.set('lk', self._cfg.common.license_key) 
-            obj.set('txn', self._txn) 
-            obj.set('uid', self._uid) 
-            obj.set('sa', self._sa) 
-            obj.set('ac', self._ac) 
-            
-            self._result['_request_unsigned_xml'] = \
-                            etree.tostring(obj, pretty_print=False)
+        self._result['_request_unsigned_xml'] = \
+                 etree.tostring(obj, pretty_print=False)
 
         log.debug("Unsigned XML:")
         log.debug(self._result['_request_unsigned_xml'])
@@ -408,6 +394,19 @@ class AuthRequest():
         if valid: 
             log.debug("Validated XML generated with result = %s " % res)
         
+        return True 
+
+    def execute(self, generate_xml=True): 
+        """
+        Execute the query specified in the configuration file. 
+        If necessary generate the signed XML from the client XML 
+        """
+        
+        cfg = self._cfg 
+
+        if generate_xml: 
+            self.generate_signed_xml() 
+
         # Testing will use the local cert instead of UIDAI's public
         # cert for encryption. Therefore will fail the tests at the
         # authentication server.
@@ -466,16 +465,16 @@ if __name__ == '__main__':
     #=> Setup logging 
     logging.basicConfig(
 	#filename=cfg.common.logfile, 
-	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
+	format=cfg.common.logformat)
 
-    logging.getLogger().setLevel(eval("logging.%s" % cfg.common.loglevel))
+    logging.getLogger().setLevel(cfg.common.loglevel)
     log.info("Starting my AuthClient")
 
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
         data = AuthData(cfg=cfg) 
-        data.generate_xml() 
+        data.generate_client_xml() 
         exported_jsoned_data = data.export_request_data() 
 
         # Sign and send it out...

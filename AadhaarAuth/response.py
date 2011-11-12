@@ -36,6 +36,8 @@ from datetime import *
 import hashlib 
 import binascii 
 
+from command import AuthConfig
+
 log = logging.getLogger("AuthResponse") 
 
 __author__ = "Venkata Pingali"
@@ -353,27 +355,14 @@ class AuthResponse():
         return self._response['_ret'] 
 
 if __name__ == '__main__':
-    assert(sys.argv)
-    if len(sys.argv) < 2:
-        print """
-Error: command line should specify a config file.
 
-Usage: validate.py <config-file>
+    cmd = AuthConfig("response", 
+                     "Process the response from the auth server")
+    cfg = cmd.update_config() 
 
-$ cat example.cfg
-common: { 
-    response_xsd: 'xsd/uid-auth-response.xsd'   
-}
-response: { 
-    command: "validate",
-    xml: "fixtures/authresponse.xml'
-}
-"""    
-        sys.exit(1) 
-
-    cfg = Config(sys.argv[1]) 
-    logging.getLogger().setLevel(eval("logging.%s" % cfg.common.loglevel))
-    logging.basicConfig(filename=cfg.common.logfile) 
+    logging.getLogger().setLevel(cfg.common.loglevel)
+    logging.basicConfig(filename=cfg.common.logfile,
+                        format=cfg.common.logformat) 
 
     if (cfg.response.command == "generate"):
         response = AuthResponse(cfg, err=100, ts=datetime.utcnow())

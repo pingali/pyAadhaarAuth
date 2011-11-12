@@ -637,7 +637,7 @@ class AuthData():
     
 
 
-    def generate_xml(self): 
+    def generate_client_xml(self): 
         """
         Generate the body of the XML that will be written out by
         tostring()
@@ -676,16 +676,16 @@ if __name__ == '__main__':
     #=> Setup logging 
     logging.basicConfig(
 	#filename=cfg.common.logfile, 
-	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
+	format=cfg.common.logformat)
 
-    logging.getLogger().setLevel(eval("logging.%s" % cfg.common.loglevel))
+    logging.getLogger().setLevel(cfg.common.loglevel)
     log.info("Starting auth data")
     
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
         data = AuthData(cfg=cfg)
-        data.generate_xml()
+        data.generate_client_xml()
         log.debug("Exported data : " + \
                       json.loads(data.export_request_data()).__str__())
 

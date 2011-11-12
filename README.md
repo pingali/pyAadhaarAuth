@@ -28,6 +28,7 @@ Features
   * Support for both biometrics and demographics
   * Simple API 
   * Sample clients for single or batch requests 
+  * Sample AUA client and servers 
   * Automatic validation checks - UID numbering scheme, XSD compliance,
     encryption, and other checks    
   * Extensive debugging information 
@@ -137,6 +138,7 @@ package in /usr/local/bin (on Linux).
 >       [0.973 secs] (999999990057,Exact(name)(Finger Prints))  -> y 
 
 
+
 Debugging
 ---------
 
@@ -180,6 +182,26 @@ The configuration file is evolving. For the most recent common and
 module-specific configuration, please see the [auth.cfg][authurl]
 
 [authurl]: https://github.com/pingali/pyAadhaarAuth/blob/asa-version/AadhaarAuth/fixtures/auth.cfg
+
+AUA Support
+-----------
+
+The distribution include sample AUA client and server. 
+
+The AUA client is a modified version of the sample client. It
+generates XML using the parameters provided by the resident. Required
+data is sent to the AUA server as per the protocol given below. The
+client 'posts' JSON object to the server. The response from the server
+is a JSON object as well. 
+
+The AUA server first imports data from the JSON object. It then
+extracts the client-generated XML and fills it with attributes such as
+AUA code and license key. It signs and posts the XML to the UIDAI
+server. The AUA server extracts information from the response,
+constructs JSON object and responds to the client with this object.
+The current implementation of the AUA server is based on Cherrypy, a
+light-weight http server and does not incorporate any security. 
+
 
 AUA Protocol 
 ------------

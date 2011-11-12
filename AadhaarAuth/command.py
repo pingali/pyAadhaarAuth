@@ -60,6 +60,8 @@ class AuthConfig():
         Process each element of the command line and generate a target
         configuration.
         """
+
+        logging.basicConfig() 
         usage = "usage: %prog [options] [<attrib=value> <attrib=value>...]\n" \
             + self._summary
         
@@ -122,7 +124,7 @@ available choices in config file. (default: %s)""" % (k, v, v)
             raise Exception("Invalid setting for parameter \'%s\'. Please check the configuration file." % self._name)
 
         # => Update the configuration for the particular service 
-        log.warn("Overriding existing request with %s " % \
+        log.debug("Setting request configuration to %s " % \
                      (eval("options.%s" % self._name)))
         cmd = "cfg.%s=cfg[options.%s]" %  (self._name, self._name) 
         exec(cmd) 
@@ -160,7 +162,10 @@ available choices in config file. (default: %s)""" % (k, v, v)
                 exec(cmd) 
                 cmd = "cfg.%s" % k 
                 log.debug("Updated conf var %s to %s \n" % (cmd, eval(cmd)))
-        
+                
+        # Special case of logging
+        cfg.common.loglevel = eval("logging.%s" % cfg.common.loglevel)
+
         log.debug("Final configuration:\n%s" % cfg)
         return cfg 
 
