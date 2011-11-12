@@ -176,6 +176,11 @@ match for the name and a threshold match for finger print minutae.
     Pi: { name: 'Sanjay', ms: 'E'} 
     FMR: { bio: 'DAHS132...' } 
 
+The configuration file is evolving. For the most recent common and
+module-specific configuration, please see the [auth.cfg][authurl]
+
+[authurl]: https://github.com/pingali/pyAadhaarAuth/blob/asa-version/AadhaarAuth/fixtures/auth.cfg
+
 AUA Protocol 
 ------------
 
@@ -196,6 +201,7 @@ AUA server to POS Client response contains:
 
         1. Result 
         2. Error code 
+        3. Error message 
 
 The error is specific to the protocol implemented but for now 
 reuses the UIDAI error codes 

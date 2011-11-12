@@ -59,6 +59,7 @@ from signature import AuthSignature
 from validate import AuthValidate
 from connection import AuthConnection 
 from response import AuthResponse
+from command import AuthConfig 
 
 log=logging.getLogger("AuthData")
 
@@ -164,17 +165,33 @@ class AuthData():
             '_pc': ""
             }
         self._result = {
-            '_request_unsigned_xml': None, 
+            '_request_client_xml': None, 
             }
         self._stats = {} 
         self._checker = AuthValidate(cfg=self._cfg, 
                                      request_xsd=self._cfg.common.request_xsd,
-                                     testing=True) 
+                                     testing=(self._cfg.common.mode == 'testing')) 
+
+    ######################################################
+    # Read and write internal state 
+    ######################################################
 
     def get_uid_hash(self): 
         return hashlib.sha256(self._uid).hexdigest() 
 
+    def get_demo_hash(self):
+        return self._demo_hash
 
+    def get_client_xml(self): 
+        return self._result['_request_client_xml']
+
+    def set_client_xml(self, xml): 
+        self._result['_request_client_xml'] = xml 
+
+
+    ######################################################
+    # Checker routines
+    ######################################################
     def validate(self): 
         """
         Check for whether the data is complete enough to be able to 
@@ -533,8 +550,9 @@ class AuthData():
 
         return True 
     
-    def get_demo_hash(self):
-        return self._demo_hash
+    ######################################################
+    # Export request data and import response data
+    ######################################################
     
     def export_request_data(self): 
         """
@@ -545,7 +563,7 @@ class AuthData():
         data = {
             'uid': self._uid,
             'demo_hash': self._demo_hash, 
-            'unsigned_xml': self._result['_request_unsigned_xml'] 
+            'unsigned_xml': self._result['_request_client_xml'] 
             }
         return pickle.dumps(data) 
 
@@ -562,24 +580,31 @@ class AuthData():
         self._result['_err_message'] = data['err_message'] 
         return True 
 
+    ######################################################
+    # XML generation 
+    ######################################################
+
     def tostring(self):
         """
-        Generate the XML text that must be sent across to the uid
-        client.
+        Write out the XML after some validation 
         """
         self.validate()
-
+        
+        # Elements ac, sa, txn, lk will set by the AUA. They are not
+        # required for computing hmac and they are not encrypted. 
         root = etree.Element('Auth', 
                              xmlns=self._cfg.common.request_xmlns,
                              ver=self._ver,
                              tid=self._tid, 
-                             #ac=self._ac, 
-                             #sa=self._sa,
-                             #txn = self._txn,
-                             #uid = self._uid,
-                             #lk=self._lk
+                             ac="", #self._ac, 
+                             sa="", #self._sa,
+                             txn="", #self._txn,
+                             uid = self._uid,
+                             lk="", #self._lk
                              )
-
+        
+        # XXX This is a placeholder. Will be populated down 
+        # the line. 
         #meta = etree.SubElement(root, "Meta",
         #                        fdc=self._meta['fdc'],
         #                        ipc=self._meta['ipc'],
@@ -614,7 +639,8 @@ class AuthData():
 
     def generate_xml(self): 
         """
-        Construct the XML that will be sent to the AUA 
+        Generate the body of the XML that will be written out by
+        tostring()
         """ 
         # => Elements of the final XML 
         self.set_skey() 
@@ -622,64 +648,30 @@ class AuthData():
         self.set_hmac() 
 
         # => Extract and store the result 
-        self._result['_request_unsigned_xml'] = self.tostring()  # dump it 
+        self._result['_request_client_xml'] = self.tostring()  # dump it 
 
-    def get_unsigned_xml(self): 
-        return self._result['_request_unsigned_xml']
-
-    def set_unsigned_xml(self, xml): 
-        self._result['_request_unsigned_xml'] = xml 
+        log.debug("Unsigned XML:")
+        log.debug(self._result['_request_client_xml'])
+    
+        # =>  Now validate the xml generated 
+        res = self._checker.validate(self._result['_request_client_xml'], 
+                               is_file=False, signed=False)
+        if (res == False): 
+            log.debug("Invalid XML generated")
+        
+        #=> In testing mode extract the XML to see if we can get back
+        # the origin XML 
+        if (self._cfg.common.mode == "testing"):
+            res = self._checker.extract(xml=self._result['_request_client_xml'],
+                                  is_file=False,
+                                  key=self._cfg.common.private_key)
 
 
         
 if __name__ == '__main__':
        
-    assert(sys.argv)
-    if len(sys.argv) < 2:
-        print """
-Error: command line should specify a config file.
-
-Usage: request.py <config-file>
-
-$ cat example.cfg 
-common: { 
-    mode: 'testing',
-
-    # Specific to this AuA
-    license_key:  "MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=",
-    private_key: 'fixtures/public_key.pem',  # note that public refers to
-    public_cert: 'fixtures/public_cert.pem', # public AuA 
-    pkcs_path: "fixtures/public.p12",
-    pkcs_password: "public",
-    uid_cert_path: "fixtures/uidai_auth_stage.cer",
-
-    # shared by all 
-    rsa_key_len: 32, 
-    sha256_length: 256,    
-    auth_url: 'http://auth.uidai.gov.in/1.5/'    
-    request_xsd: 'xsd/uid-auth-request.xsd',
-    response_xsd: 'xsd/uid-auth-response.xsd'   
-}
-
-request: { 
-    
-    #=> parameters 
-    use_template: False, 
-
-    #=> Input data
-    command: "generate",
-    uid: "123412341237",
-    name: "KKKKK", 
-    
-    xml: "/tmp/request.xml",
-    signedxml: "/tmp/request.xml.sig",
-    xmlcleanup: False
-}
-
-"""
-        sys.exit(1) 
-    
-    cfg = Config(sys.argv[1])
+    cmd = AuthConfig("data", "Capture and generate XML") 
+    cfg = cmd.update_config() 
     
     #=> Setup logging 
     logging.basicConfig(
@@ -687,14 +679,15 @@ request: {
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
 
     logging.getLogger().setLevel(eval("logging.%s" % cfg.common.loglevel))
-    log.info("Starting my AuthClient")
-
+    log.info("Starting auth data")
+    
     if cfg.request.command == "generate": 
 
         # => Generate the XML file 
-        req = AuthData(cfg=cfg, 
-                       uid=cfg.request.uid)
-        req.execute() 
+        data = AuthData(cfg=cfg)
+        data.generate_xml()
+        log.debug("Exported data : " + \
+                      pickle.loads(data.export_request_data()).__str__())
 
     elif (cfg.request.command == "validate"): 
 
@@ -721,225 +714,3 @@ request: {
     else: 
         raise Exception("Unknown command") 
     
-
-#    def analyze_xmls(self): 
-#        """
-#        Analyze the XML being sent to the server
-#        """ 
-#        
-#        pid_content_sizes = \
-#            self._checker.analyze(xml=self._pidxml,
-#                            is_file=False) 
-#        signed_content_sizes = \
-#            self._checker.analyze(xml=self._result['_request_signed_xml'],
-#                            is_file=False) 
-#        self._stats['_pid_content_sizes'] = pid_content_sizes
-#        self._stats['_signed_content_sizes'] = signed_content_sizes
-#
-#    def sign_request_xml(self,xml=None, update_state=True): 
-#        """
-#        Sign the payload XML provided (or extracted from self._result)
-#        """
-#        
-#        cfg = self._cfg 
-#        
-#        if xml == None: 
-#            xml = self._result['_request_unsigned_xml'] 
-#            
-#        if (xml == None): 
-#            log.debug("XML to be signed = %s " % xml)
-#            raise Exception("Could not find XML to sign")
-#        
-#        log.debug("Signing %s ... %s " %(xml[1:20],xml[len(xml)-20:len(xml)]))
-#
-#        # => Store the xml and generated a signed version
-#        if (cfg.request.xml == None): 
-#            tmpfp = tempfile.NamedTemporaryFile(delete=False) 
-#            tmpfp_unsigned = tmpfp.name
-#        else:
-#            tmpfp_unsigned = cfg.request.xml
-#            tmpfp = file(tmpfp_unsigned, 'w')
-#        tmpfp.write(xml) 
-#        tmpfp.flush() 
-#        tmpfp.close() 
-#        
-#        #=> Generate the signed version
-#        if (cfg.request.signedxml == None): 
-#            tmpfp_signed = cfg.request.signedxml 
-#        else:
-#            tmpfp_signed = tmpfp_unsigned + ".sig" 
-#         
-#        # => Sign the XML generated
-#        sig = AuthSignature() 
-#        sig.init_xmlsec() 
-#        res = sig.sign_file(tmpfp_unsigned, 
-#                            tmpfp_signed, 
-#                            cfg.common.pkcs_path, 
-#                            cfg.common.pkcs_password)
-#        sig.shutdown_xmlsec() 
-#        if (res == 1): 
-#            log.debug("Signed successfully!")
-#        else: 
-#            log.debug("Signing unsuccessful for some reason \"%s\""  % res)
-#            raise Exception("Unsuccessful signature") 
-#
-#        signed_content = file(tmpfp_signed).read() 
-#        log.debug("Signed XML (%s):\n%s" % (tmpfp_signed, signed_content))
-#
-#        # Now cleanup 
-#        if (self._cfg.request.xmlcleanup is True): 
-#            os.unlink(tmpfp_unsigned) 
-#            os.unlink(tmpfp_signed)
-#        
-#        return signed_content 
-#    
-#    def humanize_basic(self, req): 
-#        """
-#        Generate a readable string out of request. Simple version. It
-#        will not work for complicated queries. It is coming down the
-#        line.
-#        """
-#        
-#        # XXX Pg 12 of the API gives a full XML. We have to turn the
-#        # corresponding request structure in something readable. Right
-#        # now this function code supports only a subset of attributes.
-#
-#        msg = "" 
-#        try: 
-#            if "Pi" in req['demographics']: 
-#                pi = req['Pi']
-#                if (pi['ms'] == "E"): 
-#                    msg = msg + "Exact(name)" #% (pi['name'])
-#                else:
-#                    msg = msg + "Partial(name)" #% (pi['name'])
-#        except:
-#            pass 
-#
-#        try: 
-#            if "Pa" in req['demographics']: 
-#                pa = req['Pa']
-#                if (pi['ms'] == "E"): 
-#                    msg = msg + "Exact(address)" #% (pa['street'])
-#                else:
-#                    msg = msg + "Partial(addresses)" #% (pi['name'])
-#        except:
-#            pass 
-#        
-#        try: 
-#            if "FMR" in req['biometrics']: 
-#                msg = msg + "(Finger Prints)" 
-#        except:
-#            pass 
-#
-#        return "(%s,%s) " %(req['uid'], msg)
-#    
-#    def print_stats(self): 
-#        """
-#        The call in numbers 
-#        """
-#        log.debug("Auth server latency: %0.3f secs" % (self._stats['_auth_call_latency']))
-#        log.debug("Payload (Pid) Element:")
-#        log.debug(self._stats['_pid_content_sizes'])
-#        log.debug("Fully Signed XML:")
-#        log.debug(self._stats['_signed_content_sizes'])
-#        
-#    def execute(self, generate_xml=True): 
-#        """
-#        Execute the query specified in the configuration file. 
-#        """
-#        
-#        cfg = self._cfg 
-#
-#        # Initialization
-#        self.set_txn()
-#
-#        if generate_xml: 
-#            # => Elements of the final XML 
-#            self.set_skey() 
-#            self.set_data()
-#            self.set_hmac() 
-#        
-#        # => Extract and store the result 
-#        self._result['_request_unsigned_xml'] = self.tostring()  # dump it 
-#        
-#        log.debug("Unsigned XML:")
-#        log.debug(self._result['_request_unsigned_xml'])
-#    
-#        # =>  Now validate the xml generated 
-#        res = self._checker.validate(self._result['_request_unsigned_xml'], 
-#                               is_file=False, signed=False)
-#        if (res == False): 
-#            log.debug("Invalid XML generated")
-#        
-#        #=> In testing mode extract the XML to see if we can get back
-#        # the origin XML 
-#        if (cfg.common.mode == "testing"):
-#            res = self._checker.extract(xml=self._result['_request_unsigned_xml'],
-#                                  is_file=False,
-#                                  key=cfg.common.private_key)
-#        
-#        #=> Sign the request
-#        signed_xml = self.sign_request_xml()         
-#        self._result['_request_signed_xml'] = signed_xml
-#        
-#        #=> Log.Debug(stats about the generated XMLs 
-#        if cfg.request.analyze: 
-#            self.analyze_xmls() 
-#
-#        # Validate the signed file 
-#        valid = self._checker.validate(self._result['_request_signed_xml'], 
-#                               is_file=False, signed=True)
-#        if valid: 
-#            log.debug("Validated XML generated with result = %s " % res)
-#        
-#        # Testing will use the local cert instead of UIDAI's public
-#        # cert for encryption. Therefore will fail the tests at the
-#        # authentication server.
-#        
-#        if (cfg.common.mode != "testing"):
-#            log.debug("Connecting to the server...") 
-#            conn = AuthConnection(cfg, ac=cfg.common.ac)
-#            try: 
-#                [auth_call_latency, xml] = \
-#                    conn.authenticate(uid=cfg.request.uid, 
-#                                      data=self._result['_request_signed_xml']) 
-#                    
-#                self._stats['_auth_call_latency'] = auth_call_latency
-#            except: 
-#                traceback.print_exc(file=sys.stdout)
-#                raise Exception("Unable to complete authentication")
-#                
-#            log.debug("Response from Auth Server")
-#            log.debug(xml)
-#
-#            res = AuthResponse(cfg=cfg, 
-#                               uid=cfg.request.uid)
-#
-#            res.load_string(xml) 
-#            log.debug("Match result = %s " % res.get_ret())
-#            log.debug("Error = %s " % res.lookup_err())
-#            log.debug("Flags that are set: %s " % res.lookup_usage_bits())
-#            log.debug("UID Hash = %s " % res.get_uid_hash())
-#            log.debug("Request uid hash = %s " % self.get_uid_hash())            
-#            log.debug("Demo hash = %s " % res.get_demo_hash())
-#            log.debug("Request Demo hash = %s " % self.get_demo_hash())
-#
-#            
-#            print "[%0.3f secs] %s -> %s " % \
-#                (self._stats['_auth_call_latency'],
-#                 self.humanize_basic(self._cfg.request),
-#                 res.get_ret())
-#                                         
-#            self.print_stats() 
-#
-#        else:
-#            log.debug("Skipping contacting the server in the 'testing' mode")
-#            log.debug("Please change cfg >> common >> mode to enable server posting")
-#
-    #def set_txn(self, txn=""):
-    #    """
-    #    Update the transaction id. this is not used right now. Could be.
-    #    """
-    #    if (txn == ""):
-    #        self._txn = "pyAuth:" + self._ac + ":" + random.randint(2**28, 2**32-1).__str__() 
-

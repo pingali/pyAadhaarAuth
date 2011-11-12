@@ -45,6 +45,7 @@ import logging
 
 from crypt import AuthCrypt 
 from checksum import VerhoeffChecksum
+from command import AuthConfig 
 
 log=logging.getLogger('AuthValidate') 
 
@@ -62,7 +63,7 @@ class AuthValidate():
     Validate Auth XMLs 
     """
     def __init__(self, cfg=None, 
-                 request_xsd=None, testing=True): 
+                 request_xsd=None, testing=False): 
         self._cfg = cfg 
         self._testing = testing
         self._request_xsd = self.find_xsd(request_xsd)
@@ -208,12 +209,12 @@ class AuthValidate():
             
             enc_session_key = obj["Skey"].text
             session_key_len = len(enc_session_key)
-            session_key_len_default = 460 # How/Why?
+            session_key_len_default = 172 # How/Why?
             if (enc_session_key == None or 
                 session_key_len != session_key_len_default):
-                log.error("Encrypted/encoded session key length is wrong." + \
+                log.error("Encrypted/encoded session key length is potentially wrong." + \
                     "Please check the session key")
-                log.error("Default value for session key length = %d" % (session_key_len_default))
+                log.error("Default value for session key length = %d (found %d)" % (session_key_len_default, session_key_len))
                 result = False 
                 
         #################################################
@@ -490,62 +491,10 @@ class AuthValidate():
 
 if __name__ == '__main__':
     
-    assert(sys.argv)
-    if len(sys.argv) < 2:
-        print """
-Error: command line should specify a config file.
-
-Usage: validate.py <config-file>
-
-$ cat example.cfg
-# Configuration for the AuthXML validator
-common: {
-    request_xsd: 'xsd/uid-auth-request.xsd',
-...
-    private_key: 'fixtures/public_key.pem' # note: this is pvt key of public AUA
-}
-validate: {
-    command: 'xml-only',
-    xml: 'fixtures/authrequest-with-sig.xml',
-    signed: True, 
-}
-
-$ cat example2.cfg 
-# Configuration for the AuthXML validator
-common: {...
-}
-validate: {
-    command: 'extract',
-    xml: 'fixtures/authrequest-with-sig.xml',
-}
-
-command options: 
-
-      'xsd'
-      This assumes unsigned xml and validates the xml against the XSD.
-      In addition it does XML element-by-element content validation" 
-
-      'xml-only' 
-      The script only does XML element-by-element content validation
-      This does not do any XSD validation 
-      
-      'extract' 
-      Extract the session and payload (pid) data, and check for 
-      integrity 
-
-      'xml-with-signature' (not supported yet)
-      This is 'xml-only' plus signature validation 
-  
-      'extract'
-      Extract the contents using specified private key and show
-
-"""
-        exit(1)
-
-
-    cfg = Config(sys.argv[1]) 
+    cmd = AuthConfig("validate", "Validate xmls") 
+    cfg = cmd.update_config() 
     
-    checker=AuthValidate(cfg=cfg)
+    checker=AuthValidate(cfg=cfg, testing=(cfg.common.mode=='testing'))
 
     if cfg.validate.command == 'xsd':
         checker.set_xsd(cfg.common.response_xsd)

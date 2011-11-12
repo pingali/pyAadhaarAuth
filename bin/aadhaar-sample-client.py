@@ -24,10 +24,12 @@
 Simplest possible python client
 """
 import logging
-import sys 
+import sys, os, os.path 
 from config import Config 
 
 from AadhaarAuth.request import AuthRequest
+from AadhaarAuth.data import AuthData
+
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -39,20 +41,22 @@ __email__ = "pingali@gmail.com"
 __status__ = "Pre-release"
 
 if __name__ == '__main__':
+
     assert(sys.argv)
     if len(sys.argv) < 3:
         print "Usage: simple-client.py <config-file> <uid> <name>"
         sys.exit(1) 
 
-    logging.getLogger().setLevel(logging.WARN) 
-    logging.basicConfig()
-    
     # Load sample configuration 
     cfg = Config(sys.argv[1])
+    
+    logging.getLogger().setLevel(cfg.common.loglevel) 
+    logging.basicConfig()
     
     # Update the request information 
     cfg.request.uid = sys.argv[2]
     cfg.request.demographics = ["Pi"]
+    cfg.request.biometrics = []
     cfg.request['Pi'] = {
         'ms': "E",
         'name': sys.argv[3]
@@ -61,7 +65,13 @@ if __name__ == '__main__':
     # use this for biometrics query 
     #cfg.request.uid = sys.argv[2]
     #cfg.request = cfg.request_bio  
+    
+    # => Gather the data from the (simulated) client
+    data = AuthData(cfg=cfg) 
+    data.generate_xml() 
+    exported_data = data.export_request_data() 
 
     # Create the request object and execute 
     req = AuthRequest(cfg)
+    req.import_request_data(exported_data)
     req.execute()

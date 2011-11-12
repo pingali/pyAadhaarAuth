@@ -41,6 +41,8 @@ import json
 from pprint import pprint
 
 from AadhaarAuth.request import AuthRequest
+from AadhaarAuth.data import AuthData
+from AadhaarAuth.command import AuthConfig
 
 log = logging.getLogger("AuthBatchRequest")
 
@@ -226,53 +228,26 @@ class AuthBatchRequest():
                 'bio': person['bio']
                 }
 
+            # => Gather the data from the (simulated) client
+            data = AuthData(cfg=cfg) 
+            data.generate_xml() 
+            exported_data = data.export_request_data() 
+            
+            # Create the request object and execute 
             req = AuthRequest(cfg)
-            req.execute() 
+            req.import_request_data(exported_data)
+            req.execute()
             
 
 if __name__ == '__main__':
        
-    assert(sys.argv)
-    if len(sys.argv) < 2:
-        print """
-Error: command line should specify a config file.
+    logging.basicConfig() 
 
-Usage: batch.py <config-file>
+    cmd = AuthConfig('batch', "Batch processing") 
+    cfg = cmd.update_config() 
 
-$ cat example.cfg 
-common: { 
-    mode: 'testing',
-
-    # Specific to this AuA
-    license_key:  "MKg8njN6O+QRUmYF+TrbBUCqlrCnbN/Ns6hYbnnaOk99e5UGNhhE/xQ=",
-    private_key: 'fixtures/public_key.pem',  # note that public refers to
-    public_cert: 'fixtures/public_cert.pem', # public AuA 
-    pkcs_path: "fixtures/public.p12",
-    pkcs_password: "public",
-    uid_cert_path: "fixtures/uidai_auth_stage.cer",
-
-    # shared by all 
-    rsa_key_len: 32, 
-    sha256_length: 256,    
-    auth_url: 'http://auth.uidai.gov.in/1.5/'    
-    request_xsd: 'xsd/uid-auth-request.xsd',
-    response_xsd: 'xsd/uid-auth-response.xsd'   
-
-}
-
-batch: { 
-    
-    json: 'fixtures/test_data.json' 
-}
-
-"""
-        sys.exit(1) 
-    
-    # Load the config
-    cfg = Config(sys.argv[1])
-    
     #=> Setup logging 
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(cfg.common.loglevel )
     logging.basicConfig(
 	filename='execution.log',
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s') 

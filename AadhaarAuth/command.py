@@ -24,6 +24,7 @@ import os.path, sys
 from config import Config, ConfigMerger 
 from optparse import OptionParser, SUPPRESS_HELP
 import logging 
+
 log=logging.getLogger('AuthConfig')
 
 __author__ = "Venkata Pingali"
@@ -52,6 +53,7 @@ class AuthConfig():
         current_directory = os.path.dirname(__file__)
         cfg = file(current_directory + '/fixtures/auth.cfg').read() 
         print cfg
+        sys.exit(0) 
         
     def update_config(self): 
         """
@@ -75,6 +77,7 @@ class AuthConfig():
                           help="Sample configuration file")
 
         defaults = {
+            'data': 'request_demo',
             'request': 'request_demo',
             'response': 'response_validate',
             'crypt': 'crypt_test',
