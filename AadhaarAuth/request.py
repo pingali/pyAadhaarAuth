@@ -52,7 +52,7 @@ import traceback
 from datetime import datetime
 from M2Crypto import Rand 
 import re
-import pickle 
+import json
 
 from crypt import AuthCrypt 
 from signature import AuthSignature
@@ -179,11 +179,11 @@ class AuthRequest():
     # Export/import API 
     ######################################################
 
-    def import_request_data(self,pickled_data): 
+    def import_request_data(self,jsoned_data): 
         """
         Import data from the client
         """
-        data = pickle.loads(pickled_data) 
+        data = json.loads(jsoned_data) 
         
         log.debug("Received data from client: %s" % data)
 
@@ -202,7 +202,7 @@ class AuthRequest():
             'err': self._result['_err'],
             'err_message': self._result['_err_message'],
             }
-        return pickle.dumps(data) 
+        return json.dumps(data) 
 
     ######################################################
     # Analysis and presentation 
@@ -476,16 +476,16 @@ if __name__ == '__main__':
         # => Generate the XML file 
         data = AuthData(cfg=cfg) 
         data.generate_xml() 
-        exported_pickled_data = data.export_request_data() 
+        exported_jsoned_data = data.export_request_data() 
 
         # Sign and send it out...
         req = AuthRequest(cfg=cfg)
-        req.import_request_data(exported_pickled_data)
+        req.import_request_data(exported_jsoned_data)
         req.execute() 
         
         if cfg.common.mode != 'testing': 
-            exported_pickled_data = req.export_response_data() 
-            data.import_response_data(exported_pickled_data) 
+            exported_jsoned_data = req.export_response_data() 
+            data.import_response_data(exported_jsoned_data) 
 
     elif (cfg.request.command == "validate"): 
 

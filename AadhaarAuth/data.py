@@ -52,7 +52,7 @@ import traceback
 from datetime import datetime
 from M2Crypto import Rand 
 import re
-import pickle 
+import json
 
 from crypt import AuthCrypt 
 from signature import AuthSignature
@@ -565,13 +565,13 @@ class AuthData():
             'demo_hash': self._demo_hash, 
             'unsigned_xml': self._result['_request_client_xml'] 
             }
-        return pickle.dumps(data) 
+        return json.dumps(data) 
 
-    def import_response_data(self,pickled_data): 
+    def import_response_data(self,jsoned_data): 
         """
         Import data from the server
         """
-        data = pickle.loads(pickled_data) 
+        data = json.loads(jsoned_data) 
         
         log.debug("Received data from AUA: %s" % data)
 
@@ -687,7 +687,7 @@ if __name__ == '__main__':
         data = AuthData(cfg=cfg)
         data.generate_xml()
         log.debug("Exported data : " + \
-                      pickle.loads(data.export_request_data()).__str__())
+                      json.loads(data.export_request_data()).__str__())
 
     elif (cfg.request.command == "validate"): 
 
