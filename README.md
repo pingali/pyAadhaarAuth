@@ -137,6 +137,13 @@ package in /usr/local/bin (on Linux).
 >       [1.026 secs] (999999990042,Exact(name)(Finger Prints))  -> y 
 >       [0.973 secs] (999999990057,Exact(name)(Finger Prints))  -> y 
 
+Run the ASA server in the background and issue a request from the ASA
+client.
+
+>       $ aadhaar-asa-server.py fixtures/auth.cfg  &       
+>       $ aadhaar-asa-client.py  fixtures/auth.cfg 999999990019 "Shivshankar Choudhury"     
+>       [1.134 secs] (999999990019,Exact(name)(Finger Prints))  -> y 
+>       {"err_message": "No error", "err": -1, "ret": "y"}
 
 
 Debugging
