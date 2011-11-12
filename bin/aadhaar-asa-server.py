@@ -35,6 +35,11 @@ __email__ = "pingali@gmail.com"
 __status__ = "Pre-release"
 
 import cherrypy
+import json 
+import os, sys
+import logging
+from config import Config 
+from AadhaarAuth.request import AuthRequest
 
 __all__ = ['ASAServer']
 
@@ -44,11 +49,14 @@ class ASAServer:
     including the addition to wrapping the incoming XML and signing
     it.
     """
+    def __init__(self, cfg): 
+        self._cfg = cfg 
+
     @cherrypy.expose 
     def authenticate(self):
         
         #=> Validate incoming request 
-        valid_content_types=['text/xml', 'application/xml']
+        valid_content_types=['text/json', 'application/json']
         ct = cherrypy.request.headers.get('Content-Type', None)
         if ct not in valid_content_types:
            raise cherrypy.HTTPError(415, 'Unsupported Media Type')
@@ -56,13 +64,21 @@ class ASAServer:
         # CherryPy will set the request.body with a file object
         # where to read the content from
         if hasattr(cherrypy.request.body, 'read'):
-            content = cherrypy.request.body.read()
-            print content 
-            cherrypy.response.headers['Content-Type']='text/xml'
+            jsoned_request_data= cherrypy.request.body.read()
+            print json.loads(jsoned_request_data)
+            
+            req = AuthRequest(cfg=self._cfg)
+            req.import_request_data(jsoned_request_data)
+            req.execute() 
+
+            jsoned_response_data = req.export_response_data() 
+            print json.loads(jsoned_response_data) 
+
+            cherrypy.response.headers['Content-Type']='text/json'
             
             # XXX This is simply echoing the input. This should
             # eventually call the UIDAI server. 
-            return content 
+            return jsoned_response_data
         else:
             raise cherrypy.HTTPError(400, 'Bad Request')
 
@@ -76,4 +92,15 @@ conf = {
     #}
     }
 
-cherrypy.quickstart(ASAServer(), '/', conf)
+assert(sys.argv)
+if len(sys.argv) < 2:
+    print "Usage: aadhaar-asa-server.py <config-file>"
+    sys.exit(1) 
+
+# Load sample configuration 
+cfg = Config(sys.argv[1])
+
+logging.getLogger().setLevel(cfg.common.loglevel) 
+logging.basicConfig()
+
+cherrypy.quickstart(ASAServer(cfg), '/', conf)

@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     assert(sys.argv)
     if len(sys.argv) < 3:
-        print "Usage: simple-client.py <config-file> <uid> <name>"
+        print "Usage: aadhaar-sample-client.py <config-file> <uid> <name>"
         sys.exit(1) 
 
     # Load sample configuration 
