@@ -72,7 +72,7 @@ class AuthConfig():
                           action="store", type="string", dest="config_file",
                           default="fixtures/auth.cfg", 
                           help="Specify the input configuration file. " + 
-                          "(default: auth.cfg)",
+                          "(default: fixtures/auth.cfg)",
                           metavar="FILE")
         parser.add_option("--show-example-config",
                           action="callback", callback=self.show_example_config, 
@@ -163,8 +163,10 @@ available choices in config file. (default: %s)""" % (k, v, v)
                 cmd = "cfg.%s" % k 
                 log.debug("Updated conf var %s to %s \n" % (cmd, eval(cmd)))
                 
-        # Special case of logging
+        # Turn some strings in objects
         cfg.common.loglevel = eval("logging.%s" % cfg.common.loglevel)
+        if (cfg.validate.signed):
+            cfg.validate.signed = eval("%s" % cfg.validate.signed)
 
         log.debug("Final configuration:\n%s" % cfg)
         return cfg 

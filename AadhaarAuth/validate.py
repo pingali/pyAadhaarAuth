@@ -66,7 +66,10 @@ class AuthValidate():
                  request_xsd=None, testing=False): 
         self._cfg = cfg 
         self._testing = testing
-        self._request_xsd = self.find_xsd(request_xsd)
+        if request_xsd != None: 
+            self._request_xsd = self.find_xsd(request_xsd)
+        else: 
+            self._request_xsd = cfg.common.request_xsd 
         return 
     
     def find_xsd(self, xsd): 
@@ -262,6 +265,8 @@ class AuthValidate():
         if not signed:
             return result
         
+        print "Came here" 
+
         # Check the signature now..
         try:
             signature = obj["{http://www.w3.org/2000/09/xmldsig#}Signature"]
@@ -392,7 +397,10 @@ class AuthValidate():
                 obj = self.xsd_check_memory(xml)
         else: 
             if is_file:
-                xml_text = file(xml).read()
+                if (os.path.isfile(xml)):
+                    xml_text = file(xml).read()
+                else: 
+                    raise Exception("Invalid xml file path") 
             else:
                 xml_text = xml 
             obj = objectify.fromstring(xml_text)
@@ -465,14 +473,14 @@ class AuthValidate():
         
         #=> Decrypt the data
         decrypted_pid = crypt.aes_decrypt(skey, encrypted_pid)
-        log.debug("Extracted data: \"%s\"" % base64.b64encode(decrypted_pid))
+        log.debug("Extracted PID data : \"%s\"" % decrypted_pid)
         
         #=> Decrypt the hmac 
         encoded_hmac = obj.Hmac.text 
         decoded_hmac = base64.b64decode(encoded_hmac) 
         payload_pid_hash = crypt.aes_decrypt(skey, decoded_hmac) 
-        log.debug("Processing hmac %s ", encoded_hmac)
-        log.debug("Sha256 hash contained in XML (b64 encoded) = %s " % \
+        log.debug("Encoded hmac = %s ", encoded_hmac)
+        log.debug("Sha256 hash contained in hmac (b64 encoded) = %s " % \
             base64.b64encode(payload_pid_hash))
 
         #=> Compute the hmac now for the pid element
@@ -493,7 +501,15 @@ if __name__ == '__main__':
     
     cmd = AuthConfig("validate", "Validate xmls") 
     cfg = cmd.update_config() 
-    
+
+    #=> Setup logging 
+    logging.basicConfig(
+	#filename=cfg.common.logfile, 
+	format=cfg.common.logformat)
+
+    logging.getLogger().setLevel(cfg.common.loglevel)
+    log.info("Starting my AuthValidate")
+
     checker=AuthValidate(cfg=cfg, testing=(cfg.common.mode=='testing'))
 
     if cfg.validate.command == 'xsd':
