@@ -181,6 +181,12 @@ class AuthRequest():
     def set_demo_hash(self, h):
         self._demo_hash = h 
 
+    def is_successful(self): 
+        if self._result['_ret'] == 'y': 
+           return True
+        else: 
+            return False 
+
     ######################################################
     # Export/import API 
     ######################################################
@@ -320,7 +326,7 @@ class AuthRequest():
         sig.init_xmlsec() 
         res = sig.sign_file(tmpfp_unsigned, 
                             tmpfp_signed, 
-                            cfg.common.pkcs_path, 
+                            cfg.common.pkcs_path,
                             cfg.common.pkcs_password)
         sig.shutdown_xmlsec() 
         if (res == 1): 
@@ -481,6 +487,12 @@ if __name__ == '__main__':
         req = AuthRequest(cfg=cfg)
         req.import_request_data(exported_jsoned_data)
         req.execute() 
+        
+        if req.is_successful():
+            log.debug("Authentication successful!")
+ 	else: 
+            log.debug("Authentication unsuccessful!")
+	    
         
         if cfg.common.mode != 'testing': 
             exported_jsoned_data = req.export_response_data() 
