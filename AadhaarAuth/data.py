@@ -600,7 +600,7 @@ class AuthData():
                              sa="", #self._sa,
                              txn="", #self._txn,
                              uid = self._uid,
-                             lk="", #self._lk
+                             lk='', #self._lk
                              )
         
         # XXX This is a placeholder. Will be populated down 

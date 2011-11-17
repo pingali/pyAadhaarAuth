@@ -41,7 +41,8 @@ class AuthConfig():
     """
     Parse the command line
     """
-    def __init__(self,name, summary):
+    def __init__(self,name="unknown", summary="Unknown commands",
+                 cfg=None):
         """
         Initialize command object with information about the target
         configuration (e.g., 'request') and appropriate help text
@@ -49,6 +50,7 @@ class AuthConfig():
         """
         self._name = name
         self._summary = summary 
+        self._cfg = cfg
         
     def get_path(cfg, path): 
         try: 
@@ -92,8 +94,8 @@ class AuthConfig():
                     log.warn("File %s does not exist" % new_path) 
 
                 exec("cfg.%s = '%s'" % (p, new_path))
-                log.debug("Updated path from %s to %s " % \
-                              (old_path, eval("cfg.%s" % p)))
+                #log.debug("Updated path from %s to %s " % \
+                #              (old_path, eval("cfg.%s" % p)))
             except: 
                 traceback.print_exc() 
                 log.error("Could not update the path for cfg.%s" % p)
@@ -107,8 +109,8 @@ class AuthConfig():
                      this_dir)
             exec("cfg.common.response_xsd='%s/xsd/uid-auth-response.xsd'" % \
                      this_dir)
-            log.debug("request_xsd path is %s " % cfg.common.request_xsd)
-            log.debug("response_xsd path is %s " % cfg.common.response_xsd)
+            #log.debug("request_xsd path is %s " % cfg.common.request_xsd)
+            #log.debug("response_xsd path is %s " % cfg.common.response_xsd)
 
         return
 
@@ -124,12 +126,17 @@ class AuthConfig():
         
         parser = OptionParser(usage=usage)
         
+        if self._cfg == None: 
+            default_config_file = "fixtures/auth.cfg"
+        else: 
+            default_config_file = self._cfg
+
         #=> Set the help text and other command line options. 
         parser.add_option("-c", "--config",
                           action="store", type="string", dest="config_file",
-                          default="fixtures/auth.cfg", 
+                          default=default_config_file,
                           help="Specify the input configuration file. " + 
-                          "(default: fixtures/auth.cfg)",
+                          "(default: %s)" % default_config_file,
                           metavar="FILE")
         parser.add_option("--show-example-config",
                           action="callback", callback=self.show_example_config, 
@@ -142,7 +149,8 @@ class AuthConfig():
             'crypt': 'crypt_test',
             'signature': 'signature_default',
             'validate': 'validate_xml_only',
-            'batch': 'batch_default'
+            'batch': 'batch_default',
+            'unknown': 'unknown_default'
             }
         
         # => For a given command (e.g., response.py), enable the help
@@ -171,7 +179,7 @@ available choices in config file. (default: %s)""" % (k, v, v)
 
         # Read the configuration file
         cfg = Config(options.config_file)
-
+        
         # => For the target configuration element (e.g., request or
         # response) check whether the target configuration is valid
         cmd = "cfg[options.%s]" %  self._name
@@ -221,7 +229,6 @@ available choices in config file. (default: %s)""" % (k, v, v)
                 # here we are updating only the config element
                 # corresponding to the command.
                 cfg[self._name][k] = v 
-                print cfg[self._name] 
             else: 
                 cmd = "cfg.%s=\'%s\'" % (k, v)
                 exec(cmd) 
@@ -244,5 +251,6 @@ if __name__ == "__main__":
     logging.basicConfig()#filename="execution.log") 
     c = AuthConfig(name, summary)
     cfg = c.update_config()
+
 
 
