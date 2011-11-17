@@ -24,6 +24,7 @@ import os.path, sys
 from config import Config, ConfigMerger 
 from optparse import OptionParser, SUPPRESS_HELP
 import logging 
+import traceback 
 
 log=logging.getLogger('AuthConfig')
 
@@ -48,13 +49,57 @@ class AuthConfig():
         """
         self._name = name
         self._summary = summary 
+        
+    def get_path(cfg, path): 
+        try: 
+            if path.startswith("/"): 
+                # dont do anything
+                return path
+            basedir = cfg.common.dir 
+            return basedir + "/" + path 
+        except: 
+            return None 
 
     def show_example_config(self, option, opt_str, value, parser):
         current_directory = os.path.dirname(__file__)
         cfg = file(current_directory + '/fixtures/auth.cfg').read() 
         print cfg
         sys.exit(0) 
-        
+
+    def update_paths(self, cfg): 
+        """
+        Take relative paths of various files and make it absolute
+        """
+        # first introduce a dir element
+        paths = ['common.private_key', 'common.public_cert', 
+                 'common.pkcs_path', 'common.uid_cert_path',
+                 'common.request_xsd', 'common.response_xsd',
+                 'request_demo.xml', 'request_demo.signedxml',
+                 'request_bio.xml', 'request_bio.signedxml',
+                 'response_validate.xml',
+                 'sign_default.xml', 'sign_default.signedxml',
+                 'sign_verify.signedxml', 'validate_xml_only.xml',
+                 'batch_default.json'] 
+        basedir = cfg.common.dir 
+        for p in paths: 
+            try: 
+                old_path = eval("cfg.%s" % p) 
+                if not old_path.startswith("/"): 
+                    new_path = basedir + "/" + old_path
+                else:
+                    new_path = old_path
+                if not os.path.isfile(new_path): 
+                    log.warn("File %s does not exist" % new_path) 
+
+                exec("cfg.%s = '%s'" % (p, new_path))
+                log.debug("Updated path from %s to %s " % \
+                              (old_path, eval("cfg.%s" % p)))
+            except: 
+                traceback.print_exc() 
+                log.error("Could not update the path for cfg.%s" % p)
+                pass
+        return
+
     def update_config(self): 
         """
         Process each element of the command line and generate a target
@@ -129,6 +174,14 @@ available choices in config file. (default: %s)""" % (k, v, v)
         cmd = "cfg.%s=cfg[options.%s]" %  (self._name, self._name) 
         exec(cmd) 
         
+        # => Update the paths 
+        if options.config_file.startswith('/'):
+            config_path = options.config_file 
+        else: 
+            config_path = os.getcwd() + "/" + options.config_file 
+        cfg['common']['dir'] = os.path.dirname(config_path)
+        self.update_paths(cfg) 
+
         # python <command> --conf=auth.cfg a=x c.d=y Over ride
         # individual parameters of the config file.  Note that you can
         # override pretty much any config element. If there is a '.'
@@ -175,8 +228,9 @@ if __name__ == "__main__":
     name = "request" 
     summary = "Issues authentication requests to the server" 
     
-    logging.getLogger().setLevel(logging.WARN) 
-    logging.basicConfig(filename="execution.log") 
+    logging.getLogger().setLevel(logging.DEBUG) 
+    logging.basicConfig()#filename="execution.log") 
     c = AuthConfig(name, summary)
     cfg = c.update_config()
+
 
