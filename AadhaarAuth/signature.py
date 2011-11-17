@@ -71,6 +71,8 @@ from config import Config
 from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
 import logging 
 
+from command import AuthConfig
+
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS (for derived parts only)" 
 __credits__ = ["UIDAI", "MindTree", "GeoDesic", "Viral Shah"] 
@@ -261,8 +263,6 @@ class AuthSignature():
         libxml2mod.xmlDocFormatDump(fp, doc._o, 0)
         fp.close()
         
-        log.debug("Please check output file " + signed_xml_file)
-        
         # Success
         return self.cleanup(doc, dsig_ctx, 1)
 
@@ -339,58 +339,39 @@ class AuthSignature():
             return 0
 
 if __name__ == "__main__":
-    assert(sys.argv)
-    if len(sys.argv) < 2:
-        print """
-Error: command line should specify a config file.
 
-Usage: signature.py <config-file>
+    cmd = AuthConfig("signature", "Sign and verify xmls")
+    cfg = cmd.update_config() 
 
-$ cat example.cfg
-# Sign a given XML using the pkcs 
-common: { 
-    pkcs_path: 'fixtures/public.p12',
-    pkcs_password: 'public',
-    private_key: 'fixtures/public_key.pem',
-....
-}
-sign: {
-    command: 'sign'
-    xml: 'fixtures/authrequest.xml',
-    signedxml: 'fixtures/authrequest.xml.sig',
-}
-$ cat example2.cfg 
-# Verify the signature in a signed xml
-sign: {
-    command: 'verify'
-    signedxml: 'fixtures/authrequest.xml.sig',
-}
-"""
+    #=> Setup logging 
+    logging.basicConfig(
+	#filename=cfg.common.logfile, 
+	format=cfg.common.logformat)
 
-    #=> Read the configuration. 
-    # XXX Document the format of the configuration file
-    cfg = Config(sys.argv[1])
+    logging.getLogger().setLevel(cfg.common.loglevel)
+    log.info("Starting my AuthSignature client")
     
-    if cfg.sign.command == "sign": 
+    if cfg.signature.command == "sign": 
 
         # Sign the XML file 
         # XXX Should probably move the init_xmlsec into sign_file itself
         sign = AuthSignature() 
         sign.init_xmlsec() 
-        res = sign.sign_file(cfg.sign.xml,
-                             cfg.sign.signedxml,
+        res = sign.sign_file(cfg.signature.xml,
+                             cfg.signature.signedxml,
                              cfg.common.pkcs_path,
                              cfg.common.pkcs_password)
         sign.shutdown_xmlsec() 
     
-        print "Please check the output in %s " % signed_xml_file 
-    elif cfg.sign.command == "verify": 
+        log.debug("Please check the output in %s " % cfg.signature.signedxml)
+
+    elif cfg.signature.command == "verify": 
 
         # Load this or another file for verification using the 
         # private key of public.12 
         verify = AuthSignature()
         verify.init_xmlsec() 
-        res = verify.verify_file(cfg.sign.signedxml, 
+        res = verify.verify_file(cfg.signature.signedxml, 
                                  cfg.common.private_key)
         verify.shutdown_xmlsec() 
     else:

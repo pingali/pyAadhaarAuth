@@ -73,12 +73,12 @@ class AuthConfig():
         # first introduce a dir element
         paths = ['common.private_key', 'common.public_cert', 
                  'common.pkcs_path', 'common.uid_cert_path',
-                 'common.request_xsd', 'common.response_xsd',
+                 'common.logfile',
                  'request_demo.xml', 'request_demo.signedxml',
                  'request_bio.xml', 'request_bio.signedxml',
                  'response_validate.xml',
-                 'sign_default.xml', 'sign_default.signedxml',
-                 'sign_verify.signedxml', 'validate_xml_only.xml',
+                 'signature_default.xml', 'signature_default.signedxml',
+                 'signature_verify.signedxml', 'validate_xml_only.xml',
                  'batch_default.json'] 
         basedir = cfg.common.dir 
         for p in paths: 
@@ -98,6 +98,18 @@ class AuthConfig():
                 traceback.print_exc() 
                 log.error("Could not update the path for cfg.%s" % p)
                 pass
+            
+            # Treat the xsd paths specially. They are relative to the 
+            # package
+            xsd_paths = ['common.request_xsd', 'common.response_xsd']
+            this_dir = os.path.dirname(os.path.realpath(__file__))
+            exec("cfg.common.request_xsd='%s/xsd/uid-auth-request.xsd'" % \
+                     this_dir)
+            exec("cfg.common.response_xsd='%s/xsd/uid-auth-response.xsd'" % \
+                     this_dir)
+            log.debug("request_xsd path is %s " % cfg.common.request_xsd)
+            log.debug("response_xsd path is %s " % cfg.common.response_xsd)
+
         return
 
     def update_config(self): 
@@ -128,7 +140,7 @@ class AuthConfig():
             'request': 'request_demo',
             'response': 'response_validate',
             'crypt': 'crypt_test',
-            'sign': 'sign_default',
+            'signature': 'signature_default',
             'validate': 'validate_xml_only',
             'batch': 'batch_default'
             }
@@ -178,7 +190,7 @@ available choices in config file. (default: %s)""" % (k, v, v)
         if options.config_file.startswith('/'):
             config_path = options.config_file 
         else: 
-            config_path = os.getcwd() + "/" + options.config_file 
+            config_path = os.path.realpath(options.config_file)
         cfg['common']['dir'] = os.path.dirname(config_path)
         self.update_paths(cfg) 
 

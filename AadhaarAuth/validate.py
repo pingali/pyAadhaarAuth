@@ -265,8 +265,6 @@ class AuthValidate():
         if not signed:
             return result
         
-        print "Came here" 
-
         # Check the signature now..
         try:
             signature = obj["{http://www.w3.org/2000/09/xmldsig#}Signature"]

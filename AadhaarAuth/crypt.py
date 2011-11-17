@@ -24,6 +24,7 @@ from M2Crypto import RSA, BIO, Rand, m2, EVP, X509
 import base64 
 import random 
 from config import Config 
+from command import AuthConfig 
 
 import logging
 log=logging.getLogger("AuthCrypt") 
@@ -95,7 +96,7 @@ class AuthCrypt():
         enc_data = self.x509_encrypt(data)
         if show:
             log.debug("Encrypted base64 encoded data:")
-            log.debug(enc_data)
+            log.debug(base64.b64encode(enc_data))
         dec_data = self.x509_decrypt(enc_data)
         if show:
             log.debug("Decrypted data")
@@ -187,7 +188,7 @@ class AuthCrypt():
 
         log.debug("AES Encryption testing")
         log.debug("Original text %s " % msg)
-        log.debug("Encrypted encoded text %s " % enc_msg)
+        log.debug("Encrypted encoded text %s " % base64.b64encode(enc_msg))
 
         dec_msg=auth.aes_decrypt(key=key,msg=enc_msg) 
         log.debug("decrypted text %s " % dec_msg)
@@ -197,27 +198,17 @@ class AuthCrypt():
             log.error("AES encryption FAILED!")
 
 if __name__ == '__main__':
-    assert(sys.argv)
-    if len(sys.argv) < 2:
-        print """
-Error: command line should specify a config file.
 
-Usage: crypt.py <config-file> 
+    cmd = AuthConfig("crypt", "Encryption and decryption capability")
+    cfg = cmd.update_config() 
 
-$ cat example.cfg
-common: { 
-    private_key: 'fixtures/public_key.pem', # note that public refers to
-    public_cert: 'fixtures/public_cert.pem', # public AuA 
-}
-crypt: {
-    command: "test",
-    msg: "qwrtttrtyutyyyyy",
-    key: "sdkfsdfldfh123213213" 
-}
-"""    
-        sys.exit(1) 
+    #=> Setup logging 
+    logging.basicConfig(
+	#filename=cfg.common.logfile, 
+	format=cfg.common.logformat)
 
-    cfg = Config(sys.argv[1]) 
+    logging.getLogger().setLevel(cfg.common.loglevel)
+    log.info("Starting my AuthCrypt client")
     
     if (cfg.crypt.command == "test"):
         auth = AuthCrypt(cfg=cfg,
