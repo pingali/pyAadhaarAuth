@@ -68,7 +68,7 @@ if __name__ == '__main__':
     
     # => Gather the data from the (simulated) client
     data = AuthData(cfg=cfg) 
-    data.generate_xml() 
+    data.generate_client_xml() 
     exported_data = data.export_request_data() 
 
     # Create the request object and execute 

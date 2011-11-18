@@ -230,7 +230,7 @@ class AuthBatchRequest():
 
             # => Gather the data from the (simulated) client
             data = AuthData(cfg=cfg) 
-            data.generate_xml() 
+            data.generate_client_xml() 
             exported_data = data.export_request_data() 
             
             # Create the request object and execute 
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     cfg = cmd.update_config() 
 
     #=> Setup logging 
-    logging.getLogger().setLevel(cfg.common.loglevel )
+    logging.getLogger().setLevel(logging.WARN) #cfg.common.loglevel )
     logging.basicConfig(
 	filename='execution.log',
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s') 
