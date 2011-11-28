@@ -38,45 +38,46 @@ Features
 Example
 -------
 
-Sample client 
+The following client takes the default configuration file and performs
+the authentication request. This client is installed as
+aadhaar-sample-client for testing and development. See instructions
+below.
 
->         
->         
->      #!/usr/bin/env python     
->      """     
->      Simplest possible python client      
->      """      
->      import logging    
->      import sys    
->      from config import Config    
->      
->      from request import AuthRequest
->      
->      if __name__ == '__main__':   
->          assert(sys.argv)   
->          if len(sys.argv) < 3:   
->              print "Usage: simple-client.py <config-file> <uid> <name>"   
->              print "Please use default config file in fixtures/auth.cfg"    
->              sys.exit(1)    
->      
->          logging.basicConfig()   
->          
->          # Load sample configuration    
->          cfg = Config(sys.argv[1])   
->             
->          # Update the request information    
->          cfg.request.uid = sys.argv[2]   
->          cfg.request.demographics = ["Pi"]
->          cfg.request['Pi'] = {
->                   'ms': "E",
->                   'name': sys.argv[3]
->           }
->      
->          # Create the request object and execute   
->          req = AuthRequest(cfg)   
->          req.execute()   
->     
-
+>        
+>        """
+>        Simplest possible python client
+>        """
+>        import logging
+>        import sys, os, os.path 
+>        from config import Config 
+>        log = logging.getLogger("SampleClient")
+>        
+>        from AadhaarAuth.request import AuthRequest
+>        from AadhaarAuth.data import AuthData
+>        from AadhaarAuth.command import AuthConfig
+>        
+>        if __name__ == '__main__':
+>            
+>            cmd = AuthConfig() 
+>            cfg = cmd.update_config() 
+>        
+>            logging.getLogger().setLevel(cfg.common.loglevel) 
+>            logging.basicConfig()
+>            
+>            # => Perform only demographic authentication
+>            cfg.request.demographics = ["Pi"]
+>            cfg.request.biometrics = []
+>            
+>            # => Gather the data from the (simulated) client
+>            data = AuthData(cfg=cfg) 
+>            data.generate_client_xml() 
+>            exported_data = data.export_request_data() 
+>        
+>            # Create the request object and execute 
+>            req = AuthRequest(cfg)
+>            req.import_request_data(exported_data)
+>            req.execute()
+>            
 
 Installation
 ------------
@@ -113,10 +114,18 @@ request.
 >        $ cd $WORK 
 >        $ aadhaar-generate-client.py .      
 
-This will install a sample client, certificates and configuration files. Now run the client. 
+This will install a sample client, certificates and configuration
+files. Now run the client with the config file. The sample client by
+default does only demographic authentication.
 
 >        
->        $ ./aadhaar-sample-client.py  fixtures/auth.cfg 999999990019 "Shivshankar Choudhury"     
+>        $ ./aadhaar-sample-client.py  fixtures/auth.cfg 
+>        [1.031 secs] (999999990019,Exact(name))  -> y 
+
+You can also override the default parameters as follows:
+
+>        
+>        $ ./aadhaar-sample-client.py  fixtures/auth.cfg request.uid=999999990019 request.Pi.name="Shivshankar Choudhury"     
 >        [1.031 secs] (999999990019,Exact(name))  -> y 
 
 
@@ -282,3 +291,4 @@ Thanks
   * GeoDesic   - for c-code    
   * Viral Shah - Feedback and testing    
   * Python community - For a great development platform 
+

@@ -27,9 +27,11 @@ import logging
 import sys, os, os.path 
 from config import Config 
 
+log = logging.getLogger("SampleClient")
+
 from AadhaarAuth.request import AuthRequest
 from AadhaarAuth.data import AuthData
-
+from AadhaarAuth.command import AuthConfig
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -41,26 +43,21 @@ __email__ = "pingali@gmail.com"
 __status__ = "Pre-release"
 
 if __name__ == '__main__':
-
-    assert(sys.argv)
-    if len(sys.argv) < 3:
-        print "Usage: aadhaar-sample-client.py <config-file> <uid> <name>"
-        sys.exit(1) 
-
-    # Load sample configuration 
-    cfg = Config(sys.argv[1])
     
+    cmd = AuthConfig() 
+    cfg = cmd.update_config() 
+
     logging.getLogger().setLevel(cfg.common.loglevel) 
     logging.basicConfig()
     
     # Update the request information 
-    cfg.request.uid = sys.argv[2]
+    #cfg.request.uid = sys.argv[2]
     cfg.request.demographics = ["Pi"]
     cfg.request.biometrics = []
-    cfg.request['Pi'] = {
-        'ms': "E",
-        'name': sys.argv[3]
-     }
+    #cfg.request['Pi'] = {
+    #    'ms': "E",
+    #    'name': sys.argv[3]
+    # }
 
     # use this for biometrics query 
     #cfg.request.uid = sys.argv[2]

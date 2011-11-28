@@ -75,9 +75,9 @@ class AuthConfig():
         # first introduce a dir element
         paths = ['common.private_key', 'common.public_cert', 
                  'common.pkcs_path', 'common.uid_cert_path',
-                 'common.logfile',
-                 'request_demo.xml', 'request_demo.signedxml',
-                 'request_bio.xml', 'request_bio.signedxml',
+                 #'common.logfile',
+                 #'request_demo.xml', 'request_demo.signedxml',
+                 #'request_bio.xml', 'request_bio.signedxml',
                  'response_validate.xml',
                  'signature_default.xml', 'signature_default.signedxml',
                  'signature_verify.signedxml', 'validate_xml_only.xml',
