@@ -19,7 +19,7 @@ Aadhaar-based applications.
 Latest Release
 --------------
 
-  * Alpha Release (0.1) Nov 15, 2011 - Planned 
+  * Alpha Release (0.2) Nov 28, 2011 
   * Supported platform: Linux (Ubuntu) 
 
 Features
