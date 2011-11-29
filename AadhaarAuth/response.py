@@ -315,8 +315,9 @@ class AuthResponse():
     def load_string(self, xml):
 
         try: 
-            obj = objectify.fromstring(xml)
-        except:
+            obj = objectify.fromstring(xml.encode('utf-8'))
+        except Exception as e:
+            log.error("Could not parse xml: %s " % e.args)
             raise Exception("Could not parse the XML response") 
         
         #print type(obj)        

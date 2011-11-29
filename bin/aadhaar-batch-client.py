@@ -22,6 +22,10 @@
 
 import os, os.path, sys
 
+
+def findpath(path):
+    return os.path.abspath(os.path.join(os.path.dirname(__file__),path))
+
 # For dumper library 
 import AadhaarAuth
 auth_path = os.path.dirname(os.path.realpath(AadhaarAuth.__file__))
@@ -43,6 +47,7 @@ from pprint import pprint
 from AadhaarAuth.request import AuthRequest
 from AadhaarAuth.data import AuthData
 from AadhaarAuth.command import AuthConfig
+from AadhaarAuth.response import AuthResponse 
 
 log = logging.getLogger("AuthBatchRequest")
 
@@ -62,98 +67,11 @@ Issue batch requests to the server
 class AuthBatchRequest():
     """
     Issue batch requests to the server 
-    """
-    
-    data_xmlns = "http://www.uidai.gov.in/authentication/uid-auth-request-data/1.0"
-    
+    """    
+
     def __init__(self, cfg): 
         self._cfg = cfg 
         self._json_file = cfg.batch.json
-        self._data = None 
-        self._xml_hash = {} 
-        self._processing_functions = {} 
-
-    def name_exact(self, root, person): 
-
-        uses = root.find('Uses')
-        uses.set("pi","y")
-        pid = root.find('Pid')
-        demo = etree.SubElement(pid, "Demo")
-        pi=etree.SubElement(demo, "Pi", ms="E", name=person['name'])
-
-    def name_partial(self, root, person): 
-
-        uses = root.find('Uses')
-        uses.set("pi","y")
-        pid = root.find('Pid')
-        demo = etree.SubElement(pid, "Demo")
-        pi=etree.SubElement(demo, "Pi", ms="P", mv="70", 
-                            name=person['name'])
-
-    def address_exact(self, root, person):
-
-        uses = root.find('Uses')
-        uses.set("pa","y")
-        pid = root.find('Pid')
-        demo = etree.SubElement(pid, "Demo")
-        pi=etree.SubElement(demo, "Pa", 
-                            ms="E", 
-                            street=person['street'],
-                            vtc=person['vtc'],
-                            subdist=person['subdist'],
-                            district=person['district'],
-                            state=person['state'],
-                            pincode=person['pincode'])
-    
-    def email_exact(self, root, person): 
-
-        uses = root.find('Uses')
-        uses.set("pi","y")
-        pid = root.find('Pid')
-        demo = etree.SubElement(pid, "Demo")
-        pi=etree.SubElement(demo, "Pi", ms="E",
-                            email=person['email'])
-
-    def phone_exact(self, root, person): 
-
-        uses = root.find('Uses')
-        uses.set("pi","y")
-        pid = root.find('Pid')
-        demo = etree.SubElement(pid, "Demo")
-        pi=etree.SubElement(demo, "Pi", ms="E",
-                            email=person['phone'])
-
-    #def pin_otp(self, root, person):  
-    #
-    #    uses = root.find('Uses')
-    #    uses.set("pi","y")
-    #    pid = root.find('Pid')
-    #    demo = etree.SubElement(pid, "Demo")
-    #    pi=etree.SubElement(demo, "Pv", 
-    #                        pin=person['pin'],
-    #                        otp=person['otp'])
-
-    def bio_fmr(self, root, person): 
-
-        uses = root.find('Uses')
-        uses.set("bio","y")
-        uses.set("bt","FMR")
-        pid = root.find('Pid')
-        bios = etree.SubElement(pid, "Bios")
-        bio = etree.SubElement(bios, "Bio", 
-                               type="FMR")
-        bio.text = person['bio']
-    
-    def register_processing_functions(self): 
-        
-        self._processing_functions = { 
-            'name_exact': ["Exact name", self.name_exact],
-            'name_partial': ["Partial name", self.name_partial],
-            'address_exact': ["Exact address", self.address_exact],
-            'email_exact': ["Exact Email", self.email_exact],
-            'phone_exact': ["Exact phone", self.phone_exact],
-            'bio_only': ["Bio FMR", self.bio_fmr],
-            }
     
     def load_data(self): 
         """
@@ -163,54 +81,6 @@ class AuthBatchRequest():
         self._data = json.load(fp)
         fp.close()
 
-    def generate_xml(self): 
-        
-        if (self._data == None): 
-            self.load_data() 
-
-        # Generate the xml 
-        ts = datetime.now()
-        root = etree.Element('Auth', 
-                             xmlns=self._cfg.common.request_xmlns,
-                             ver=self._cfg.common.ver,
-                             tid=self._cfg.common.tid,
-                             ac=self._cfg.common.ac, 
-                             sa=self._cfg.common.sa,
-                             txn = "",
-                             uid = "",
-                             lk=self._cfg.common.license_key,
-                             )
-        uses = etree.SubElement(root, "Uses", 
-                                otp="n", 
-                                pin="n",
-                                bio="n",
-                                pfa="n",
-                                pi="n",
-                                pa="n")
-        pid = etree.SubElement(root, 'Pid', 
-                             xmlns=self.data_xmlns, 
-                             ts=ts.strftime("%Y-%m-%dT%H:%M:%S"),
-                             ver="1.0")
-            
-        for person in self._data:            
-            #print person 
-            for func_name,func_details in self._processing_functions.items():
-                func = func_details[1] 
-                
-                # Fix some details of the root
-                new_root = copy.deepcopy(root)
-                new_root.set('uid', person['uid'])
-                new_root.set('txn', "batch:"+random.randint(2**20, 2**30-1).__str__())
-                
-                # Now insert the demo/bio element 
-                func(new_root, person) 
-                
-                # output the tree 
-                print "------"
-                print "UID,Test Name"
-                print "%s,%s" %(person['uid'], func_details[0])
-                print etree.tostring(new_root, pretty_print=True)
-                
     def authenticate_basic(self): 
         
         log.debug("Authenticating") 
@@ -237,7 +107,72 @@ class AuthBatchRequest():
             req = AuthRequest(cfg)
             req.import_request_data(exported_data)
             req.execute()
+
+            # Load the response 
+            data = json.loads(req.export_response_data())
+            res = AuthResponse(cfg=cfg, uid=cfg.request.uid) 
+            res.load_string(data['xml'])
             
+            # Find all the attributes set 
+            bits = res.lookup_usage_bits()
+            print "[%.3f] (%s) -> %s " % (data['latency'], bits, data['ret'])
+            if data['err'] is not None and data['err'] != -1: 
+                print "Err %s: %s "% ( data['err'], data['err_message'])            
+    def authenticate_advanced(self): 
+        
+        log.debug("Authentication advanced") 
+
+        for person in self._data: 
+
+            cfg= self._cfg 
+            cfg.request.uid = person['uid'] 
+            cfg.request.demographics = ["Pi", "Pa"]
+            cfg.request.biometrics = []
+            
+            # test data format is DD-MM-YYYY whereas what is required
+            # is YYYY-MM-DD 
+            dob = person['dob'] 
+            dob_split = dob.split("-") 
+            dob = dob_split[2] + "-" + dob_split[1] + "-" + dob_split[0]
+            cfg.request['Pi'] = {
+                'ms': "E",
+                'name': person['name'],
+                'dob': dob,
+                'gender': person['gender'], 
+                }
+            cfg.request["Pa"] = { 
+                'ms': "E",
+                "landmark": person['landmark'],
+                "street": person['street'], # 12 Maulana Azad Marg
+                "locality": person['locality'], #"",
+                "poname": person['poname'], #"",
+                "vtc": person['vtc'], #"New Delhi",
+                "subdist": person['subdist'], #"New Delhi",
+                "district": person['district'], #"New Delhi",
+                "state": person['state'], #"New delhi",
+                "pincode": person['pincode'] #"110002",
+                }
+
+            # => Gather the data from the (simulated) client
+            data = AuthData(cfg=cfg) 
+            data.generate_client_xml() 
+            exported_data = data.export_request_data() 
+            
+            # Create the request object and execute 
+            req = AuthRequest(cfg)
+            req.import_request_data(exported_data)
+            req.execute()
+            
+            # Load the response 
+            data = json.loads(req.export_response_data())
+            res = AuthResponse(cfg=cfg, uid=cfg.request.uid) 
+            res.load_string(data['xml'])
+            
+            # Find all the attributes set 
+            bits = res.lookup_usage_bits()
+            print "[%.3f] (%s) -> %s " % (data['latency'], bits, data['ret'])
+            if data['err'] is not None and data['err'] != -1: 
+                print "Err %s: %s "% ( data['err'], data['err_message'])
 
 if __name__ == '__main__':
        
@@ -249,7 +184,7 @@ if __name__ == '__main__':
     #=> Setup logging 
     logging.getLogger().setLevel(logging.WARN) #cfg.common.loglevel )
     logging.basicConfig(
-	filename='execution.log',
+	#filename='execution.log',
 	format='%(asctime)-6s: %(name)s - %(levelname)s - %(message)s') 
 
     log.info("Starting my Batch AuthClient")
@@ -257,5 +192,4 @@ if __name__ == '__main__':
     batch = AuthBatchRequest(cfg=cfg)
     batch.load_data() 
     batch.authenticate_basic() 
-    #batch.register_processing_functions() 
-    #batch.generate_xml()
+    batch.authenticate_advanced() 

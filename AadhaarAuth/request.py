@@ -210,6 +210,8 @@ class AuthRequest():
         Export the authentication result obtained from the response 
         """
         data = {
+            'latency': self._result['_latency'],
+            'xml': self._result['_xml'], 
             'ret': self._result['_ret'],
             'err': self._result['_err'],
             'err_message': self._result['_err_message'],
@@ -259,10 +261,10 @@ class AuthRequest():
         try: 
             if "Pa" in req['demographics']: 
                 pa = req['Pa']
-                if (pi['ms'] == "E"): 
+                if (pa['ms'] == "E"): 
                     msg = msg + "Exact(address)" #% (pa['street'])
                 else:
-                    msg = msg + "Partial(addresses)" #% (pi['name'])
+                    msg = msg + "Partial(addresses)" #% (pa['address'])
         except:
             pass 
         
@@ -436,7 +438,9 @@ class AuthRequest():
             res = AuthResponse(cfg=cfg, 
                                uid=cfg.request.uid)
 
-            res.load_string(xml) 
+            res.load_string(xml)
+            self._result['_latency'] = self._stats['_auth_call_latency']
+            self._result['_xml'] = xml 
             self._result['_ret'] = res.get_ret()
             self._result['_err'] = res.get_err()
             self._result['_err_message'] = res.lookup_err()
@@ -451,10 +455,10 @@ class AuthRequest():
             log.debug("Request Demo hash = %s " % self.get_demo_hash())
 
             
-            print "[%0.3f secs] %s -> %s " % \
+            log.debug("[%0.3f secs] %s -> %s " % \
                 (self._stats['_auth_call_latency'],
                  self.humanize_basic(self._cfg.request),
-                 res.get_ret())
+                 res.get_ret()))
                                          
             self.print_stats() 
 

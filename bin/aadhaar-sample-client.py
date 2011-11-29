@@ -26,12 +26,17 @@ Simplest possible python client
 import logging
 import sys, os, os.path 
 from config import Config 
+import simplejson as json 
+
+def findpath(path):
+    return os.path.abspath(os.path.join(os.path.dirname(__file__),path))
 
 log = logging.getLogger("SampleClient")
 
 from AadhaarAuth.request import AuthRequest
 from AadhaarAuth.data import AuthData
 from AadhaarAuth.command import AuthConfig
+from AadhaarAuth.response import AuthResponse 
 
 __author__ = "Venkata Pingali"
 __copyright__ = "Copyright 2011,Venkata Pingali and TCS" 
@@ -50,18 +55,9 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(cfg.common.loglevel) 
     logging.basicConfig()
     
-    # Update the request information 
-    #cfg.request.uid = sys.argv[2]
+    # This is a simple client. Force use of name
     cfg.request.demographics = ["Pi"]
     cfg.request.biometrics = []
-    #cfg.request['Pi'] = {
-    #    'ms': "E",
-    #    'name': sys.argv[3]
-    # }
-
-    # use this for biometrics query 
-    #cfg.request.uid = sys.argv[2]
-    #cfg.request = cfg.request_bio  
     
     # => Gather the data from the (simulated) client
     data = AuthData(cfg=cfg) 
@@ -72,3 +68,14 @@ if __name__ == '__main__':
     req = AuthRequest(cfg)
     req.import_request_data(exported_data)
     req.execute()
+
+    # Load the response 
+    data = json.loads(req.export_response_data())
+    res = AuthResponse(cfg=cfg, uid=cfg.request.uid) 
+    res.load_string(data['xml'])
+            
+    # Find all the attributes set 
+    bits = res.lookup_usage_bits()
+    print "[%.3f] (%s) -> %s " % (data['latency'], bits, data['ret'])
+    if data['err'] is not None and data['err'] != -1: 
+        print "Err %s: %s "% ( data['err'], data['err_message'])
