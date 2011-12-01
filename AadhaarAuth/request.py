@@ -215,7 +215,12 @@ class AuthRequest():
             'ret': self._result['_ret'],
             'err': self._result['_err'],
             'err_message': self._result['_err_message'],
+            'ts': self._result['_ts'] ,
+            'info': self._result['_info'],
+            'txn': self._result['_txn'],
+            'code': self._result['_code'],
             }
+
         return json.dumps(data) 
 
     ######################################################
@@ -440,9 +445,14 @@ class AuthRequest():
 
             res.load_string(xml)
             self._result['_latency'] = self._stats['_auth_call_latency']
-            self._result['_xml'] = xml 
-            self._result['_ret'] = res.get_ret()
-            self._result['_err'] = res.get_err()
+            self._result['_xml']   = xml 
+            self._result['_ret']   = res.get_ret()
+            self._result['_err']   = res.get_err()
+            self._result['_ts']    = res.get_ts() 
+            self._result['_info']  = res.get_info() 
+            self._result['_txn']   = res.get_txn() 
+            self._result['_code']   = res.get_code() 
+            
             self._result['_err_message'] = res.lookup_err()
             
             # XXX add a check for txnid 

@@ -345,7 +345,19 @@ class AuthResponse():
         usage_data =self._response['_info'][130:142]
         self._response['_usage_data'] = hextobin(usage_data)
         return 
+    
+    def get_ts(self): 
+        return self._response['_ts'] 
 
+    def get_txn(self): 
+        return self._response['_txn'] 
+
+    def get_code(self): 
+        return self._response['_code'] 
+
+    def get_ts(self): 
+        return self._response['_ts'] 
+    
     def get_uid_hash(self):
         return self._response['_uid_hash'] 
 
