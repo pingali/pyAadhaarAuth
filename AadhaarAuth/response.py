@@ -89,6 +89,36 @@ class AuthResponse():
             '200': "'Pa' (address) attributes of demographic data did not match",
             '300': "Biometric data did not match",
             '500': "Invalid encryption",
+            '500': "Invalid encryption of Skey",
+            #This error will be returned if Auth server is not able to
+            #decrypt the "Skey" value.  In such cases, please review
+            #your RSA encryption code.  Also, ensure that you are
+            #using correct certificate.
+ 
+            '501': "Invalid certificate identifier (ci)",
+            #(Refer "ci" attribute of Skey).  In such cases, please
+            #ensure that you are deriving this value from the
+            #certificate that was used for encryption.  Do not
+            #hardcode this value in your application, instead always
+            #derive its value from the Certificate, which contains its
+            #own expiry date.
+ 
+            '502': "Invalid Pid encryption",             
+            #This error will be returned if Auth server is not able to
+            #decrypt the <Data> element.  In such cases, please review
+            #your AES encryption code, and also ensure that AES key
+            #that was used for Pid encryption was indeed encrypted to
+            #create Skey. Please make sure that you use same AES key
+            #for encrypting both Pid and Hmac.
+ 
+            '503': "Invalid Hmac encryption", 
+            #This error will be returned if Auth server is not able to
+            #decrypt the <Hmac> element.  In such cases, please review
+            #your AES encryption code, and also ensure that AES key
+            #that was used for Hmac encryption was indeed encrypted to
+            #create Skey.  Please make sure that you use same AES key
+            #for encrypting both Pid and Hmac.
+
             '510': "Invalid Auth XML format",
             '511': "Invalid PID XML format",
             '520': "Invalid device",
