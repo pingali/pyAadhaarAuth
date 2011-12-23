@@ -16,7 +16,7 @@ The aim of this library is to be a reference implementation of the
 Authentication API and at the same time enable rapid development of
 Aadhaar-based applications. 
 
-NEW!!! We have a new document discussing [AUA Design and Implementation](https://github.com/pingali/pyAadhaarAuth/raw/master/docs/Aadhaar-enabled_Data_Sharing_2.0.pdf)
+NEW!!! We have a new document discussing [AUA Design and Implementation](https://github.com/pingali/pyAadhaarAuth/raw/master/docs/AUA_Design_and_Implementation.pdf)
 
 
 Latest Release
