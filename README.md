@@ -115,7 +115,7 @@ code stabilizes.
 
 >         
 >        $ cd /tmp   
->        $ wget --no-check-certificate -O pyAadhaarAuth.tar.gz https://github.com/pingali/pyAadhaarAuth/tarball/v0.1.0
+>        $ wget --no-check-certificate -O pyAadhaarAuth.tar.gz https://github.com/pingali/pyAadhaarAuth/tarball/v0.2.1
 >        $ tar zxvf pyAadhaarAuth.tar.gz  
 >        $ cd pingali-pyAaadhaarAuth-bf47789
 >        $ sudo python setup.py install    
