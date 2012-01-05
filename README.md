@@ -96,13 +96,17 @@ below.
 Installation
 ------------
 
-Install dependencies. 
+Install dependencies. Note the non-standard installation of
+M2Crypto. It is necessary because the default M2Crypto has a known bug
+(see below) and the latest debian package fixes the bug.
 
 >         
 >        $ sudo apt-get install python-dev libxml2-dev libxslt1-dev  xmlsec1       
 >        $ sudo apt-get install libxmlsec1 swig libxmlsec1-openssl libxmlsec1-dev      
->        $ sudo apt-get install libssl-dev python-openssl      
->        $ sudo easy_install lxml pyxmlsec M2Crypto requests config  
+>        $ sudo apt-get install libssl-dev python-openssl   
+>        $ sudo easy_install lxml pyxmlsec requests config  
+>        $ wget -O /tmp/m2crypto.deb http://ftp.us.debian.org/debian/pool/main/m/m2crypto/python-m2crypto_0.21.1-2_i386.deb
+>        $ sudo dpkg -i /tmp/m2crypto.deb 
 
 Prepare working directory 
 
