@@ -137,15 +137,18 @@ files. Now run the client with the config file. The sample client by
 default does only demographic authentication.
 
 >        
->        $ ./aadhaar-sample-client.py  fixtures/auth.cfg 
+>        $ ./aadhaar-sample-client.py  -c fixtures/auth.cfg 
 >        [1.031 secs] (999999990019,Exact(name))  -> y 
 
 You can also override the default parameters as follows:
 
 >        
->        $ ./aadhaar-sample-client.py  fixtures/auth.cfg request.uid=999999990019 request.Pi.name="Shivshankar Choudhury"     
+>        $ ./aadhaar-sample-client.py  -c fixtures/auth.cfg request.uid=999999990019 request.Pi.name="Shivshankar Choudhury"     
 >        [1.031 secs] (999999990019,Exact(name))  -> y 
 
+>        
+>        $ ./aadhaar-sample-client.py -c fixtures/auth.cfg request.uid=999999990019 request.Pi.name="Alpha"
+>        [0.659] (['Pi->name', 'ver']) -> n
 
 'y' shows successful authentication. Note that this client is capable
 of doing both demographic and biometric authentication but only does
@@ -158,7 +161,7 @@ auth.cfg file. In this case you can run the script installed by the
 package in /usr/local/bin (on Linux).
 
 >          
->       $ aadhaar-batch-client.py fixtures/auth.cfg 
+>       $ aadhaar-batch-client.py -c fixtures/auth.cfg 
 >       [0.974 secs] (999999990019,Exact(name)(Finger Prints))  -> y 
 >       [1.011 secs] (999999990026,Exact(name)(Finger Prints))  -> y 
 >       [1.026 secs] (999999990042,Exact(name)(Finger Prints))  -> y 
@@ -167,7 +170,7 @@ package in /usr/local/bin (on Linux).
 Run the ASA server in the background and issue a request from the ASA
 client.
 
->       $ aadhaar-asa-server.py fixtures/auth.cfg  &       
+>       $ aadhaar-asa-server.py -c fixtures/auth.cfg  &       
 >       $ aadhaar-asa-client.py  fixtures/auth.cfg 999999990019 "Shivshankar Choudhury"     
 >       [1.134 secs] (999999990019,Exact(name)(Finger Prints))  -> y 
 >       {"err_message": "No error", "err": -1, "ret": "y"}
@@ -293,12 +296,12 @@ Work-in-progress
   Medium term:  
 
     1. Language and location support 
-	2. Humanize all messages
+    2. Humanize all messages
     3. ASA/AUA split operation model including ASA API development
-	4. Use a pregenerated XML as an input
-    4. Look through the spec for validation rules beyond what the XSD is providing (e.g., sanity checks)    
-    5. Extensive profiling and XML optimizations 
-    6. Explore browser and mobile phone support 
+    4. Use a pregenerated XML as an input
+    5. Look through the spec for validation rules beyond what the XSD is providing (e.g., sanity checks)    
+    6. Extensive profiling and XML optimizations 
+    7. Explore browser and mobile phone support 
 
 Thanks 
 ------   
