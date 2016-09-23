@@ -1,3 +1,6 @@
+## Note: This library is not supported. It has not been touched for 5 years. Please visit UIDAI page for other options
+
+
 Python Client and Library for Aadhaar Authentication Service
 ------------------------------------------------------------
 
